@@ -1,6 +1,16 @@
-import { pgTable, text, integer, geometry, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, pgEnum, geometry, index, uuid, timestamp } from 'drizzle-orm/pg-core';
 
-export const assets = pgTable('assets', {});
+const timestamps = {
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp().defaultNow().notNull().$onUpdateFn(() => new Date()),
+};
+
+export const assets = pgTable('assets', {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(), 
+    path: text().notNull(),
+    ...timestamps,
+});
 
 export const quests = pgTable('quests', {});
 
