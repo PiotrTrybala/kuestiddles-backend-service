@@ -8,7 +8,7 @@ const app = new Hono();
 app.use(
 	"/api/auth/*",
 	cors({
-		origin: "http://localhost:3000",
+		origin: ["http://localhost:5173", "https://www.kuestiddles.pl"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
