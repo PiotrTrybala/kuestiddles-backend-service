@@ -6,6 +6,9 @@ export const auth = betterAuth({
     database: drizzleAdapter(database, {
         provider: "pg",
     }),
+
+    trustedOrigins: ["http://localhost:5173", "https://www.kuestiddles.com", "https://.kuestiddles.pl"],
+
     user: {
         additionalFields: {
             role: {
@@ -13,5 +16,5 @@ export const auth = betterAuth({
                 defaultValue: "user",
             }
         }
-    }
+    },
 });
