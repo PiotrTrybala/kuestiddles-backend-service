@@ -1,31 +1,49 @@
 import { Hono } from "hono";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { assets } from "../database/schema/kuestiddles";
 import { database } from "../database/db";
+import { s3 } from "../config/s3";
 
 export const assetsRouter = new Hono();
 
+
 assetsRouter.get("/list", async (c) => {
 
-    const res1 = sql`SELECT now()`;
-    console.log('Test result 1:', res1);
-    const res2 = await database.select().from(assets).then((value) => value);
-    console.log("Test result 2:", res2);
+    const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
+    const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
 
-    // console.log(result);
-    // const result = await database.select().from(assets).limit(100);
+    const offset = page * pageSize;
+    const limit = offset + pageSize;
 
-    // console.log(result);
+    const result = await database.select().from(assets).offset(offset).limit(limit);
 
-    return c.json({ placeholder: true });
+    return c.json({
+        page: page,
+        assets: result,
+    });
 });
 
-assetsRouter.get("/:id", (c) => {
+assetsRouter.get("/:id", async (c) => {
 
+    const id = c.req.param("id");
 
+    const result = await database.select().from(assets).where(eq(assets.id, id));
 
-    return c.json({ placeholder: true });
+    const [ asset ] = result;
+
+    const image = s3.file(asset!.path, {
+        bucket: process.env.AWS_BUCKET_NAME!,
+    });
+
+    const exists = await image.exists();
+    if (!exists) return c.notFound();
+
+    const data = await image.arrayBuffer();
+    return c.body(data, 200, {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=31536000',
+    });
 });
 
 assetsRouter.post("/upload", (c) => {
