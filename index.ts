@@ -3,6 +3,9 @@ import { cors } from "hono/cors";
 
 import { auth } from './config/auth';
 
+import { api } from './routes/api';
+import { showRoutes } from 'hono/dev';
+
 const app = new Hono();
 
 app.use(
@@ -22,8 +25,14 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
     return auth.handler(c.req.raw);
 });
 
-app.get("/", (c) => {
-    return c.json({ message: "Hello World!" });
+app.get("/ping", (c) => {
+    return c.json({ message: "Pong" });
+});
+
+app.route("/api", api);
+
+showRoutes(app, {
+	verbose: true,
 });
 
 export default app;
