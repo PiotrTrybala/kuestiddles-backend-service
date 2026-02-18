@@ -8,7 +8,7 @@
     "drizzle-kit": "^0.31.9"
   },
   "scripts": {
-    "dev": "bun run --hot index.ts"
+    "dev": "bun run --hot ./src/index.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
