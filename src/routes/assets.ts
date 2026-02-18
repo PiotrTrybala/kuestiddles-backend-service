@@ -7,14 +7,17 @@ import { s3 } from "../config/s3";
 import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
 
-export const assetsRouter = new Hono();
+import { type AppEnv } from "../config/app";
+import { requireAdmin } from "./admin/admin";
+
+export const assetsRouter = new Hono<AppEnv>();
 
 // TODO: Add middleware (user, group user roles) and (admin role)
 // TODO: Add more search options to GET /list routes
 // TODO: Change naming of asset from hash to something more human readable
 // TODO: Add better error handling
 
-assetsRouter.get("/list", async (c) => {
+assetsRouter.get("/list", requireAdmin, async (c) => {
 
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
@@ -60,7 +63,7 @@ assetsRouter.get("/:id", async (c) => {
     });
 });
 
-assetsRouter.post("/upload", async (c) => {
+assetsRouter.post("/upload", requireAdmin, async (c) => {
 
     const form = await c.req.parseBody({ all: true });
 
@@ -111,7 +114,7 @@ assetsRouter.post("/upload", async (c) => {
     return c.json({ files: uploadResults });
 });
 
-assetsRouter.delete("/:id", async (c) => {
+assetsRouter.delete("/:id", requireAdmin, async (c) => {
 
     const id = c.req.param("id");
 

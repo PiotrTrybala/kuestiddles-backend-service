@@ -6,12 +6,9 @@ import { auth } from './config/auth';
 import { api } from './routes/api';
 import { showRoutes } from 'hono/dev';
 
-const app = new Hono<{
-	Variables: {
-		user: typeof auth.$Infer.Session.user | null,
-		session: typeof auth.$Infer.Session.session | null,
-	}
-}>();
+import { type AppEnv } from './config/app';
+
+const app = new Hono<AppEnv>();
 
 app.use("*", async (c, next) => {
 
