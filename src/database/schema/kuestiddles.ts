@@ -11,7 +11,8 @@ const DEFAULT_THUMBNAIL = "";
 
 export const assets = pgTable('assets', {
     id: uuid().primaryKey().defaultRandom(),
-    name: text().notNull(), 
+    name: text().notNull(),
+    labels: text().array().default(sql`'{}'::text[]`),
     path: text().notNull(),
     hash: text().notNull(),
     ...timestamps,
@@ -21,21 +22,23 @@ export const quests = pgTable('quests', {
     id: uuid().defaultRandom().primaryKey(),
     landmark_id: uuid().notNull().references(() => landmarks.id),
     title: text().notNull(),
+    labels: text().array().default(sql`'{}'::text[]`),
     description: text().notNull(),
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),
     assets: text().array().default(sql`'{}'::text[]`).notNull(),
     points: integer().notNull(),
-    ...timestamps,   
+    ...timestamps,
 });
 
 export const landmarks = pgTable('landmarks', {
     id: uuid().primaryKey().defaultRandom(),
     name: text().notNull(),
+    labels: text().array().default(sql`'{}'::text[]`),
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),
     assets: text().array().default(sql`'{}'::text[]`).notNull(),
     coords: geometry('coords', { type: 'point', mode: 'xy', srid: 4326 }).notNull(),
     ...timestamps,
-},(table) => [
+}, (table) => [
     index("spatial_index").using('gist', table.coords),
 ]);
 
@@ -69,7 +72,7 @@ export const groupUsers = pgTable('groups_users', {
 
 export const groupQuestsSolved = pgTable('group_quests_solved', {
     quest_id: uuid().references(() => quests.id),
-    group_user_id: uuid().references(() => groupUsers.id), 
+    group_user_id: uuid().references(() => groupUsers.id),
     solved: boolean().default(false).notNull(),
     ...timestamps,
 });
