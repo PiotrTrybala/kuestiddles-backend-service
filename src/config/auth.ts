@@ -3,6 +3,15 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { database } from "../database/db";
 import { sendVerificationEmail } from './mailgun';
 
+import { stripe } from "@better-auth/stripe";
+import { jwt } from 'better-auth/plugins';
+
+import Stripe from 'stripe';
+
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-01-28.clover",
+});
+
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
         provider: "pg",
@@ -39,8 +48,18 @@ export const auth = betterAuth({
             },
             plan: {
                 type: "string",
-                deafultValue: "basic",
+                defaultValue: "basic",
             }
         }
     },
+
+    plugins: [
+        stripe({
+            stripeClient,
+            stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+            createCustomerOnSignUp: true,
+        }),
+        // twoFactor(),
+        jwt(),
+    ]
 });
