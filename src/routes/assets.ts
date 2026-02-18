@@ -1,18 +1,16 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { eq, sql, ilike, arrayOverlaps, and } from "drizzle-orm";
+import { sha256 } from "hono/utils/crypto";
+import sharp from "sharp";
 
 import { assets } from "../database/schema/kuestiddles";
 import { database } from "../database/db";
 import { s3 } from "../config/s3";
-import sharp from "sharp";
-import { sha256 } from "hono/utils/crypto";
-
 import { type AppEnv } from "../config/app";
 import { requireAdmin } from "./admin/admin";
 
 export const assetsRouter = new Hono<AppEnv>();
 
-// TODO: Add middleware (user, group user roles) and (admin role)
 // TODO: Add more search options to GET /list routes
 // TODO: Change naming of asset from hash to something more human readable
 // TODO: Add better error handling
@@ -21,16 +19,34 @@ assetsRouter.get("/list", requireAdmin, async (c) => {
 
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
+    const labels = (c.req.query("labels") || "")
+        .split(",")
+        .map(l => l.trim())
+        .filter(Boolean);
+
+    const name = c.req.query("name");
 
     const offset = page * pageSize;
-    const limit = offset + pageSize;
+    const limit = pageSize;
 
-    const result = await database.select().from(assets).offset(offset).limit(limit);
+    const conditions = [];
+
+    if (name && name.trim() !== "") {
+        conditions.push(ilike(assets.name, `%${name}%`));
+    }
+    
+    if (labels.length > 0) {
+        conditions.push(arrayOverlaps(assets.labels, labels));
+    }
+    
+    const result = await database.select()
+        .from(assets)
+        .where(conditions.length ? and(...conditions) : undefined)
+        .offset(offset)
+        .limit(limit);
 
     const extendedAssets = result.map((asset) => {
-
         const link = `${process.env.ASSETS_URL!}/${asset.id}`;
-
         return {
             ...asset,
             link,
@@ -43,7 +59,7 @@ assetsRouter.get("/list", requireAdmin, async (c) => {
     });
 });
 
-assetsRouter.get("/:id", requireAdmin, async (c) => {
+assetsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
 
@@ -85,10 +101,9 @@ assetsRouter.post("/upload", requireAdmin, async (c) => {
                 .toBuffer();
 
             const hash = await sha256(webpBuffer);
-            const assetName = await sha256(`${asset.name}.${hash}.webp`);
+            const assetName = `${asset.name}.webp`;
             const assetPath = `assets/${assetName}`;
 
-            console.log("Asset path:", assetPath);
             try {
                 const s3Res = await s3.write(assetPath, webpBuffer, {
                     type: "image/webp",
@@ -97,14 +112,11 @@ assetsRouter.post("/upload", requireAdmin, async (c) => {
                 console.error("error detected:", error);
             }
 
-
             const [entry] = await database.insert(assets).values({
                 name: assetName!,
                 path: assetPath!,
                 hash: hash!,
             }).returning({ id: assets.id });
-
-            console.log(`Asset: ${asset.name}, database result: ${JSON.stringify(entry)}`);
 
             return { id: entry?.id, hash };
         })
@@ -118,15 +130,24 @@ assetsRouter.delete("/:id", requireAdmin, async (c) => {
 
     const id = c.req.param("id");
 
-    console.log("Asset id:", id);
-
     const [asset] = await database.select().from(assets).where(eq(assets.id, id));
 
     if (asset == undefined) return c.notFound();
 
-    await s3.delete(asset.path);
+    try {
+        await s3.delete(asset.path);
 
-    await database.delete(assets).where(eq(assets.id, id!));
+    } catch(error) {
+        console.error("Failed to delete asset:", error);
+        return c.json({ message: "Internal server error"}, 500);
+    }
+
+    try {
+        await database.delete(assets).where(eq(assets.id, id!));
+    } catch(error) {
+        console.error("Failed to delete asset metadata:", error);
+        return c.json({ message: "Internal server error" }, 500);
+    }
 
     return c.json({ message: "Asset deleted" });
 });
