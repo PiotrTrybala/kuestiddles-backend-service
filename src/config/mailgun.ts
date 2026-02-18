@@ -8,7 +8,7 @@ export async function sendMessage(from: string, to: string, subject: string, htm
     const response = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
         method: "POST",
         headers: {
-            'Authorization': "Basic" + btoa(`api:${apiKey}`),
+            'Authorization': "Basic " + btoa(`api:${apiKey}`),
             'Content-Type': "application/x-www-form-urlencoded",
         },
         body: form.toString(),

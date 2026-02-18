@@ -159,7 +159,7 @@ landmarksRouter.patch("/:id", async (c) => {
 
 landmarksRouter.delete("/:id", async (c) => {
     
-    const id = await c.req.param("id");
+    const id = c.req.param("id");
 
     await database.delete(landmarks).where(eq(landmarks.id, id));
     return c.json({ message: "Deleted landmark" });

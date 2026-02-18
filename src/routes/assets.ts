@@ -86,11 +86,15 @@ assetsRouter.post("/upload", requireAdmin, async (c) => {
 
     const rawAssets = form['assets'];
 
+    console.log("raw assets:", rawAssets);
+
     const assetsFiles: File[] = Array.isArray(rawAssets) ? rawAssets.filter((f): f is File => f instanceof File) : rawAssets instanceof File ? [rawAssets] : [];
 
     if (assetsFiles.length == 0) {
         return c.json({ message: "No assets uploaded" }, 400);
     }
+
+    console.log(assetsFiles);
 
     const uploadResults = await Promise.all(
         assetsFiles.map(async (asset) => {
@@ -101,14 +105,20 @@ assetsRouter.post("/upload", requireAdmin, async (c) => {
                 .resize(800, null, { withoutEnlargement: true })
                 .toBuffer();
 
+
+
             const hash = await sha256(webpBuffer);
             const assetName = `${asset.name}.webp`;
-            const assetPath = `assets/${assetName}`;
+            const hashedName = await sha256(assetName);
+            const assetPath = `assets/${hashedName}`;
+
+            console.log(`${assetName} : ${assetPath}`);
 
             try {
                 const s3Res = await s3.write(assetPath, webpBuffer, {
                     type: "image/webp",
                 });
+                console.log(s3Res);
             } catch (error) {
                 console.error("error detected:", error);
             }

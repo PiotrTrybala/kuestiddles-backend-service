@@ -15,6 +15,13 @@
       "when": 1771241726829,
       "tag": "0001_loud_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771427944062,
+      "tag": "0002_flimsy_raza",
+      "breakpoints": true
     }
   ]
 }
