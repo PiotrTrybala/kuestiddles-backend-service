@@ -43,7 +43,7 @@ assetsRouter.get("/list", requireAdmin, async (c) => {
     });
 });
 
-assetsRouter.get("/:id", async (c) => {
+assetsRouter.get("/:id", requireAdmin, async (c) => {
 
     const id = c.req.param("id");
 
@@ -127,7 +127,6 @@ assetsRouter.delete("/:id", requireAdmin, async (c) => {
     await s3.delete(asset.path);
 
     await database.delete(assets).where(eq(assets.id, id!));
-
 
     return c.json({ message: "Asset deleted" });
 });
