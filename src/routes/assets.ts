@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, sql, ilike, arrayOverlaps, and } from "drizzle-orm";
+import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
@@ -64,6 +64,7 @@ assetsRouter.get("/:id", async (c) => {
     const id = c.req.param("id");
 
     const result = await database.select().from(assets).where(eq(assets.id, id));
+    if (result.length == 0) return c.notFound();
 
     const [asset] = result;
 
