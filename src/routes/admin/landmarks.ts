@@ -6,8 +6,6 @@ import { database } from "../../database/db";
 export const landmarksRouter = new Hono();
 
 landmarksRouter.get("/list", async (c) => {
-
-
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
     const labels = (c.req.query("labels") || "")
