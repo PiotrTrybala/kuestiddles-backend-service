@@ -56,6 +56,8 @@ landmarksRouter.get("/:id", async (c) => {
 
 // TODO: Add input validation
 
+// TODO: Add better error handling to routes
+
 type LandmarkCreate = {
     name: string,
     description: string,
