@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { subscriptions } from "./stripe";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -87,6 +88,7 @@ export const jwks = pgTable("jwks", {
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  subscriptions: many(subscriptions),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
