@@ -2,10 +2,11 @@ import { Hono } from "hono";
 import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { landmarks } from "../../database/schema/kuestiddles";
 import { database } from "../../database/db";
+import { requireAdmin } from "./middleware";
 
 export const landmarksRouter = new Hono();
 
-landmarksRouter.get("/list", async (c) => {
+landmarksRouter.get("/list", requireAdmin, async (c) => {
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
     const labels = (c.req.query("labels") || "")
@@ -41,10 +42,13 @@ landmarksRouter.get("/list", async (c) => {
     });
 });
 
-landmarksRouter.get("/:id", async (c) => {
+landmarksRouter.get("/:id", requireAdmin, async (c) => {
     const id = c.req.param("id");
 
     const result = await database.select().from(landmarks).where(eq(landmarks.id, id));
+
+    console.log('landmark result:', result);
+
     if (result.length === 0) return c.notFound();
 
     const [landmark] = result;
@@ -70,7 +74,7 @@ type LandmarkCreate = {
 
 // TODO: Add error handling and validation
 
-landmarksRouter.post("/", async (c) => {
+landmarksRouter.post("/", requireAdmin, async (c) => {
 
     const body = await c.req.json<LandmarkCreate>();
 
@@ -95,7 +99,7 @@ type LandmarkUpdate = {
     }[]
 };
 
-landmarksRouter.patch("/:id", async (c) => {
+landmarksRouter.patch("/:id", requireAdmin, async (c) => {
     const id = c.req.param("id");
     const body = await c.req.json<LandmarkUpdate>();
 
@@ -157,7 +161,7 @@ landmarksRouter.patch("/:id", async (c) => {
     return c.json(updated);
 });
 
-landmarksRouter.delete("/:id", async (c) => {
+landmarksRouter.delete("/:id", requireAdmin, async (c) => {
     
     const id = c.req.param("id");
 

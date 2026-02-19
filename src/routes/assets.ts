@@ -7,7 +7,7 @@ import { assets } from "../database/schema/kuestiddles";
 import { database } from "../database/db";
 import { s3 } from "../config/s3";
 import { type AppEnv } from "../config/app";
-import { requireAdmin } from "./admin/admin";
+import { requireAdmin } from "./admin/middleware";
 
 export const assetsRouter = new Hono<AppEnv>();
 

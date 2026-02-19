@@ -3,8 +3,8 @@ import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean } fro
 import { user } from './auth';
 
 const timestamps = {
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull().$onUpdateFn(() => new Date()),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp({ withTimezone: true }).defaultNow().notNull().$onUpdateFn(() => new Date()),
 };
 
 const DEFAULT_THUMBNAIL = "";
