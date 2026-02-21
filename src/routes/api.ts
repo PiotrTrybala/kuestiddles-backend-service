@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { admin } from "./admin/admin";
 import { user } from "./user/user";
 
-import { assetsRouter } from "./assets";
+import { assetsRouter } from "./a";
 
 export const api = new Hono().basePath("/v1");
 

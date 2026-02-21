@@ -3,7 +3,7 @@ import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
-import { assets } from "../database/schema/kuestiddles";
+import { assets } from "../database/schema/assets";
 import { database } from "../database/db";
 import { s3 } from "../config/s3";
 import { type AppEnv } from "../config/app";
