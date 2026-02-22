@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
-import { landmarks } from "../../database/schema/kuestiddles";
+import { landmarks } from "../../database/schema/organizations";
 import { database } from "../../database/db";
 import { requireAdmin } from "./middleware";
 

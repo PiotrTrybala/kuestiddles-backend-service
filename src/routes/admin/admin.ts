@@ -4,11 +4,10 @@ import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
 import { requireAdmin } from "./middleware";
 import { assetsRouter } from "./assets";
+import { admin } from "better-auth/plugins";
+import { organizationsRouter } from "./organizations";
 
 export const adminRouter = new Hono();
 
 adminRouter.use("*", requireAdmin);
-
-adminRouter.route("/landmarks", landmarksRouter);
-adminRouter.route("/quests", questsRouter);
-adminRouter.route("/assets", assetsRouter);
+adminRouter.route("/organizations", organizationsRouter);

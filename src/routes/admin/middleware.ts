@@ -1,5 +1,8 @@
+import { eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 import {type AppEnv } from "../../config/app";
+import { database } from "../../database/db";
+import { organizations } from "../../database/schema/organizations";
 
 export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 
@@ -9,3 +12,18 @@ export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 
     await next();
 });
+
+export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
+
+    const name = c.req.param("orgName");
+    
+    const [ organization ] = await database.select()
+        .from(organizations)
+        .where(eq(organizations.name, name!));
+
+    if (!organization) return c.notFound();
+
+    c.set("organization", organization);
+
+    await next();
+}); 

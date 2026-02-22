@@ -3,7 +3,7 @@ import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 
 import { type AppEnv } from "../../config/app";
 import { requireAdmin } from "./middleware";
-import { quests } from "../../database/schema/kuestiddles";
+import { quests } from "../../database/schema/organizations";
 import { database } from "../../database/db";
 
 export const questsRouter = new Hono<AppEnv>();
