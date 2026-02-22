@@ -9,6 +9,9 @@ import { database } from "../../database/db";
 export const questsRouter = new Hono<AppEnv>();
 
 questsRouter.get("/list", requireAdmin, async (c) => {
+
+    const organization = c.get("organization")!;
+
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
     const labels = (c.req.query("labels") || "")
@@ -21,7 +24,9 @@ questsRouter.get("/list", requireAdmin, async (c) => {
     const offset = page * pageSize;
     const limit = pageSize;
 
-    const conditions = [];
+    const conditions = [
+        eq(quests.organization_name, organization.name)
+    ];
 
     if (name && name.trim() !== "") {
         conditions.push(ilike(quests.title, `%${name}%`));
@@ -70,10 +75,12 @@ type QuestCreate = {
 };
 
 questsRouter.post("/", requireAdmin, async (c) => {
+    const organization = c.get("organization")!;
     const body = await c.req.json<QuestCreate>();
 
     const [quest] = await database.insert(quests).values({
         landmark_id: body.landmarkId,
+        organization_name: organization.name,
         title: body.title,
         description: body.description,
         labels: body.labels,
@@ -93,7 +100,6 @@ type QuestUpdate = {
 };
 
 questsRouter.patch("/:id", requireAdmin, async (c) => {
-
     const id = c.req.param("id");
     const body = await c.req.json<QuestUpdate>();
 
@@ -137,7 +143,7 @@ questsRouter.patch("/:id", requireAdmin, async (c) => {
 
     const [updated] = await database.update(quests)
         .set(updateData)
-        .where(eq(quests.id, id))
+        .where(and(eq(quests.id, id)))
         .returning();
 
     if (!updated) return c.notFound();
@@ -146,8 +152,9 @@ questsRouter.patch("/:id", requireAdmin, async (c) => {
 });
 
 questsRouter.delete("/:id", requireAdmin, async (c) => {
+    const organization = c.get("organization")!;
     const id = c.req.param("id");
 
-    await database.delete(quests).where(eq(quests.id, id));
+    await database.delete(quests).where(and(eq(quests.id, id), eq(quests.organization_name, organization.name)));
     return c.json({ message: "Deleted quest" });
 });

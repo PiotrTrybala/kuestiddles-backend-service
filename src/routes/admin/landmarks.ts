@@ -7,6 +7,9 @@ import { requireAdmin } from "./middleware";
 export const landmarksRouter = new Hono();
 
 landmarksRouter.get("/list", requireAdmin, async (c) => {
+
+    const organization = c.get("organization")!;
+
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
     const labels = (c.req.query("labels") || "")
@@ -19,7 +22,9 @@ landmarksRouter.get("/list", requireAdmin, async (c) => {
     const offset = page * pageSize;
     const limit = pageSize;
 
-    const conditions = [];
+    const conditions = [
+        eq(landmarks.organization_name, organization.name)
+    ];
 
     if (name && name.trim() !== "") {
         conditions.push(ilike(landmarks.name, `%${name}%`));
@@ -47,8 +52,6 @@ landmarksRouter.get("/:id", requireAdmin, async (c) => {
 
     const result = await database.select().from(landmarks).where(eq(landmarks.id, id));
 
-    console.log('landmark result:', result);
-
     if (result.length === 0) return c.notFound();
 
     const [landmark] = result;
@@ -75,10 +78,11 @@ type LandmarkCreate = {
 // TODO: Add error handling and validation
 
 landmarksRouter.post("/", requireAdmin, async (c) => {
-
+    const organization = c.get("organization")!;
     const body = await c.req.json<LandmarkCreate>();
 
     const [landmark] = await database.insert(landmarks).values({
+        organization_name: organization.name,
         name: body.name,
         labels: body.labels,
         thumbnail: body.thumbnail ?? "",
@@ -162,9 +166,9 @@ landmarksRouter.patch("/:id", requireAdmin, async (c) => {
 });
 
 landmarksRouter.delete("/:id", requireAdmin, async (c) => {
-    
+    const organization = c.get("organization")!;
     const id = c.req.param("id");
 
-    await database.delete(landmarks).where(eq(landmarks.id, id));
+    await database.delete(landmarks).where(and(eq(landmarks.id, id), eq(landmarks.organization_name, organization.name)));
     return c.json({ message: "Deleted landmark" });
 });

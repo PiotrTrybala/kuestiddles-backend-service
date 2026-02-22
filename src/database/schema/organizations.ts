@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 import { timestamps } from './utils';
-import { DEFAULT_THUMBNAIL } from './assets';
+import { DEFAULT_THUMBNAIL } from './utils';
 
 export const organizations = pgTable('organizations', {
     name: text().primaryKey(),

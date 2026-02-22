@@ -13,6 +13,8 @@ export const assetsRouter = new Hono<AppEnv>();
 
 assetsRouter.get("/list", async (c) => {
 
+    const organization = c.get("organization")!;
+
     const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
     const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
     const labels = (c.req.query("labels") || "")
@@ -25,7 +27,9 @@ assetsRouter.get("/list", async (c) => {
     const offset = page * pageSize;
     const limit = pageSize;
 
-    const conditions = [];
+    const conditions = [
+        eq(assets.organization_name, organization.name)
+    ];
 
     if (name && name.trim() !== "") {
         conditions.push(ilike(assets.name, `%${name}%`));
@@ -78,7 +82,7 @@ assetsRouter.get("/:id", async (c) => {
 });
 
 assetsRouter.post("/upload", async (c) => {
-
+    const organization = c.get("organization")!;
     const user = c.get("user")!;
     const form = await c.req.parseBody({ all: true });
 
@@ -114,6 +118,7 @@ assetsRouter.post("/upload", async (c) => {
 
             const [ entry ] = await database.insert(assets).values({
                 user_id: user.id,
+                organization_name: organization.name,
                 name: assetName!,
                 path: assetPath!,
                 hash: assetHash!,
@@ -131,6 +136,7 @@ assetsRouter.post("/upload", async (c) => {
 
 assetsRouter.delete("/:id", async (c) => {
 
+    const organization = c.get("organization")!;
     const id = c.req.param("id");
 
     const [ asset ] = await database.select().from(assets).where(eq(assets.id, id));
@@ -144,7 +150,7 @@ assetsRouter.delete("/:id", async (c) => {
     }
 
     try {
-        await database.delete(assets).where(eq(assets.id, id));
+        await database.delete(assets).where(and(eq(assets.id, id), eq(assets.organization_name, organization.name)));
     } catch (error) {
         console.error("error detected:", error);
         return c.json({ message: "Could not delete asset"}, 400);
