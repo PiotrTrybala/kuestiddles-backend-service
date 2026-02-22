@@ -3,7 +3,6 @@ import { createMiddleware } from "hono/factory";
 import {type AppEnv } from "../../config/app";
 import { database } from "../../database/db";
 import { organizations } from "../../database/schema/organizations";
-import { plans } from "../../database/schema/stripe";
 
 export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 

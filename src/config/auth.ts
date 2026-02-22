@@ -7,6 +7,8 @@ import { stripe } from "@better-auth/stripe";
 import { jwt } from 'better-auth/plugins';
 
 import Stripe from 'stripe';
+import { eq } from 'drizzle-orm';
+import { plans } from '../database/schema/stripe';
 
 const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2026-01-28.clover",
@@ -54,6 +56,23 @@ export const auth = betterAuth({
             stripeClient,
             stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
             createCustomerOnSignUp: true,
+            subscription: {
+                enabled: true,
+                plans: async () => {
+                    const rows = await database.select().from(plans).where(eq(plans.active, true));
+
+                    return rows.map((plan) => ({
+                        name: plan.name,
+                        priceId: plan.stripe_price_id,
+                        limits: {
+                            organizationsQuota: plan.organizations_quota,
+                            landmarksPerOrgQuota: plan.landmarks_org_quota,
+                            questsPerOrgQuota: plan.landmarks_org_quota,
+                            simultaneousCompsPerQuota: plan.simultaneous_comps_per_org_quota,
+                        }
+                    }));
+                }
+            } 
         }),
         // twoFactor(),
         jwt(),

@@ -7,6 +7,8 @@ import { api } from './routes/api';
 import { showRoutes } from 'hono/dev';
 
 import { type AppEnv } from './config/app';
+import { database } from './database/db';
+import { plans } from './database/schema/stripe';
 
 const app = new Hono<AppEnv>();
 
@@ -17,12 +19,23 @@ app.use("*", async (c, next) => {
 	if (!session) {
 		c.set("user", null);
 		c.set("session", null);
+		c.set("organization", null);
+		c.set("plan", null);
 		await next();
 		return;
 	}
 
+
+
 	c.set("session", session.session);
 	c.set("user", session.user);
+
+	// const [ plan ] = await database.select()
+	// 	.from(plans)
+	// 	.where()
+
+
+
 
 	await next();
 });
