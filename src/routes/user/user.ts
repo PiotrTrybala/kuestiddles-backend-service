@@ -1,4 +1,4 @@
 import { Hono } from "hono";
 
-export const user = new Hono();
+export const userRouter = new Hono();
 

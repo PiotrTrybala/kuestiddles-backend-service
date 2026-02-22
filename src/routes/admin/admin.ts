@@ -5,10 +5,10 @@ import { questsRouter } from "./quests";
 import { requireAdmin } from "./middleware";
 import { assetsRouter } from "./assets";
 
-export const admin = new Hono();
+export const adminRouter = new Hono();
 
-admin.use("*", requireAdmin);
+adminRouter.use("*", requireAdmin);
 
-admin.route("/landmarks", landmarksRouter);
-admin.route("/quests", questsRouter);
-admin.route("/assets", assetsRouter);
+adminRouter.route("/landmarks", landmarksRouter);
+adminRouter.route("/quests", questsRouter);
+adminRouter.route("/assets", assetsRouter);

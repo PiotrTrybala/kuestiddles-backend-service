@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 
-import { admin } from "./admin/admin";
-import { user } from "./user/user";
+import { adminRouter } from "./admin/admin";
+import { userRouter } from "./user/user";
+import { publicRouter } from "./public/public";
 
 export const api = new Hono().basePath("/v1");
 
-api.route("/admin", admin);
-api.route("/user", user);
+api.route("/admin", adminRouter);
+api.route("/user", userRouter);
+api.route("/public", publicRouter);
