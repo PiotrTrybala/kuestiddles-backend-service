@@ -1,8 +1,5 @@
+import Stripe from 'stripe';
 
-// TODO: Add plans limits
-// TODO: Develop checkout process
-// TODO: Revise if subscription and plans architecture is correct
-
-export const PLANS = {
-    
-};
+export const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-01-28.clover",
+});

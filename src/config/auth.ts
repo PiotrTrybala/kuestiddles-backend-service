@@ -4,15 +4,11 @@ import { database } from "../database/db";
 import { sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
-import { jwt } from 'better-auth/plugins';
+import { twoFactor } from 'better-auth/plugins';
 
-import Stripe from 'stripe';
 import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
-
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-01-28.clover",
-});
+import { stripeClient } from './stripe';
 
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
@@ -32,6 +28,7 @@ export const auth = betterAuth({
 
     emailVerification: {
         async sendVerificationEmail({ user, url, token }) {
+            console.log(`send verification message to ${user}: ${token}`);  
             await sendVerificationEmail(user.email, url);
         }
     },
@@ -76,6 +73,5 @@ export const auth = betterAuth({
             } 
         }),
         twoFactor(),
-        jwt(),
     ]
 });
