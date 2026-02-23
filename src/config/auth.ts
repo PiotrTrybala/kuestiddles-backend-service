@@ -27,6 +27,7 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
+        autoSignInAfterVerification: true,
     },
 
     emailVerification: {
@@ -74,7 +75,7 @@ export const auth = betterAuth({
                 }
             } 
         }),
-        // twoFactor(),
+        twoFactor(),
         jwt(),
     ]
 });

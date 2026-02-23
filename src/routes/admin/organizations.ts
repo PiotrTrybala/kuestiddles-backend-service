@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { eq, name } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
@@ -18,6 +18,24 @@ organizationsRouter.get("/list", async (c) => {
     return c.json({
         organizations: result,
     })
+});
+
+type OrganizationUpdate = {
+    name: string,
+};
+
+organizationsRouter.patch("/:orgName", async (c) => {
+
+    const body = await c.req.json<OrganizationUpdate>();
+
+    const updated = await database.update(organizations).set({
+        name: body.name,
+    });
+
+    return c.json({
+        message: updated
+    })
+
 });
 
 organizationsRouter.use("*", requireOrganization);
