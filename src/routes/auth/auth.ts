@@ -37,9 +37,16 @@ authRouter.post("/avatar", async (c) => {
 
     if (!(rawProfilePicture instanceof File)) return c.json({ message: "Profile picture must be file"}, 400);
 
-    let profilePicture = rawProfilePicture as File;
+    let profilePicture = rawProfilePicture as File | undefined;
+
+    if (!profilePicture) {
+        // TODO: default profile picture
+        return c.json({
+
+        })
+    }
     
-    const arrayBuffer = await profilePicture.arrayBuffer();
+    const arrayBuffer = await profilePicture!.arrayBuffer();
 
     const webpBuffer = await sharp(arrayBuffer)
         .webp({ quality: 50 })
