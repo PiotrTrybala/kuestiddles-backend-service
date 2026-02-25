@@ -9,6 +9,7 @@ import { showRoutes } from 'hono/dev';
 import { type AppEnv } from './config/app';
 import { database } from './database/db';
 import { plans } from './database/schema/stripe';
+import { requireUser } from './routes/user/middleware';
 
 const app = new Hono<AppEnv>();
 
@@ -25,18 +26,12 @@ app.use("*", async (c, next) => {
 		return;
 	}
 
-
-
 	c.set("session", session.session);
 	c.set("user", session.user);
 
 	// const [ plan ] = await database.select()
 	// 	.from(plans)
 	// 	.where()
-
-
-
-
 	await next();
 });
 
