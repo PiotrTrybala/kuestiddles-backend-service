@@ -7,9 +7,9 @@ import { user } from "../../database/schema/auth";
 import { eq } from "drizzle-orm";
 import { defaultProfilePictureFile } from "../../static";
 
-export const authRouter = new Hono<AppEnv>();
+export const avatarRouter = new Hono<AppEnv>();
 
-authRouter.get("/avatar/:id", async (c) => {
+avatarRouter.get("/:id", async (c) => {
 
     const userId = c.req.param("id");
 
@@ -37,7 +37,7 @@ authRouter.get("/avatar/:id", async (c) => {
     });
 });
 
-authRouter.post("/avatar", async (c) => {
+avatarRouter.post("/", async (c) => {
 
     const userId = c.get("user")!.id;
     const form = await c.req.parseBody({ all: true });
