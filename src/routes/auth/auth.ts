@@ -22,7 +22,6 @@ authRouter.get("/avatar/:id", async (c) => {
         });
     }
 
-
     const profilePicturePath = `avatars/${userId}.webp`;
 
     const picture = s3.file(profilePicturePath);
