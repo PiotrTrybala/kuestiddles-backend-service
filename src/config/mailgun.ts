@@ -38,3 +38,23 @@ export async function sendVerificationEmail(to: string, verificationUrl: string)
         console.log("Failed to send verification email");
     }
 };
+
+export async function sendResetPasswordEmail(to: string, resetURL: string) {
+    const domain = process.env.MAILGUN_DOMAIN!;
+
+    try {
+        await sendMessage(
+            `Kuestiddles <mailgun@${domain}>`,
+            to,
+            `Reset password`,
+            `
+                <h2>Reset password</h1>
+                <p>Click below to change your password</p>
+                <a href="${resetURL}">${resetURL}</a>
+            
+            `
+        )
+    } catch(error) {
+        console.log("Failed to send reset password email");
+    }
+}

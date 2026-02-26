@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { database } from "../database/db";
-import { sendVerificationEmail } from './mailgun';
+import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
 import { twoFactor } from 'better-auth/plugins';
@@ -24,11 +24,15 @@ export const auth = betterAuth({
         enabled: true,
         requireEmailVerification: true,
         autoSignInAfterVerification: true,
+        sendResetPassword: async ({ user, url, token }, request) => {
+            console.log(`sent reset password email to ${user.email}: ${token}`);
+            await sendResetPasswordEmail(user.email, url);
+        }
     },
 
     emailVerification: {
         async sendVerificationEmail({ user, url, token }) {
-            console.log(`send verification message to ${user}: ${token}`);  
+            console.log(`sent verification message to ${user.email}: ${token}`);  
             await sendVerificationEmail(user.email, url);
         }
     },
