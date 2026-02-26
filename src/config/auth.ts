@@ -4,7 +4,7 @@ import { database } from "../database/db";
 import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
-import { twoFactor } from 'better-auth/plugins';
+import { createAuthMiddleware, twoFactor } from 'better-auth/plugins';
 
 import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
@@ -81,5 +81,7 @@ export const auth = betterAuth({
             } 
         }),
         twoFactor(),
-    ]
+    ],
+
+    
 });

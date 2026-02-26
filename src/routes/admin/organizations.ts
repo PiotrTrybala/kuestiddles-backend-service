@@ -20,22 +20,28 @@ organizationsRouter.get("/list", async (c) => {
     })
 });
 
-type OrganizationUpdate = {
+type OrganizationCreate = {
     name: string,
 };
 
-organizationsRouter.patch("/:orgName", async (c) => {
+organizationsRouter.post("/", async (c) => {
+    const body = await c.req.json<OrganizationCreate>();
 
-    const body = await c.req.json<OrganizationUpdate>();
-
-    const updated = await database.update(organizations).set({
-        name: body.name,
+    const existing = await database.query.organizations.findFirst({
+        where: eq(organizations.name, body.name)
     });
 
-    return c.json({
-        message: updated
-    })
+    if (existing) {
+        return c.json({ message: "Organization with this name has been created" }, 400);
+    }
 
+    const [entry] = await database.insert(organizations).values({
+        name: body.name,
+    }).returning();
+
+    return c.json({
+        message: "Created new organization",
+    }, 200);
 });
 
 organizationsRouter.use("*", requireOrganization);
