@@ -1,5 +1,5 @@
 export * from './auth';
 export * from './stripe';
-export * from './assets';
+export * from './uploads';
 export * from './competitions';
 export * from './organizations';

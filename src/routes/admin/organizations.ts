@@ -3,7 +3,7 @@ import { eq, name } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
-import { assetsRouter } from "./assets";
+import { assetsRouter } from "./uploads";
 import { requireOrganization } from "./middleware";
 import { database } from "../../database/db";
 import { organizations } from "../../database/schema/organizations";
@@ -35,7 +35,7 @@ organizationsRouter.post("/", async (c) => {
         return c.json({ message: "Organization with this name has been created" }, 400);
     }
 
-    const [entry] = await database.insert(organizations).values({
+    await database.insert(organizations).values({
         name: body.name,
     }).returning();
 

@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { adminRouter } from "./admin/admin";
 import { userRouter } from "./user/user";
 import { publicRouter } from "./public/public";
-import { avatarRouter } from "./auth/avatar";
+// import { avatarRouter } from "./auth/avatars";
 import { requireUser } from "./user/middleware";
 import { mobileRouter } from "./auth/mobile";
 
@@ -16,5 +16,5 @@ api.route("/admin", adminRouter);
 api.route("/user", userRouter);
 api.route("/public", publicRouter);
 
-api.route("/avatars", avatarRouter);
+// api.route("/avatars", avatarRouter);
 api.route("/mobile", mobileRouter);

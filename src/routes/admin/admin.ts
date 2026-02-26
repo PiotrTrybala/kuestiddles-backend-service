@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
 import { requireAdmin } from "./middleware";
-import { assetsRouter } from "./assets";
+import { assetsRouter } from "./uploads";
 import { admin } from "better-auth/plugins";
 import { organizationsRouter } from "./organizations";
 

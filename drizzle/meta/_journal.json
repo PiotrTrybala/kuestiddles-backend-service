@@ -64,6 +64,13 @@
       "when": 1772046297246,
       "tag": "0008_mushy_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772120656982,
+      "tag": "0009_clever_red_ghost",
+      "breakpoints": true
     }
   ]
 }
