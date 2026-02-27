@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, name } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
@@ -10,7 +10,6 @@ import { organizations } from "../../database/schema/organizations";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
-
 organizationsRouter.get("/list", async (c) => {
     const user = c.get("user")!;
 
@@ -20,24 +19,52 @@ organizationsRouter.get("/list", async (c) => {
     });
 });
 
+organizationsRouter.get("/:name", async (c) => {
+
+    const user = c.get("user")!;
+    const name = c.req.param("name");
+
+    const [ organization ] = await database.select()
+        .from(organizations)
+        .where(and(eq(organizations.user_id, user.id), eq(organizations.name, name)));
+
+    if (!organization) {
+        return c.notFound();
+    }
+
+    return c.json(organization);
+
+});
+
 type OrganizationCreate = {
     name: string,
 };
 
 organizationsRouter.post("/", async (c) => {
+    const user = c.get("user")!;
     const body = await c.req.json<OrganizationCreate>();
 
     const existing = await database.query.organizations.findFirst({
-        where: eq(organizations.name, body.name)
+        where: and(eq(organizations.name, body.name), eq(organizations.user_id, user.id))
     });
 
     if (existing) {
         return c.json({ message: "Organization with this name has been created" }, 400);
     }
 
-    await database.insert(organizations).values({
-        name: body.name,
-    }).returning();
+    try {
+        const [organization] = await database.insert(organizations).values({
+            user_id: user.id,
+            name: body.name,
+        }).returning();
+
+        console.log(organization);
+
+    } catch (error) {
+        console.error(error);
+        return c.json({ message: "Could not create new organization" }, 500);
+    }
+
 
     return c.json({
         message: "Created new organization",
