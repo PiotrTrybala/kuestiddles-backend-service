@@ -7,9 +7,6 @@ import { api } from './routes/api';
 import { showRoutes } from 'hono/dev';
 
 import { type AppEnv } from './config/app';
-import { database } from './database/db';
-import { plans } from './database/schema/stripe';
-import { requireUser } from './routes/user/middleware';
 
 const app = new Hono<AppEnv>();
 
@@ -38,7 +35,7 @@ app.use("*", async (c, next) => {
 app.use(
 	"/api/auth/*",
 	cors({
-		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://.kuestiddles.com"],
+		origin: ["http://localhost:5173", "https://kuestiddles.pl", "https://kuestiddles.com"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -46,6 +43,18 @@ app.use(
 		credentials: true,
 	}),
 );
+
+app.use(
+	"/api/v1/*",
+	cors({
+		origin: ["http://localhost:5173", "https://kuestiddles.pl", "https://kuestiddles.com"],
+		allowHeaders: ["Content-Type", "Authorization"],
+		allowMethods: ["POST", "GET", "PATCH", "DELETE"],
+		exposeHeaders: ["Content-Length"],
+		maxAge: 600,
+		credentials: true,
+	})
+)
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
     return auth.handler(c.req.raw);

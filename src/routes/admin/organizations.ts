@@ -17,7 +17,7 @@ organizationsRouter.get("/list", async (c) => {
     const result = await database.select().from(organizations).where(eq(organizations.user_id, user.id));
     return c.json({
         organizations: result,
-    })
+    });
 });
 
 type OrganizationCreate = {
