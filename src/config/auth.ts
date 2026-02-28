@@ -4,7 +4,7 @@ import { database } from "../database/db";
 import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
-import { createAuthMiddleware, twoFactor } from 'better-auth/plugins';
+import { organization, twoFactor } from 'better-auth/plugins';
 
 import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
@@ -53,11 +53,20 @@ export const auth = betterAuth({
             username: {
                 type: "string",
                 required: true,
+            },
+            audience: {
+                type: "string",
+                defaultValue: "admin", // or public(user)
             }
         }
     },
 
     plugins: [
+        organization({ 
+            organizationHooks: {
+                
+            }
+        }),
         stripe({
             stripeClient,
             stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,

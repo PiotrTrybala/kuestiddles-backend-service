@@ -1,19 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53, uniqueIndex } from 'drizzle-orm/pg-core';
-import { user } from './auth';
-import { timestamps } from './utils';
-import { DEFAULT_THUMBNAIL } from './utils';
-export const organizations = pgTable('organizations', {
-    name: text().notNull(),
-    slug: text().primaryKey(),
-    user_id: text().references(() => user.id),
-    ...timestamps,
-});
+import { DEFAULT_THUMBNAIL, timestamps } from './utils';
+import { organization, user } from './auth';
 
 export const quests = pgTable('quests', {
     id: uuid().defaultRandom().primaryKey(),
-    organization_id: text().references(() => organizations.slug),
-    landmark_id: uuid().notNull().references(() => landmarks.id),
+    organization_id: text().references(() => organization.id, { onDelete: 'cascade' }),
+    landmark_id: uuid().notNull().references(() => landmarks.id, { onDelete: 'no action'}),
     title: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),
     answers: text().array().default(sql`'{}'::text[]`),
@@ -26,7 +19,7 @@ export const quests = pgTable('quests', {
 
 export const landmarks = pgTable('landmarks', {
     id: uuid().primaryKey().defaultRandom(),
-    organization_id: text().references(() => organizations.slug),
+    organization_id: text().references(() => organization.id, { onDelete: 'cascade' }),
     name: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),
@@ -38,21 +31,21 @@ export const landmarks = pgTable('landmarks', {
 ]);
 
 export const questsSolved = pgTable('quests_solved', {
-    quest_id: uuid().references(() => quests.id),
-    user_id: text().references(() => user.id),
+    quest_id: uuid().references(() => quests.id, { onDelete: 'cascade' }),
+    user_id: text().references(() => user.id, { onDelete: 'cascade' }),
     solved: boolean().default(false).notNull(),
     ...timestamps,
 });
 
 export const landmarksVisited = pgTable('landmarks_visited', {
-    landmark_id: uuid().references(() => landmarks.id),
-    user_id: text().references(() => user.id),
+    landmark_id: uuid().references(() => landmarks.id, { onDelete: 'cascade' }),
+    user_id: text().references(() => user.id, { onDelete: 'cascade' }),
     visited: boolean().default(true).notNull(),
     ...timestamps,
 });
 
 export const userStats = pgTable('user_statistics', {
-    user_id: text().references(() => user.id),
+    user_id: text().references(() => user.id, { onDelete: 'cascade' }),
     questsSolved: integer().notNull().default(0),
     landmarksVisited: integer().notNull().default(0),
     pointsTotal: integer().notNull().default(0),
