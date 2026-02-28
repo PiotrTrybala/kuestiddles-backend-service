@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 import {type AppEnv } from "../../config/app";
 import { database } from "../../database/db";
-import { organizations } from "../../database/schema/organizations";
+import { auth } from "../../config/auth";
 
 export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 
@@ -15,26 +15,35 @@ export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
 
 export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
 
-    const user = c.get("user");
+    // const { data, error } = await auth.api.getFullOrganization({
+    //     query: {
+    //         organizationSlug: c.req.param("organizationSlug"),
+    //     },
+    //     headers: c.req.raw.headers,
+    // });
 
-    if (!user) {
-        return c.json({ message: "Unauthorized" }, 401);
-    }
+    // if (error || !data?.organization) return c.json({ message: "No organization" }, 403);
 
-    const organizationName = c.req.param("orgName");
+    // const user = c.get("user");
 
-    if (!organizationName) return c.notFound();
+    // if (!user) {
+    //     return c.json({ message: "Unauthorized" }, 401);
+    // }
 
-    const organization = await database.query.organizations.findFirst({
-        where: and(
-            eq(organizations.name, organizationName!.toLowerCase()),
-            eq(organizations.user_id, user.id)
-        )
-    })
+    // const organizationName = c.req.param("orgName");
 
-    if (!organization) return c.json({ message: "Forbidden" }, 403);
+    // if (!organizationName) return c.notFound();
 
-    c.set("organization", organization);
+    // const organization = await database.query.organizations.findFirst({
+    //     where: and(
+    //         eq(organizations.name, organizationName!.toLowerCase()),
+    //         eq(organizations.user_id, user.id)
+    //     )
+    // })
 
-    await next();
+    // if (!organization) return c.json({ message: "Forbidden" }, 403);
+
+    // c.set("organization", organization);
+
+    // await next();
 }); 

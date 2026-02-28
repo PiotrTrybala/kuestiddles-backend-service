@@ -10,6 +10,6 @@ export const organizationsRouter = new Hono<AppEnv>();
 
 organizationsRouter.use("*", requireOrganization);
 
-organizationsRouter.route("/:slug/landmarks", landmarksRouter);
-organizationsRouter.route("/:slug/quests", questsRouter);
-organizationsRouter.route("/:slug/uploads", uploadsRouter);
+organizationsRouter.route("/:organizationSlug/landmarks", landmarksRouter);
+organizationsRouter.route("/:organizationSlug/quests", questsRouter);
+organizationsRouter.route("/:organizationSlug/uploads", uploadsRouter);

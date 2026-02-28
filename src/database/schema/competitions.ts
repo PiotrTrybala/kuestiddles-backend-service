@@ -2,7 +2,7 @@
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 import { timestamps } from './utils';
-import { quests } from './organizations';
+import { quests } from './quests';
 
 export const competitions = pgTable('competitions', {
     id: uuid().primaryKey().defaultRandom(),

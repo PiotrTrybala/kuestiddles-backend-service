@@ -24,7 +24,7 @@ export const auth = betterAuth({
         enabled: true,
         requireEmailVerification: true,
         autoSignInAfterVerification: true,
-        sendResetPassword: async ({ user, url, token }, request) => {
+        sendResetPassword: async ({ user, url, token }, _) => {
             console.log(`sent reset password email to ${user.email}: ${token}`);
             await sendResetPasswordEmail(user.email, url);
         }
@@ -63,8 +63,13 @@ export const auth = betterAuth({
 
     plugins: [
         organization({ 
+            allowUserToCreateOrganization: async (user) => {
+                return user.audience === "admin";
+            },
             organizationHooks: {
-                
+                beforeCreateOrganization: async (data) => {
+                    
+                }
             }
         }),
         stripe({
