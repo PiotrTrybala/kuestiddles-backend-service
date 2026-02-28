@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
-import { assetsRouter } from "./uploads";
+import { uploadsRouter } from "./uploads";
 import { requireOrganization } from "./middleware";
 import { database } from "../../database/db";
 import { organizations } from "../../database/schema/organizations";
@@ -56,6 +56,7 @@ organizationsRouter.post("/", async (c) => {
         const [organization] = await database.insert(organizations).values({
             user_id: user.id,
             name: body.name,
+            slug: body.name.toLowerCase(),
         }).returning();
 
         console.log(organization);
@@ -75,4 +76,4 @@ organizationsRouter.use("*", requireOrganization);
 
 organizationsRouter.route("/:orgName/landmarks", landmarksRouter);
 organizationsRouter.route("/:orgName/quests", questsRouter);
-organizationsRouter.route("/:orgName/assets", assetsRouter);
+organizationsRouter.route("/:orgName/uploads", uploadsRouter);

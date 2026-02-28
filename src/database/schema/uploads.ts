@@ -8,7 +8,7 @@ export const UPLOADS_LABELS = ['profile', 'asset'];
 
 export const uploads = pgTable('uploads', {
     id: uuid().primaryKey().defaultRandom(),
-    organization_name: text().references(() => organizations.name),
+    organization_id: text().references(() => organizations.slug),
     user_id: text().references(() => user.id),
     name: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),

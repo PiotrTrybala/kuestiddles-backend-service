@@ -7,11 +7,10 @@ import { defaultThumbnailFile } from "../../static";
 import { s3 } from "../../config/s3";
 import sharp from 'sharp';
 import { sha256 } from "hono/utils/crypto";
-import { meta } from "zod/v4/core";
 
-export const assetsRouter = new Hono<AppEnv>();
+export const uploadsRouter = new Hono<AppEnv>();
 
-assetsRouter.get("/list", async (c) => {
+uploadsRouter.get("/list", async (c) => {
 
     const organization = c.get("organization")!;
 
@@ -28,7 +27,7 @@ assetsRouter.get("/list", async (c) => {
     const limit = pageSize;
 
     const conditions = [
-        eq(uploads.organization_name, organization.name)
+        eq(uploads.organization_id, organization.slug)
     ];
 
     if (name && name.trim() !== "") {
@@ -59,7 +58,7 @@ assetsRouter.get("/list", async (c) => {
     });
 });
 
-assetsRouter.get("/:id", async (c) => {
+uploadsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
 
@@ -83,7 +82,7 @@ assetsRouter.get("/:id", async (c) => {
     });
 });
 
-assetsRouter.post("/", async (c) => {
+uploadsRouter.post("/", async (c) => {
     const organization = c.get("organization")!;
     const user = c.get("user")!;
 
@@ -120,7 +119,7 @@ assetsRouter.post("/", async (c) => {
         try {
             const [metadata] = await database.insert(uploads).values({
                 user_id: user.id,
-                organization_name: organization.name,
+                organization_id: organization.slug,
                 name: assetName!,
                 path: assetPath!,
                 labels: ['asset'],
@@ -138,7 +137,7 @@ assetsRouter.post("/", async (c) => {
     return c.json({ assets: uploadResults });
 });
 
-assetsRouter.delete("/:id", async (c) => {
+uploadsRouter.delete("/:id", async (c) => {
     const organization = c.get("organization")!;
     const id = c.req.param("id");
 
@@ -153,7 +152,7 @@ assetsRouter.delete("/:id", async (c) => {
     }
 
     try {
-        await database.delete(uploads).where(and(eq(uploads.id, id), eq(uploads.organization_name, organization.name)));
+        await database.delete(uploads).where(and(eq(uploads.id, id), eq(uploads.organization_id, organization.slug)));
     } catch (error) {
         console.error("error detected:", error);
         return c.json({ message: "Could not delete asset" }, 400);
