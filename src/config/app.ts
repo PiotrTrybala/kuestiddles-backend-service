@@ -12,7 +12,7 @@ export type AppEnv = {
         session: typeof auth.$Infer.Session.session | null,
         plan: typeof plans.$inferSelect | null,
 
-        organizaton: typeof auth.$Infer.Organization | null,
+        organization: typeof auth.$Infer.Organization | null,
         membership: typeof auth.$Infer.Member | null,
     }
 };

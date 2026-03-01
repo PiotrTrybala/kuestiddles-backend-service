@@ -9,7 +9,6 @@ import { showRoutes } from 'hono/dev';
 import { type AppEnv } from './config/app';
 import { database } from './database/db';
 import { plans } from './database/schema/stripe';
-import { requireUser } from './routes/user/middleware';
 
 // TODO: Rewrite index.ts 
 
