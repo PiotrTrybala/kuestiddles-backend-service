@@ -6,7 +6,6 @@ import { questsRouter } from "./quests";
 import { assetsRouter } from "./uploads";
 import { requireOrganization } from "./middleware";
 import { database } from "../../database/db";
-import { organizations } from "../../database/schema/organizations";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
@@ -27,7 +26,7 @@ type OrganizationCreate = {
 organizationsRouter.post("/", async (c) => {
     const body = await c.req.json<OrganizationCreate>();
 
-    const existing = await database.query.organizations.findFirst({
+    const existing = await database.query.organization.findFirst({
         where: eq(organizations.name, body.name)
     });
 

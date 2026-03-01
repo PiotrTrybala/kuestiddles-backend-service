@@ -1,20 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
-import { user } from './auth';
+import { organization, user } from './auth';
 import { timestamps } from './utils';
 import { DEFAULT_THUMBNAIL } from './utils';
 
-export const organizations = pgTable('organizations', {
-    name: text().primaryKey(),
-    user_id: text().references(() => user.id),
-    ...timestamps,
-}, (table) => [
-    index("org_name_idx").on(table.name),
-]);
-
 export const quests = pgTable('quests', {
     id: uuid().defaultRandom().primaryKey(),
-    organization_name: text().references(() => organizations.name),
+    organization_id: text().references(() => organization.id),
     landmark_id: uuid().notNull().references(() => landmarks.id),
     title: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),
@@ -27,7 +19,7 @@ export const quests = pgTable('quests', {
 
 export const landmarks = pgTable('landmarks', {
     id: uuid().primaryKey().defaultRandom(),
-    organization_name: text().references(() => organizations.name),
+    organization_id: text().references(() => organization.id),
     name: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),

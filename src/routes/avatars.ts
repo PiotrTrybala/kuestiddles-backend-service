@@ -1,13 +1,13 @@
 import { Hono } from "hono";
-import type { AppEnv } from "../../config/app";
-import { database } from "../../database/db";
-import { uploads } from "../../database/schema/uploads";
+import type { AppEnv } from "../config/app";
+import { database } from "../database/db";
+import { uploads } from "../database/schema/uploads";
 import { and, eq } from "drizzle-orm";
-import { defaultProfilePictureFile } from "../../public";
-import { s3 } from "../../config/s3";
+import { defaultProfilePictureFile } from "../public";
+import { s3 } from "../config/s3";
 import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
-import { user } from "../../database/schema/auth";
+import { user } from "../database/schema/auth";
 
 export const avatarsRouter = new Hono<AppEnv>();
 
