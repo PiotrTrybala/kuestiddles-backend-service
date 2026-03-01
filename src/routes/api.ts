@@ -2,19 +2,17 @@ import { Hono } from "hono";
 
 import { adminRouter } from "./admin/admin";
 import { userRouter } from "./user/user";
-import { publicRouter } from "./public/public";
-// import { avatarRouter } from "./auth/avatars";
-import { requireUser } from "./user/middleware";
-import { mobileRouter } from "./auth/mobile";
+import { requireAuth } from "./middleware";
+import { avatarsRouter } from "./auth/avatars";
 
 export const api = new Hono().basePath("/v1");
 
-api.use("/admin", requireUser);
-api.use("/user", requireUser);
 
+api.use("/admin", requireAuth("admin"));
 api.route("/admin", adminRouter);
-api.route("/user", userRouter);
-api.route("/public", publicRouter);
 
-// api.route("/avatars", avatarRouter);
-api.route("/mobile", mobileRouter);
+api.use("/user", requireAuth("user"));
+api.route("/user", userRouter);
+
+api.use("/avatars", requireAuth("none")); // access both user and admin to this router
+api.route("/avatars", avatarsRouter);

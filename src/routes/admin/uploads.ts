@@ -3,7 +3,7 @@ import type { AppEnv } from "../../config/app";
 import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
 import { database } from "../../database/db";
 import { uploads } from "../../database/schema/uploads";
-import { defaultThumbnailFile } from "../../static";
+import { defaultThumbnailFile } from "../../public";
 import { s3 } from "../../config/s3";
 import sharp from 'sharp';
 import { sha256 } from "hono/utils/crypto";

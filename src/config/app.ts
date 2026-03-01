@@ -3,6 +3,8 @@ import { auth } from "./auth";
 import { organizations } from "../database/schema/organizations";
 import { plans } from "../database/schema/stripe";
 
+// TODO: Change this app env for better?
+
 export type AppEnv = {
     Variables: {
         user: typeof auth.$Infer.Session.user | null,

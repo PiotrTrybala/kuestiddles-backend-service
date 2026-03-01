@@ -10,9 +10,6 @@ export const requireAdmin = createMiddleware<AppEnv>(async (c, next) => {
     if (!user) return c.json({ message: "Unauthorized"}, 401);
     if (user.role !== "admin") return c.json({ message: "Forbidden"}, 403);
 
-
-
-
     await next();
 });
 
