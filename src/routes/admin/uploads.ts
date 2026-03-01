@@ -7,6 +7,7 @@ import { defaultThumbnailFile } from "../../static";
 import { s3 } from "../../config/s3";
 import sharp from 'sharp';
 import { sha256 } from "hono/utils/crypto";
+import { getAsset, listAssets, uploadAssets } from "../../repositories/uploads";
 
 export const uploadsRouter = new Hono<AppEnv>();
 
@@ -21,40 +22,42 @@ uploadsRouter.get("/list", async (c) => {
         .map(l => l.trim())
         .filter(Boolean);
 
-    const name = c.req.query("name");
+    const name = c.req.query("name") || "";
 
-    const offset = page * pageSize;
-    const limit = pageSize;
+    const result = await listAssets(organization.id, { page, pageSize, labels, name });
 
-    const conditions = [
-        eq(uploads.organization_id, organization.slug)
-    ];
+    // const offset = page * pageSize;
+    // const limit = pageSize;
 
-    if (name && name.trim() !== "") {
-        conditions.push(ilike(uploads.name, `%${name}%`));
-    }
+    // const conditions = [
+    //     eq(uploads.organization_id, organization.slug)
+    // ];
 
-    if (labels.length > 0) {
-        conditions.push(arrayOverlaps(uploads.labels, labels));
-    }
+    // if (name && name.trim() !== "") {
+    //     conditions.push(ilike(uploads.name, `%${name}%`));
+    // }
 
-    const result = await database.select()
-        .from(uploads)
-        .where(conditions.length ? and(...conditions) : undefined)
-        .offset(offset)
-        .limit(limit);
+    // if (labels.length > 0) {
+    //     conditions.push(arrayOverlaps(uploads.labels, labels));
+    // }
 
-    const fulluploads = result.map((asset) => {
-        const url = `${process.env.ASSETS_URL!}/${asset.id}`;
-        return {
-            ...asset,
-            url,
-        };
-    });
+    // const result = await database.select()
+    //     .from(uploads)
+    //     .where(conditions.length ? and(...conditions) : undefined)
+    //     .offset(offset)
+    //     .limit(limit);
+
+    // const fulluploads = result.map((asset) => {
+    //     const url = `${process.env.ASSETS_URL!}/${asset.id}`;
+    //     return {
+    //         ...asset,
+    //         url,
+    //     };
+    // });
 
     return c.json({
-        page,
-        uploads: fulluploads,
+        page: result.page,
+        uploads: result.uploads,
     });
 });
 
@@ -62,21 +65,27 @@ uploadsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
 
-    const [metadata] = await database.select()
-        .from(uploads)
-        .where(and(eq(uploads.id, id), arrayOverlaps(uploads.labels, ['asset'])));
+    const result = await getAsset(id);
 
-    if (!metadata) {
+    if (!result) {
         return c.body(await defaultThumbnailFile.arrayBuffer(), 200, {
             'Content-Type': 'image/webp',
             'Cache-Control': 'public, max-age=31536000'
         });
     }
 
-    const asset = s3.file(metadata!.path);
-    const assetBuffer = await asset.arrayBuffer();
+    // const [metadata] = await database.select()
+    //     .from(uploads)
+    //     .where(and(eq(uploads.id, id), arrayOverlaps(uploads.labels, ['asset'])));
 
-    return c.body(assetBuffer, 200, {
+    // if (!metadata) {
+
+    // }
+
+    // const asset = s3.file(metadata!.path);
+    // const assetBuffer = await asset.arrayBuffer();
+
+    return c.body(result.asset, 200, {
         'Content-Type': 'image/webp',
         'Cache-Control': 'public, max-age=31536000'
     });
@@ -84,7 +93,7 @@ uploadsRouter.get("/:id", async (c) => {
 
 uploadsRouter.post("/", async (c) => {
     const organization = c.get("organization")!;
-    const user = c.get("user")!;
+    const member = c.get("member")!;
 
     const body = await c.req.parseBody({ all: true });
     const rawAssets = body['assets'];
@@ -92,49 +101,54 @@ uploadsRouter.post("/", async (c) => {
     const assets: File[] = Array.isArray(rawAssets) ? rawAssets.filter((f): f is File => f instanceof File) : rawAssets instanceof File ? [rawAssets] : [];
     if (assets.length === 0) return c.json({ message: "No assets uploaded" }, 400);
 
-    const uploadResults = await Promise.all(assets.map(async (asset) => {
+    const result = await uploadAssets(organization.id, member.id, assets);
+    if (!result) {
+        return c.json({ message: "Failed to upload assets"}, 500);
+    }
 
-        const assetBuffer = await asset.arrayBuffer();
+    // const uploadResults = await Promise.all(assets.map(async (asset) => {
 
-        const webpBuffer = await sharp(assetBuffer)
-            .webp({ quality: 75 })
-            .resize(400, 300, { withoutEnlargement: true, withoutReduction: true })
-            .toBuffer();
+    //     const assetBuffer = await asset.arrayBuffer();
 
-        const assetHash = await sha256(webpBuffer);
-        const assetName = `${asset.name.substring(0, asset.name.indexOf('.'))}.webp`;
+    //     const webpBuffer = await sharp(assetBuffer)
+    //         .webp({ quality: 75 })
+    //         .resize(400, 300, { withoutEnlargement: true, withoutReduction: true })
+    //         .toBuffer();
 
-        const hashedUserId = await sha256(user.id);
-        const assetPath = `assets/${hashedUserId}/${assetName}`;
+    //     const assetHash = await sha256(webpBuffer);
+    //     const assetName = `${asset.name.substring(0, asset.name.indexOf('.'))}.webp`;
 
-        try {
-            await s3.write(assetPath, webpBuffer, {
-                type: "image/webp",
-            });
-        } catch (error) {
-            console.log(`error detected: ${error}`);
-            return c.json({ message: `Could not upload asset: ${assetName}` }, 400);
-        }
+    //     const hashedUserId = await sha256(user.id);
+    //     const assetPath = `assets/${hashedUserId}/${assetName}`;
 
-        try {
-            const [metadata] = await database.insert(uploads).values({
-                user_id: user.id,
-                organization_id: organization.slug,
-                name: assetName!,
-                path: assetPath!,
-                labels: ['asset'],
-                hash: assetHash!,
-            }).returning();
+    //     try {
+    //         await s3.write(assetPath, webpBuffer, {
+    //             type: "image/webp",
+    //         });
+    //     } catch (error) {
+    //         console.log(`error detected: ${error}`);
+    //         return c.json({ message: `Could not upload asset: ${assetName}` }, 400);
+    //     }
 
-            return { id: metadata?.id, hash: metadata?.hash };
+    //     try {
+    //         const [metadata] = await database.insert(uploads).values({
+    //             user_id: user.id,
+    //             organization_id: organization.slug,
+    //             name: assetName!,
+    //             path: assetPath!,
+    //             labels: ['asset'],
+    //             hash: assetHash!,
+    //         }).returning();
 
-        } catch (error) {
-            console.error(`error detected: ${error}`);
-            return c.json({ message: `Could not upload asset: ${assetName}` }, 400);
-        }
-    }));
+    //         return { id: metadata?.id, hash: metadata?.hash };
 
-    return c.json({ assets: uploadResults });
+    //     } catch (error) {
+    //         console.error(`error detected: ${error}`);
+    //         return c.json({ message: `Could not upload asset: ${assetName}` }, 400);
+    //     }
+    // }));
+
+    return c.json({ assets: result });
 });
 
 uploadsRouter.delete("/:id", async (c) => {

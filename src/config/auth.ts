@@ -4,7 +4,7 @@ import { database } from "../database/db";
 import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
-import { organization, twoFactor } from 'better-auth/plugins';
+import { admin, organization, twoFactor } from 'better-auth/plugins';
 
 import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
@@ -48,29 +48,21 @@ export const auth = betterAuth({
         additionalFields: {
             role: {
                 type: "string",
-                defaultValue: "user",
+                defaultValue: "user", // or public
             },
             username: {
                 type: "string",
                 required: true,
             },
-            audience: {
-                type: "string",
-                defaultValue: "admin", // or public(user)
-            }
         }
     },
 
     plugins: [
+        admin(),
         organization({ 
             allowUserToCreateOrganization: async (user) => {
-                return user.audience === "admin";
+                return user.role === "admin";
             },
-            organizationHooks: {
-                beforeCreateOrganization: async (data) => {
-                    
-                }
-            }
         }),
         stripe({
             stripeClient,
@@ -96,6 +88,4 @@ export const auth = betterAuth({
         }),
         twoFactor(),
     ],
-
-    
 });
