@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, name } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
