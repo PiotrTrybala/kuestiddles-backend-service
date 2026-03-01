@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 import {type AppEnv } from "../../config/app";
-import { database } from "../../database/db";
 import { auth } from "../../config/auth";
 
 export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
