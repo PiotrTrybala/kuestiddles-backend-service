@@ -16,7 +16,7 @@ export async function listQuests(organizationId: string, { page, pageSize, title
 
     const offset = page * pageSize;
     const limit = pageSize;
-    
+
     const conditions = [
         eq(quests.organization_id, organization.id)
     ];
@@ -41,16 +41,23 @@ export async function listQuests(organizationId: string, { page, pageSize, title
 }
 
 export async function getQuest(id: string): Promise<{ quest?: Quest, error?: string }> {
+    try {
+        const quest = await database.query.quests.findFirst({
+            where: eq(quests.id, id)
+        });
 
-    const quest = await database.query.quests.findFirst({
-        where: eq(quests.id, id)
-    });
+        if (!quest) {
+            return { error: "Quest not found" };
+        }
 
-    if (!quest) {
-        return { error: "Quest not found" };
+        return { quest }
+    } catch (error) {
+        console.log('error detected:', error);
+        return {
+            error: "Internal error while retrieving quest"
+        };
     }
 
-    return { quest }
 }
 
 export async function getRecentQuests(organizationId: string, memberId: string) { }
@@ -65,7 +72,16 @@ export type CreateQuestParams = {
     points: number,
 };
 
-export async function createQuest(organizationId: string, params: CreateQuestParams) { }
+export async function createQuest(organizationId: string, params: CreateQuestParams) { 
+    try {
+
+    } catch(error) {
+        console.log('error detected:', error);
+        return {
+            error: "Internal error while creating new quest"
+        }
+    }
+}
 
 export type UpdateQuestParams = {
     updates: {
