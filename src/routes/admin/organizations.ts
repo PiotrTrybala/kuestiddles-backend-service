@@ -1,11 +1,9 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
 import { assetsRouter } from "./uploads";
 import { requireOrganization } from "./middleware";
-import { database } from "../../database/db";
 
 export const organizationsRouter = new Hono<AppEnv>();
 

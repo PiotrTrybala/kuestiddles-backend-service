@@ -1,14 +1,50 @@
 
-export async function listLandmarks() {}
+export type ListLandmarksParams = {
+    page: number,
+    pageSize: number,
+    labels: string[],
+    name: string,
+}
 
-export async function getLandmark() {}
+export async function listLandmarks(organizationId: string, params: ListLandmarksParams) {
 
-export async function getRecentLandmarks() {}
+}
 
-export async function createLandmark() {}
+export async function getLandmark(id: string) {
 
-export async function updateLandmark() {}
+}
 
-export async function deleteLandmark() {}
+export async function getRecentLandmarks(organizationId: string, memberId: string) {
 
-export async function visitLandmark() {}
+}
+
+export type CreateLandmarkParams = {
+    name: string,
+    labels: string[],
+    thumbnail: string,
+    assets: string[],
+    coords: { x: number, y: number },
+};
+
+export async function createLandmark(organizationId: string, params: CreateLandmarkParams) {
+
+}
+
+export type UpdateLandmarkParams = {
+    updates: {
+        field: string,
+        value: string,
+    }[]
+};
+
+export async function updateLandmark(landmarkId: string, params: UpdateLandmarkParams) {
+
+}
+
+export async function deleteLandmark(landmarkId: string) {
+
+}
+
+export async function visitLandmark(landmarkId: string, userId: string) {
+    
+}

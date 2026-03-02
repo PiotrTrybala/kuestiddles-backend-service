@@ -59,6 +59,12 @@ export const auth = betterAuth({
             allowUserToCreateOrganization: async (user) => {
                 return user.role === "admin";
             },
+
+            additionalFields: {
+                questsCount: {
+
+                }
+            }
         }),
         stripe({
             stripeClient,
