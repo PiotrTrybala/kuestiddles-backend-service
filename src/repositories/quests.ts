@@ -1,6 +1,7 @@
 import { arrayOverlaps, eq, ilike, and } from "drizzle-orm";
 import { quests } from "../database/schema/organizations";
 import { database } from "../database/db";
+import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 
 export type Error = {
     code: number;

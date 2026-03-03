@@ -4,6 +4,7 @@ import { database } from "../database/db";
 import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
 import { s3 } from "../config/s3";
+import type { S3File } from "bun";
 
 export type Error = {
     code: number;
@@ -57,7 +58,7 @@ export async function listAssets(organizationId: string, { page, pageSize, name,
     }
 }
 
-export async function getAsset(id: string): Promise<{ asset?: Asset, error?: Error }> {
+export async function getAsset(id: string): Promise<{ asset?: Asset, file?: S3File, error?: Error }> {
     try {
         const asset = await database.query.uploads.findFirst({
             where: eq(uploads.id, id)
@@ -67,7 +68,9 @@ export async function getAsset(id: string): Promise<{ asset?: Asset, error?: Err
             return { error: { code: 404, error: "Asset not found" } };
         }
 
-        return { asset };
+        const file = s3.file(asset!.path);
+
+        return { asset, file };
     } catch (error) {
         console.log('error detected:', error);
         return { error: { code: 500, error: "Internal error while retrieving asset" } };

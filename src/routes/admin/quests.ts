@@ -4,7 +4,8 @@ import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { quests } from "../../database/schema/organizations";
 import { database } from "../../database/db";
-import { getQuest, listQuests } from "../../repositories/quests";
+import { createQuest, deleteQuest, getQuest, listQuests, updateQuest } from "../../repositories/quests";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const questsRouter = new Hono<AppEnv>();
 
@@ -61,11 +62,14 @@ questsRouter.get("/list", async (c) => {
 questsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
-
     const { quest, error } = await getQuest(id);
+
     if (error) {
-        
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
     }
+    return c.json(quest);
 
     // const id = c.req.param("id");
 
@@ -89,8 +93,16 @@ type QuestCreate = {
 };
 
 questsRouter.post("/", async (c) => {
-    // const organization = c.get("organization")!;
-    // const body = await c.req.json<QuestCreate>();
+    const organization = c.get("organization")!;
+    const body = await c.req.json<QuestCreate>();
+    const { error } = await createQuest(organization.id, body);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.body(null, 204);
 
     // const [quest] = await database.insert(quests).values({
     //     landmark_id: body.landmarkId,
@@ -114,12 +126,21 @@ type QuestUpdate = {
 };
 
 questsRouter.patch("/:id", async (c) => {
-    // const id = c.req.param("id");
-    // const body = await c.req.json<QuestUpdate>();
+    const id = c.req.param("id");
+    const body = await c.req.json<QuestUpdate>();
 
-    // if (!body.updates?.length) {
-    //     return c.json({ message: "No updates provided" }, 400);
-    // }
+    if (!body.updates?.length) {
+        return c.json({ message: "No updates provided" }, 400);
+    }
+
+    const { quest, error } = await updateQuest(id, body);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(quest);
 
     // const allowedFields = new Set([
     //     "title",
@@ -166,9 +187,17 @@ questsRouter.patch("/:id", async (c) => {
 });
 
 questsRouter.delete("/:id", async (c) => {
-    // const organization = c.get("organization")!;
-    // const id = c.req.param("id");
+    const organization = c.get("organization")!;
+    const id = c.req.param("id");
 
+    const { error } = await deleteQuest(organization.id, id);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.body(null, 200);
     // await database.delete(quests).where(and(eq(quests.id, id), eq(quests.organization_name, organization.name)));
     // return c.json({ message: "Deleted quest" });
 });

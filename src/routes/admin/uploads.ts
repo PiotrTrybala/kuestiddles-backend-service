@@ -8,21 +8,28 @@ import { s3 } from "../../config/s3";
 import sharp from 'sharp';
 import { sha256 } from "hono/utils/crypto";
 import { meta } from "zod/v4/core";
+import { deleteAsset, getAsset, listAssets, uploadAssets } from "../../repositories/assets";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export const assetsRouter = new Hono<AppEnv>();
 
 assetsRouter.get("/list", async (c) => {
 
-    // const organization = c.get("organization")!;
+    const organization = c.get("organization")!;
 
-    // const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
-    // const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
-    // const labels = (c.req.query("labels") || "")
-    //     .split(",")
-    //     .map(l => l.trim())
-    //     .filter(Boolean);
+    const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
+    const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
+    const labels = (c.req.query("labels") || "")
+        .split(",")
+        .map(l => l.trim())
+        .filter(Boolean);
 
-    // const name = c.req.query("name");
+    const name = c.req.query("name")!;
+
+    const { assets } = await listAssets(organization.id, { page, pageSize, name, labels });
+
+    return c.json({ page, assets });
+
 
     // const offset = page * pageSize;
     // const limit = pageSize;
@@ -61,7 +68,17 @@ assetsRouter.get("/list", async (c) => {
 
 assetsRouter.get("/:id", async (c) => {
 
-    // const id = c.req.param("id");
+    const id = c.req.param("id");
+
+    const { asset, file, error } = await getAsset(id);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+
+    // const assetBuffer = await asset.arrayBuffer();
 
     // const [metadata] = await database.select()
     //     .from(uploads)
@@ -74,24 +91,33 @@ assetsRouter.get("/:id", async (c) => {
     //     });
     // }
 
-    // const asset = s3.file(metadata!.path);
-    // const assetBuffer = await asset.arrayBuffer();
+    const buffer = await file?.arrayBuffer()!;
 
-    // return c.body(assetBuffer, 200, {
-    //     'Content-Type': 'image/webp',
-    //     'Cache-Control': 'public, max-age=31536000'
-    // });
+    return c.body(buffer, 200, {
+        'Content-Type': 'image/webp',
+        'Cache-Control': 'public, max-age=31536000'
+    });
 });
 
 assetsRouter.post("/", async (c) => {
-    // const organization = c.get("organization")!;
-    // const user = c.get("user")!;
+    const organization = c.get("organization")!;
+    const membership = c.get("membership")!;
 
-    // const body = await c.req.parseBody({ all: true });
-    // const rawAssets = body['assets'];
+    const body = await c.req.parseBody({ all: true });
+    const rawAssets = body['assets'];
 
-    // const assets: File[] = Array.isArray(rawAssets) ? rawAssets.filter((f): f is File => f instanceof File) : rawAssets instanceof File ? [rawAssets] : [];
-    // if (assets.length === 0) return c.json({ message: "No assets uploaded" }, 400);
+    const assets: File[] = Array.isArray(rawAssets) ? rawAssets.filter((f): f is File => f instanceof File) : rawAssets instanceof File ? [rawAssets] : [];
+    if (assets.length === 0) return c.json({ message: "No assets uploaded" }, 400);
+
+    const { results, error } = await uploadAssets(organization.id, membership.user.id, assets);
+
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(results);
 
     // const uploadResults = await Promise.all(assets.map(async (asset) => {
 
@@ -139,8 +165,17 @@ assetsRouter.post("/", async (c) => {
 });
 
 assetsRouter.delete("/:id", async (c) => {
-    // const organization = c.get("organization")!;
-    // const id = c.req.param("id");
+    const organization = c.get("organization")!;
+    const id = c.req.param("id");
+
+    const { error } = await deleteAsset(organization.id, id);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.body(null, 200);
 
     // const [asset] = await database.select().from(uploads).where(eq(uploads.id, id));
     // if (!asset) return c.notFound();
