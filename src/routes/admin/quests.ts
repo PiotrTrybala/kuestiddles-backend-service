@@ -4,22 +4,29 @@ import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { quests } from "../../database/schema/organizations";
 import { database } from "../../database/db";
+import { getQuest, listQuests } from "../../repositories/quests";
 
 export const questsRouter = new Hono<AppEnv>();
 
 questsRouter.get("/list", async (c) => {
 
-    // const organization = c.get("organization")!;
+    const organization = c.get("organization")!;
 
-    // const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
-    // const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
-    // const labels = (c.req.query("labels") || "")
-    //     .split(",")
-    //     .map(l => l.trim())
-    //     .filter(Boolean);
+    const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
+    const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
+    const labels = (c.req.query("labels") || "")
+        .split(",")
+        .map(l => l.trim())
+        .filter(Boolean);
 
-    // const name = c.req.query("name");
+    const title = c.req.query("title") || "";
 
+    const { quests } = await listQuests(organization.id, { page, pageSize, labels, title });
+
+    return c.json({
+        page: page,
+        quests,
+    });
     // const offset = page * pageSize;
     // const limit = pageSize;
 
@@ -52,6 +59,14 @@ questsRouter.get("/list", async (c) => {
 // TODO: Improve code consistancy
 
 questsRouter.get("/:id", async (c) => {
+
+    const id = c.req.param("id");
+
+    const { quest, error } = await getQuest(id);
+    if (error) {
+        
+    }
+
     // const id = c.req.param("id");
 
     // const result = await database.select().from(quests).where(eq(quests.id, id));
