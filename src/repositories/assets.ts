@@ -147,9 +147,9 @@ export async function deleteAsset(organizationId: string, assetId: string): Prom
         }
 
         return {};
-    } catch(error) {
+    } catch (error) {
         console.log('error detected:', error);
         return { error: "Internal error while deleting quest" }
     }
-    
+
 }
