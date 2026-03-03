@@ -1,6 +1,12 @@
 import { eq, ilike, arrayOverlaps, and, desc } from "drizzle-orm";
 import { landmarks } from "../database/schema/organizations";
 import { database } from "../database/db";
+
+export type Error = {
+    code: number;
+    error: string;
+};
+
 type Landmark = typeof landmarks.$inferSelect;
 
 export type ListLandmarksParams = {
@@ -37,29 +43,25 @@ export async function listLandmarks(organizationId: string, { page, pageSize, na
     };
 }
 
-export async function getLandmark(id: string): Promise<{ landmark?: Landmark, error?: string }> {
+export async function getLandmark(id: string): Promise<{ landmark?: Landmark, error?: Error }> {
     try {
         const result = await database.select().from(landmarks).where(eq(landmarks.id, id));
         
         if (result.length === 0) {
-            return { error: "Landmark not found" };
+            return { error: { code: 404, error: "Landmark not found" } };
         }
 
         return { landmark: result[0] };
     } catch (error) {
         console.error('Error fetching landmark:', error);
-        return { error: "Internal error while retrieving landmark" };
+        return { error: { code: 500, error: "Internal error while retrieving landmark" } };
     }
 }
 
-/**
- * Fetches landmarks recently interacted with or created within an organization.
- * Adjust the logic below based on your specific 'recent' criteria (e.g., createdAt).
- */
-export async function getRecentLandmarks(organizationId: string, memberId: string): Promise<{ landmarks: Landmark[], error?: string }> {
+export async function getRecentLandmarks(organizationId: string, memberId: string): Promise<{ landmarks: Landmark[], error?: Error }> {
     return { 
         landmarks: [],
-        error: "Not implemented",
+        error: { code: 501, error: "Not implemented" },
     }
 }
 
@@ -72,7 +74,7 @@ export type CreateLandmarkParams = {
     coords: { x: number, y: number };
 };
 
-export async function createLandmark(organizationId: string, params: CreateLandmarkParams): Promise<{ landmark?: Landmark, error?: string }> {
+export async function createLandmark(organizationId: string, params: CreateLandmarkParams): Promise<{ landmark?: Landmark, error?: Error }> {
     try {
         const [landmark] = await database.insert(landmarks).values({
             organization_id: organizationId,
@@ -81,13 +83,16 @@ export async function createLandmark(organizationId: string, params: CreateLandm
             thumbnail: params.thumbnail ?? "",
             assets: params.assets,
             coords: params.coords,
-            // description: params.description, // Add if in schema
         }).returning();
+
+        if (!landmark) {
+            return { error: { code: 400, error: "Failed to create landmark" } };
+        }
 
         return { landmark };
     } catch (error) {
         console.error('Error creating landmark:', error);
-        return { error: "Internal error while creating landmark" };
+        return { error: { code: 500, error: "Internal error while creating landmark" } };
     }
 }
 
@@ -107,19 +112,19 @@ const ALLOWED_LANDMARK_FIELDS = new Set([
     "coords"
 ]);
 
-export async function updateLandmark(landmarkId: string, params: UpdateLandmarkParams): Promise<{ landmark?: Landmark, error?: string }> {
+export async function updateLandmark(landmarkId: string, params: UpdateLandmarkParams): Promise<{ landmark?: Landmark, error?: Error }> {
     try {
         const updateData: any = {};
 
         for (const update of params.updates) {
             if (!ALLOWED_LANDMARK_FIELDS.has(update.field)) {
-                return { error: `Field ${update.field} is not allowed` };
+                return { error: { code: 400, error: `Field ${update.field} is not allowed` } };
             }
             updateData[update.field] = update.value;
         }
 
         if (Object.keys(updateData).length === 0) {
-            return { error: "No valid updates provided" };
+            return { error: { code: 400, error: "No valid updates provided" } };
         }
 
         const [updated] = await database.update(landmarks)
@@ -127,22 +132,29 @@ export async function updateLandmark(landmarkId: string, params: UpdateLandmarkP
             .where(eq(landmarks.id, landmarkId))
             .returning();
 
-        if (!updated) return { error: "Landmark not found" };
+        if (!updated) return { error: { code: 404, error: "Landmark not found" } };
 
         return { landmark: updated };
     } catch (error) {
         console.error('Error updating landmark:', error);
-        return { error: "Internal error while updating landmark" };
+        return { error: { code: 500, error: "Internal error while updating landmark" } };
     }
 }
 
-export async function deleteLandmark(landmarkId: string): Promise<{ error?: string }> {
+export async function deleteLandmark(landmarkId: string): Promise<{ error?: Error }> {
     try {
-        await database.delete(landmarks).where(eq(landmarks.id, landmarkId));
+        const result = await database.delete(landmarks)
+            .where(eq(landmarks.id, landmarkId))
+            .returning();
+        
+        if (result.length === 0) {
+            return { error: { code: 404, error: "Landmark not found for deletion" } };
+        }
+
         return {};
     } catch (error) {
         console.error('Error deleting landmark:', error);
-        return { error: "Internal error while deleting landmark" };
+        return { error: { code: 500, error: "Internal error while deleting landmark" } };
     }
 }
 

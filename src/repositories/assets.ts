@@ -5,6 +5,11 @@ import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
 import { s3 } from "../config/s3";
 
+export type Error = {
+    code: number;
+    error: string;
+};
+
 export type Asset = typeof uploads.$inferSelect;
 
 export type ListAssetsParams = {
@@ -14,7 +19,7 @@ export type ListAssetsParams = {
     labels: string[],
 };
 
-export async function listAssets(organizationId: string, { page, pageSize, name, labels }: ListAssetsParams): Promise<{ assets: Asset[], error?: string }> {
+export async function listAssets(organizationId: string, { page, pageSize, name, labels }: ListAssetsParams): Promise<{ assets: Asset[], error?: Error }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -48,41 +53,32 @@ export async function listAssets(organizationId: string, { page, pageSize, name,
         return { assets: fullAssets };
     } catch (error) {
         console.log(`error detected:`, error);
-        return { assets: [], error: "Internal error" };
+        return { assets: [], error: { code: 500, error: "Internal error" } };
     }
-
 }
 
-export async function getAsset(id: string): Promise<{ asset?: Asset, error?: string }> {
+export async function getAsset(id: string): Promise<{ asset?: Asset, error?: Error }> {
     try {
         const asset = await database.query.uploads.findFirst({
             where: eq(uploads.id, id)
         });
 
         if (!asset) {
-            return {
-                error: "Asset not found",
-            };
+            return { error: { code: 404, error: "Asset not found" } };
         }
 
-
-        return {
-            asset,
-        }
+        return { asset };
     } catch (error) {
         console.log('error detected:', error);
-        return {
-            error: "Internal error while retrieving quest",
-        };
+        return { error: { code: 500, error: "Internal error while retrieving asset" } };
     }
-
 }
 
 export async function uploadAssets(
     organizationId: string,
     memberId: string,
     assets: File[]
-): Promise<{ results?: { id: string, hash: string }[], error?: string }> {
+): Promise<{ results?: { id: string, hash: string }[], error?: Error }> {
 
     try {
         const uploadsResults = await Promise.all(assets.map(async (asset) => {
@@ -111,7 +107,7 @@ export async function uploadAssets(
                 hash: assetHash!,
             }).returning();
 
-            if (!metadata) throw new Error(`Database failed for ${assetName}`);
+            if (!metadata) throw new Error(`DATABASE_FAILED: ${assetName}`);
 
             return { id: metadata.id, hash: metadata.hash };
         }));
@@ -121,35 +117,33 @@ export async function uploadAssets(
     } catch (error) {
         console.error('Upload process failed:', error);
         return {
-            error: error instanceof Error ? error.message : "An unknown error occurred during upload"
+            error: { 
+                code: 500, 
+                error: error instanceof Error ? error.message : "An unknown error occurred during upload" 
+            }
         };
     }
 }
 
-export async function deleteAsset(organizationId: string, assetId: string): Promise<{ error?: string }> {
+export async function deleteAsset(organizationId: string, assetId: string): Promise<{ error?: Error }> {
     try {
         const asset = await database.query.uploads.findFirst({
-            where: eq(uploads.id, assetId)
+            where: and(eq(uploads.id, assetId), eq(uploads.organization_id, organizationId))
         });
 
-        if (!asset) return {
-            error: "Asset not found"
-        };
+        if (!asset) return { error: { code: 404, error: "Asset not found" } };
 
         try {
             await s3.delete(asset.path);
-            await database.delete(uploads).where(and(eq(uploads.id, assetId), eq(uploads.organization_id, organizationId)))
+            await database.delete(uploads).where(eq(uploads.id, assetId));
         } catch (error) {
             console.log('error detected:', error);
-            return {
-                error: `Could not delete asset: ${asset.name}`,
-            };
-        }
+            return { error: { code: 500, error: `Could not delete asset: ${asset.name}` } };
+        }  
 
         return {};
     } catch (error) {
         console.log('error detected:', error);
-        return { error: "Internal error while deleting quest" }
+        return { error: { code: 500, error: "Internal error while deleting asset" } };
     }
-
 }

@@ -5,7 +5,7 @@ import { database } from "../../database/db";
 export const landmarksRouter = new Hono();
 
 landmarksRouter.get("/list", async (c) => {
-
+    
     // const organization = c.get("organization")!;
 
     // const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);

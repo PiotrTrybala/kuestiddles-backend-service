@@ -1,7 +1,11 @@
 import { arrayOverlaps, eq, ilike, and } from "drizzle-orm";
 import { quests } from "../database/schema/organizations";
-import { organization } from "../database/schema/auth";
 import { database } from "../database/db";
+
+export type Error = {
+    code: number;
+    error: string;
+};
 
 export type ListQuestsParams = {
     page: number,
@@ -13,12 +17,11 @@ export type ListQuestsParams = {
 type Quest = typeof quests.$inferSelect;
 
 export async function listQuests(organizationId: string, { page, pageSize, title, labels }: ListQuestsParams): Promise<{ quests: Quest[] }> {
-
     const offset = page * pageSize;
     const limit = pageSize;
 
     const conditions = [
-        eq(quests.organization_id, organization.id)
+        eq(quests.organization_id, organizationId)
     ];
 
     if (title && title.trim() !== "") {
@@ -40,24 +43,23 @@ export async function listQuests(organizationId: string, { page, pageSize, title
     }
 }
 
-export async function getQuest(id: string): Promise<{ quest?: Quest, error?: string }> {
+export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Error }> {
     try {
         const quest = await database.query.quests.findFirst({
             where: eq(quests.id, id)
         });
 
         if (!quest) {
-            return { error: "Quest not found" };
+            return { error: { code: 404, error: "Quest not found" } };
         }
 
         return { quest }
     } catch (error) {
         console.log('error detected:', error);
         return {
-            error: "Internal error while retrieving quest"
+            error: { code: 500, error: "Internal error while retrieving quest" }
         };
     }
-
 }
 
 export async function getRecentQuests(organizationId: string, memberId: string) { }
@@ -72,7 +74,7 @@ export type CreateQuestParams = {
     points: number,
 };
 
-export async function createQuest(organizationId: string, { landmarkId, title, description, labels, thumbnail, assets, points }: CreateQuestParams): Promise<{ quest?: Quest, error?: string }> {
+export async function createQuest(organizationId: string, { landmarkId, title, description, labels, thumbnail, assets, points }: CreateQuestParams): Promise<{ quest?: Quest, error?: Error }> {
     try {
         const [quest] = await database.insert(quests).values({
             organization_id: organizationId,
@@ -87,7 +89,7 @@ export async function createQuest(organizationId: string, { landmarkId, title, d
 
         if (!quest) {
             return {
-                error: "Failed to create new quest",
+                error: { code: 400, error: "Failed to create new quest" },
             }
         }
 
@@ -95,7 +97,7 @@ export async function createQuest(organizationId: string, { landmarkId, title, d
     } catch (error) {
         console.log('error detected:', error);
         return {
-            error: "Internal error while creating new quest"
+            error: { code: 500, error: "Internal error while creating new quest" }
         }
     }
 }
@@ -103,7 +105,7 @@ export async function createQuest(organizationId: string, { landmarkId, title, d
 export type UpdateQuestParams = {
     updates: {
         field: string,
-        value: string,
+        value: any,
     }[]
 };
 
@@ -117,19 +119,18 @@ const ALLOWED_QUESTS_UPDATE_FIELDS = new Set([
     "landmark",
 ]);
 
-export async function updateQuest(id: string, params: UpdateQuestParams): Promise<{ quest?: Quest, error?: string }> {
-
+export async function updateQuest(id: string, params: UpdateQuestParams): Promise<{ quest?: Quest, error?: Error }> {
     try {
         const updateData: any = {};
 
         for (const update of params.updates) {
-
-            if (!ALLOWED_QUESTS_UPDATE_FIELDS.has(update.field)) return { error: `Field ${update.field} is not allowed or does not exists` };
+            if (!ALLOWED_QUESTS_UPDATE_FIELDS.has(update.field)) {
+                return { error: { code: 400, error: `Field ${update.field} is not allowed or does not exist` } };
+            }
 
             if (update.field === "points") {
-                const points = update.value;
-                if (typeof points !== "number") return { error: "Points value is not a number" };
-
+                const points = Number(update.value);
+                if (isNaN(points)) return { error: { code: 400, error: "Points value is not a number" } };
                 updateData.points = points;
                 continue;
             }
@@ -138,40 +139,43 @@ export async function updateQuest(id: string, params: UpdateQuestParams): Promis
         }
 
         if (Object.keys(updateData).length === 0) {
-            return { error: "No updates found" };
+            return { error: { code: 400, error: "No updates found" } };
         }
 
-        const [ updated ] = await database.update(quests)
+        const [updated] = await database.update(quests)
             .set(updateData)
             .where(eq(quests.id, id))
             .returning();
 
+        if (!updated) return { error: { code: 404, error: "Quest to update was not found" } };
+
         return { quest: updated };
     } catch (error) {
         console.log('error detected:', error);
-        return { error: "Internal error while updating quests" };
+        return { error: { code: 500, error: "Internal error while updating quests" } };
     }
 }
 
-export async function deleteQuest(organizationId: string, id: string): Promise<{ error?: string }> {
+export async function deleteQuest(organizationId: string, id: string): Promise<{ error?: Error }> {
     try {
-
-        await database.delete(quests)
+        const result = await database.delete(quests)
             .where(and(
                 eq(quests.id, id),
                 eq(quests.organization_id, organizationId)
-            ));
-            
-        return {};
-    } catch(error) {
-        console.log('error detected:', error);
-        return { error: "Internal error while deleting quest" };
-    }
+            ))
+            .returning();
 
+        if (result.length === 0) {
+            return { error: { code: 404, error: "Quest not found" } };
+        }
+
+        return {};
+    } catch (error) {
+        console.log('error detected:', error);
+        return { error: { code: 500, error: "Internal error while deleting quest" } };
+    }
 }
 
-// USER METHODS: Used by /user router
-
 export async function solveQuest(questId: string, userId: string, answers: string[]) {
-
+    // Implementation pending
 }
