@@ -4,17 +4,18 @@ import { database } from "../database/db";
 import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 
 import { stripe } from "@better-auth/stripe";
-import { admin, createAuthMiddleware, organization, twoFactor } from 'better-auth/plugins';
+import { admin, organization, twoFactor } from 'better-auth/plugins';
 
 import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
 import { stripeClient } from './stripe';
-
+import { OAuth2Client } from "google-auth-library";
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
         provider: "pg",
     }),
 
+    appName: process.env.APP_NAME!,
     baseURL: process.env.BETTER_AUTH_URL!,
     secret: process.env.BETTER_AUTH_SECRET!,
 
@@ -41,7 +42,25 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            
         },
+    },
+
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user) => {
+                    if (!user.username) {
+                        const base = user.email.split('@')[0];
+                        const random = Math.floor(1000 + Math.random() * 9000);
+                        user.username = `${base}${random}`;
+                    }
+                    return { 
+                        data: user
+                    };
+                }
+            }
+        }
     },
 
     user: {
@@ -50,7 +69,8 @@ export const auth = betterAuth({
                 type: "string",
                 required: true,
             }
-        }
+        },
+        
     },
 
     plugins: [
@@ -88,8 +108,10 @@ export const auth = betterAuth({
                 }
             } 
         }),
-    twoFactor(),
+        twoFactor(),
     ],
 
     
 });
+
+export const googleMobileClient = new OAuth2Client(process.env.GOOGLE_MOBILE_CLIENT_ID!);
