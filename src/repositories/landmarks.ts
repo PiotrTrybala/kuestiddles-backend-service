@@ -66,12 +66,15 @@ export async function getRecentLandmarks(organizationId: string, memberId: strin
 }
 
 export type CreateLandmarkParams = {
-    name: string;
-    description?: string;
-    labels: string[];
-    thumbnail: string | null;
-    assets: string[];
-    coords: { x: number, y: number };
+    name: string,
+    description: string,
+    labels: string[],
+    thumbnail: string | null,
+    assets: string[],
+    position: {
+        longitude: number,
+        latitude: number,
+    },
 };
 
 export async function createLandmark(organizationId: string, params: CreateLandmarkParams): Promise<{ landmark?: Landmark, error?: Error }> {
@@ -82,7 +85,10 @@ export async function createLandmark(organizationId: string, params: CreateLandm
             labels: params.labels,
             thumbnail: params.thumbnail ?? "",
             assets: params.assets,
-            coords: params.coords,
+            coords: {
+                x: params.position.longitude,
+                y: params.position.latitude,
+            },
         }).returning();
 
         if (!landmark) {

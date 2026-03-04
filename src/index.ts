@@ -69,8 +69,8 @@ app.get("/ping", (c) => {
 
 app.route("/api", api);
 
-// showRoutes(app, {
-// 	verbose: true,
-// });
+showRoutes(app, {
+	verbose: true,
+});
 
 export default app;

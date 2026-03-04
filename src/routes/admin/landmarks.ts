@@ -1,22 +1,26 @@
 import { Hono } from "hono";
-import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
-import { landmarks } from "../../database/schema/organizations";
-import { database } from "../../database/db";
-export const landmarksRouter = new Hono();
+import { createLandmark, deleteLandmark, getLandmark, listLandmarks, updateLandmark } from "../../repositories/landmarks";
+import type { AppEnv } from "../../config/app";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+
+export const landmarksRouter = new Hono<AppEnv>();
 
 landmarksRouter.get("/list", async (c) => {
     
-    // const organization = c.get("organization")!;
+    const organization = c.get("organization")!;
 
-    // const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
-    // const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
-    // const labels = (c.req.query("labels") || "")
-    //     .split(",")
-    //     .map(l => l.trim())
-    //     .filter(Boolean);
+    const page = Math.max(0, parseInt(c.req.query("page") ?? "0", 10) || 0);
+    const pageSize = Math.max(1, parseInt(c.req.query("pageSize") ?? "20", 10) || 20);
+    const labels = (c.req.query("labels") || "")
+        .split(",")
+        .map(l => l.trim())
+        .filter(Boolean);
 
-    // const name = c.req.query("name");
+    const name = c.req.query("name")!;
 
+    const { landmarks } = await listLandmarks(organization.id, { page, pageSize, name, labels });
+
+    return c.json({ page, landmarks, });
     // const offset = page * pageSize;
     // const limit = pageSize;
 
@@ -46,7 +50,17 @@ landmarksRouter.get("/list", async (c) => {
 });
 
 landmarksRouter.get("/:id", async (c) => {
-    // const id = c.req.param("id");
+    const id = c.req.param("id");
+
+    const { landmark, error } = await getLandmark(id);
+
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(landmark);
 
     // const result = await database.select().from(landmarks).where(eq(landmarks.id, id));
 
@@ -76,8 +90,18 @@ type LandmarkCreate = {
 // TODO: Add error handling and validation
 
 landmarksRouter.post("/", async (c) => {
-    // const organization = c.get("organization")!;
-    // const body = await c.req.json<LandmarkCreate>();
+    const organization = c.get("organization")!;
+    const body = await c.req.json<LandmarkCreate>();
+
+    const { landmark, error } = await createLandmark(organization.id, body);
+
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(landmark);
 
     // const [landmark] = await database.insert(landmarks).values({
     //     organization_name: organization.name,
@@ -102,12 +126,22 @@ type LandmarkUpdate = {
 };
 
 landmarksRouter.patch("/:id", async (c) => {
-    // const id = c.req.param("id");
-    // const body = await c.req.json<LandmarkUpdate>();
+    const id = c.req.param("id");
+    const body = await c.req.json<LandmarkUpdate>();
 
-    // if (!body.updates?.length) {
-    //     return c.json({ error: "No updates provided" }, 400);
-    // }
+    if (!body.updates?.length) {
+        return c.json({ error: "No updates provided" }, 400);
+    }
+
+    const { landmark, error } = await updateLandmark(id, body);
+
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(landmark);
 
     // const allowedFields = new Set([
     //     "name",
@@ -164,8 +198,17 @@ landmarksRouter.patch("/:id", async (c) => {
 });
 
 landmarksRouter.delete("/:id", async (c) => {
-    // const organization = c.get("organization")!;
-    // const id = c.req.param("id");
+    const organization = c.get("organization")!;
+    const id = c.req.param("id");
+
+    const { error } = await deleteLandmark(id);
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.body(null, 200);
 
     // await database.delete(landmarks).where(and(eq(landmarks.id, id), eq(landmarks.organization_name, organization.name)));
     // return c.json({ message: "Deleted landmark" });

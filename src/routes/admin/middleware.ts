@@ -3,12 +3,10 @@ import {type AppEnv } from "../../config/app";
 import { auth } from "../../config/auth";
 
 export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
-
     const user = c.get("user");
     const session = c.get("session");
 
     if (!user || !session) return c.json({ message: "Unauthorized" }, 401);
-
 
     const slug = c.req.param("organizationSlug");
 

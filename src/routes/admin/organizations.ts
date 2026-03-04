@@ -7,18 +7,18 @@ import { requireOrganization } from "./middleware";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
-
 organizationsRouter.get("/list", async (c) => {
     return c.json({ message: "Not Implemented" }, 501);
 });
-
 
 organizationsRouter.post("/", async (c) => {
     return c.json({ message: "Not Implemented" }, 501);
 });
 
-organizationsRouter.use("*", requireOrganization);
+const sluggedGroup = organizationsRouter.basePath("/:organizationSlug");
 
-organizationsRouter.route("/:orgName/landmarks", landmarksRouter);
-organizationsRouter.route("/:orgName/quests", questsRouter);
-organizationsRouter.route("/:orgName/assets", assetsRouter);
+sluggedGroup.use("*", requireOrganization);
+
+sluggedGroup.route("/landmarks", landmarksRouter);
+sluggedGroup.route("/quests", questsRouter);
+sluggedGroup.route("/assets", assetsRouter);
