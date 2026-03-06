@@ -1,17 +1,12 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../../config/app";
-import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
-import { database } from "../../database/db";
-import { uploads } from "../../database/schema/uploads";
-import { defaultThumbnailFile } from "../../public";
-import { s3 } from "../../config/s3";
-import sharp from 'sharp';
-import { sha256 } from "hono/utils/crypto";
-import { meta } from "zod/v4/core";
 import { deleteAsset, getAsset, listAssets, uploadAssets } from "../../repositories/assets";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { requireOrganization } from "./middleware";
 
 export const assetsRouter = new Hono<AppEnv>();
+
+assetsRouter.use("/*", requireOrganization);
 
 assetsRouter.get("/list", async (c) => {
 
@@ -70,7 +65,10 @@ assetsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
 
+    console.log(id);
+
     const { asset, file, error } = await getAsset(id);
+
     if (error) {
         return c.json({
             message: error.error,
@@ -104,12 +102,17 @@ assetsRouter.post("/", async (c) => {
     const membership = c.get("membership")!;
 
     const body = await c.req.parseBody({ all: true });
+
+    console.log('body:', body);
+
     const rawAssets = body['assets'];
+
+    console.log('raw assets:', rawAssets);
 
     const assets: File[] = Array.isArray(rawAssets) ? rawAssets.filter((f): f is File => f instanceof File) : rawAssets instanceof File ? [rawAssets] : [];
     if (assets.length === 0) return c.json({ message: "No assets uploaded" }, 400);
 
-    const { results, error } = await uploadAssets(organization.id, membership.user.id, assets);
+    const { results, error } = await uploadAssets(organization.id, membership.id, assets);
 
     if (error) {
         return c.json({

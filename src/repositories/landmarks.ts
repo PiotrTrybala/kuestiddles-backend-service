@@ -1,4 +1,4 @@
-import { eq, ilike, arrayOverlaps, and, desc } from "drizzle-orm";
+import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { landmarks } from "../database/schema/organizations";
 import { database } from "../database/db";
 

@@ -1,4 +1,4 @@
-import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
+import { and, arrayOverlaps, DrizzleError, eq, ilike } from "drizzle-orm";
 import { uploads } from "../database/schema/uploads";
 import { database } from "../database/db";
 import sharp from "sharp";
@@ -103,8 +103,8 @@ export async function uploadAssets(
             });
 
             const [metadata] = await database.insert(uploads).values({
-                member_id: memberId,
                 organization_id: organizationId,
+                member_id: memberId,
                 name: assetName,
                 path: assetPath!,
                 hash: assetHash!,
@@ -119,10 +119,11 @@ export async function uploadAssets(
 
     } catch (error) {
         console.error('Upload process failed:', error);
+
         return {
             error: { 
                 code: 500, 
-                error: error instanceof Error ? error.message : "An unknown error occurred during upload" 
+                error: "Internal error while trying to upload assets", 
             }
         };
     }

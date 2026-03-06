@@ -1,13 +1,9 @@
 import { Hono } from "hono";
 
-import { landmarksRouter } from "./landmarks";
-import { questsRouter } from "./quests";
-import { requireOrganization } from "./middleware";
-import { assetsRouter } from "./uploads";
-import { admin } from "better-auth/plugins";
 import { organizationsRouter } from "./organizations";
+import { requireAuth } from "../middleware";
 
 export const adminRouter = new Hono();
 
-adminRouter.use("*", requireOrganization);
+adminRouter.use("/organizations/*", requireAuth("admin"));
 adminRouter.route("/organizations", organizationsRouter);

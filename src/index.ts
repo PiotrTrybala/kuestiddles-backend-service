@@ -17,7 +17,7 @@ const app = new Hono<AppEnv>();
 app.use(
 	"/api/auth/*",
 	cors({
-		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://.kuestiddles.com"],
+		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -29,7 +29,7 @@ app.use(
 app.use(
 	"/api/v1/*",
 	cors({
-		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://.kuestiddles.com"],
+		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "PATCH", "DELETE"],
 		exposeHeaders: ["Content-Length"],
@@ -71,6 +71,7 @@ app.route("/api", api);
 
 showRoutes(app, {
 	verbose: true,
+	colorize: true,
 });
 
 export default app;
