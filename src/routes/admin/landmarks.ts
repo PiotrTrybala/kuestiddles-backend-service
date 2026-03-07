@@ -2,8 +2,11 @@ import { Hono } from "hono";
 import { createLandmark, deleteLandmark, getLandmark, listLandmarks, updateLandmark } from "../../repositories/landmarks";
 import type { AppEnv } from "../../config/app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { requireOrganization } from "./middleware";
 
 export const landmarksRouter = new Hono<AppEnv>();
+
+landmarksRouter.use("*", requireOrganization);
 
 landmarksRouter.get("/list", async (c) => {
     
