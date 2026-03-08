@@ -21,7 +21,7 @@ assetsRouter.get("/list", async (c) => {
 
     const name = c.req.query("name")!;
 
-    const { assets } = await listAssets(organization.id, { page, pageSize, name, labels });
+    const { assets } = await listAssets(organization.slug, organization.id, { page, pageSize, name, labels });
 
     return c.json({ page, assets });
 

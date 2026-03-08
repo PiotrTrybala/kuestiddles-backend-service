@@ -20,7 +20,7 @@ export type ListAssetsParams = {
     labels: string[],
 };
 
-export async function listAssets(organizationId: string, { page, pageSize, name, labels }: ListAssetsParams): Promise<{ assets: Asset[], error?: Error }> {
+export async function listAssets(organizationSlug: string, organizationId: string, { page, pageSize, name, labels }: ListAssetsParams): Promise<{ assets: Asset[], error?: Error }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -44,7 +44,7 @@ export async function listAssets(organizationId: string, { page, pageSize, name,
             .limit(limit);
 
         const fullAssets = assets.map((asset) => {
-            const url = `${process.env.ASSETS_URL!}/${asset.id}`;
+            const url = `${process.env.API_URL!}/admin/organizations/${organizationSlug}/assets/${asset.id}`;
             return {
                 ...asset,
                 url,
