@@ -4,7 +4,7 @@ import { database } from "../database/db";
 import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
 import { s3 } from "../config/s3";
-import type { S3File } from "bun";
+import { randomUUIDv7, type S3File } from "bun";
 
 export type Error = {
     code: number;
@@ -93,8 +93,9 @@ export async function uploadAssets(
                 .toBuffer();
 
             const assetHash = await sha256(webpBuffer);
-            const fileName = asset.name.split('.')[0];
-            const assetName = `${fileName}.webp`;
+
+            const fileName = `${asset.name.split('.')[0]}.webp`;
+            const assetName = await sha256(randomUUIDv7("base64url")); // TODO: Find better and more elegant to do this
             const hashedOrganizationId = await sha256(organizationId);
             const assetPath = `assets/${hashedOrganizationId}/${assetName}`;
 
@@ -105,12 +106,15 @@ export async function uploadAssets(
             const [metadata] = await database.insert(uploads).values({
                 organization_id: organizationId,
                 member_id: memberId,
-                name: assetName,
+                name: fileName,
                 path: assetPath!,
                 hash: assetHash!,
             }).returning();
 
+
             if (!metadata) throw new Error(`DATABASE_FAILED: ${assetName}`);
+
+
 
             return { id: metadata.id, hash: metadata.hash };
         }));
