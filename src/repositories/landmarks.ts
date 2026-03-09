@@ -1,5 +1,5 @@
 import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
-import { landmarks } from "../database/schema/organizations";
+import { landmarks } from "../database/schema/games";
 import { database } from "../database/db";
 
 export type Error = {

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 
 import { type AppEnv } from "../../config/app";
-import { quests } from "../../database/schema/organizations";
+import { quests } from "../../database/schema/games";
 import { database } from "../../database/db";
 import { createQuest, deleteQuest, getQuest, listQuests, updateQuest } from "../../repositories/quests";
 import type { ContentfulStatusCode } from "hono/utils/http-status";

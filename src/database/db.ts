@@ -6,7 +6,7 @@ const client = new Pool({ connectionString: process.env.DATABASE_URL! });
 export const database = drizzle(client, { schema });
 
 async function populatePlans() {
-
+    console.log('adding Basic and Enterprise plans...');
     try {
         await database.insert(schema.plans).values({
             name: "Basic",
@@ -31,9 +31,8 @@ async function populatePlans() {
             active: true,
         });
     } catch (error) {
-        console.log('could not populate plans table:', error);
+        console.log('could not load pricing plans due to internal error');
     }
-
 }
 
 await populatePlans();

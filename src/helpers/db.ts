@@ -20,7 +20,7 @@ export async function initWithMockData() {
         await database.update(user).set({
             emailVerified: true,
         }).where(eq(user.id, userWithRole.id)); // Manually verify email in database
-
+         
 
         await auth.api.createOrganization({ body: { 
             name: "Test Organization",
