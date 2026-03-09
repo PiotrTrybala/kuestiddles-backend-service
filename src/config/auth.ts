@@ -54,6 +54,7 @@ export const auth = betterAuth({
                         const base = user.email.split('@')[0];
                         const random = Math.floor(1000 + Math.random() * 9000);
                         user.username = `${base}${random}`;
+                        user.role = "admin";
                     }
                     return { 
                         data: user

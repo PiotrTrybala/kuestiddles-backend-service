@@ -136,6 +136,8 @@ landmarksRouter.patch("/:id", async (c) => {
         return c.json({ error: "No updates provided" }, 400);
     }
 
+    console.log("received updates for", id, ":", body);
+
     const { landmark, error } = await updateLandmark(id, body);
 
     if (error) {
