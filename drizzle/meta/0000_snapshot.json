@@ -1,5 +1,5 @@
 {
-  "id": "8d378616-1e52-4f82-a36f-b880f52305e5",
+  "id": "3a61f3fd-0c9e-452f-a1c3-9d063ccb0a30",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -774,8 +774,7 @@
           "name": "role",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'user'"
+          "notNull": false
         },
         "banned": {
           "name": "banned",
@@ -1110,8 +1109,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "user_id": {
-          "name": "user_id",
+        "member_id": {
+          "name": "member_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1171,12 +1170,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "uploads_user_id_user_id_fk": {
-          "name": "uploads_user_id_user_id_fk",
+        "uploads_member_id_member_id_fk": {
+          "name": "uploads_member_id_member_id_fk",
           "tableFrom": "uploads",
-          "tableTo": "user",
+          "tableTo": "member",
           "columnsFrom": [
-            "user_id"
+            "member_id"
           ],
           "columnsTo": [
             "id"
@@ -1511,6 +1510,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
         },
         "labels": {
           "name": "labels",

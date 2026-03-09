@@ -12,8 +12,6 @@ export type AppEnv = {
         session: typeof auth.$Infer.Session.session | null,
         plan: typeof plans.$inferSelect | null,
 
-        organizationSlug: string | undefined, // Simple workaround for lack of parametersr in middlware passed down from top routes
-
         organization: typeof auth.$Infer.Organization | null,
         membership: typeof auth.$Infer.Member | null,
     }

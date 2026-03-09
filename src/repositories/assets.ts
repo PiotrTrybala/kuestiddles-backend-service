@@ -44,7 +44,7 @@ export async function listAssets(organizationSlug: string, organizationId: strin
             .limit(limit);
 
         const fullAssets = assets.map((asset) => {
-            const url = `${process.env.API_URL!}/admin/organizations/${organizationSlug}/assets/${asset.id}`;
+            const url = `${process.env.ADMIN_API_URL!}/organizations/${organizationSlug}/assets/${asset.id}`;
             return {
                 ...asset,
                 url,

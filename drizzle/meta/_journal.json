@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772366779682,
-      "tag": "0000_powerful_winter_soldier",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1772397714730,
-      "tag": "0001_bright_bloodscream",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1772452296345,
-      "tag": "0002_chief_harrier",
+      "when": 1773003492144,
+      "tag": "0000_good_red_skull",
       "breakpoints": true
     }
   ]

@@ -7,12 +7,14 @@ import { api } from './routes/api';
 import { showRoutes } from 'hono/dev';
 
 import { type AppEnv } from './config/app';
-import { database } from './database/db';
-import { plans } from './database/schema/stripe';
+
+import { initWithMockData } from "./helpers/db"; 
 
 // TODO: Rewrite index.ts 
 
 const app = new Hono<AppEnv>();
+
+await initWithMockData();
 
 app.use(
 	"/api/auth/*",

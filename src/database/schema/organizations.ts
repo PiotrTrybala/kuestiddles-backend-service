@@ -21,6 +21,7 @@ export const landmarks = pgTable('landmarks', {
     id: uuid().primaryKey().defaultRandom(),
     organization_id: text().references(() => organization.id),
     name: text().notNull(),
+    description: text().notNull().default(""),
     labels: text().array().default(sql`'{}'::text[]`),
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),
     assets: text().array().default(sql`'{}'::text[]`).notNull(),

@@ -82,6 +82,7 @@ export async function createLandmark(organizationId: string, params: CreateLandm
         const [landmark] = await database.insert(landmarks).values({
             organization_id: organizationId,
             name: params.name,
+            description: params.description,
             labels: params.labels,
             thumbnail: params.thumbnail ?? "",
             assets: params.assets,
