@@ -120,6 +120,9 @@ const ALLOWED_LANDMARK_FIELDS = new Set([
 ]);
 
 export async function updateLandmark(landmarkId: string, params: UpdateLandmarkParams): Promise<{ landmark?: Landmark, error?: Error }> {
+
+    console.log('landmark id:', landmarkId, 'params:', params);
+
     try {
         const updateData: any = {};
 

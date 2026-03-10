@@ -15,8 +15,6 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
 
     if (!user || !session) return c.json({ message: "Unauthorized" }, 401);
 
-    console.log('params:', c.get("organizationSlug"));
-
     const slug = c.req.param("organizationSlug");
 
     console.info('organization slug:', slug);

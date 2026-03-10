@@ -132,7 +132,9 @@ landmarksRouter.patch("/:id", async (c) => {
     const id = c.req.param("id");
     const body = await c.req.json<LandmarkUpdate>();
 
-    if (!body.updates?.length) {
+    console.log('id:', id, 'body:', body);
+
+    if (body.updates?.length === 0) {
         return c.json({ error: "No updates provided" }, 400);
     }
 

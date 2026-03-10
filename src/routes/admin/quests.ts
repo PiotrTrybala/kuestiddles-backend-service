@@ -6,8 +6,11 @@ import { quests } from "../../database/schema/games";
 import { database } from "../../database/db";
 import { createQuest, deleteQuest, getQuest, listQuests, updateQuest } from "../../repositories/quests";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { requireOrganization } from "./middleware";
 
 export const questsRouter = new Hono<AppEnv>();
+
+questsRouter.use("*", requireOrganization);
 
 questsRouter.get("/list", async (c) => {
 
