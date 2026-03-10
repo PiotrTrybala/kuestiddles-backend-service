@@ -67,6 +67,8 @@ questsRouter.get("/:id", async (c) => {
     const id = c.req.param("id");
     const { quest, error } = await getQuest(id);
 
+    console.log('quest:', quest);
+
     if (error) {
         return c.json({
             message: error.error,
