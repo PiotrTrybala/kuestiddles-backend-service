@@ -14,6 +14,7 @@ export const quests = pgTable('quests', {
     thumbnail: text().notNull().default(DEFAULT_THUMBNAIL),
     assets: text().array().default(sql`'{}'::text[]`).notNull(),
     points: integer().notNull(),
+    answers: text().array().default(sql`'{}'::text[]`),
     ...timestamps,
 });
 

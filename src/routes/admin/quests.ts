@@ -92,6 +92,7 @@ type QuestCreate = {
     labels: string[],
     thumbnail?: string,
     assets?: string[],
+    answers?: string[],
     points: number,
 };
 

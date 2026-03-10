@@ -15,6 +15,13 @@
       "when": 1773055878636,
       "tag": "0001_watery_gwen_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773172301966,
+      "tag": "0002_smart_the_captain",
+      "breakpoints": true
     }
   ]
 }

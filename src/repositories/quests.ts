@@ -72,10 +72,11 @@ export type CreateQuestParams = {
     labels: string[],
     thumbnail?: string,
     assets?: string[],
+    answers?: string[],
     points: number,
 };
 
-export async function createQuest(organizationId: string, { landmarkId, title, description, labels, thumbnail, assets, points }: CreateQuestParams): Promise<{ quest?: Quest, error?: Error }> {
+export async function createQuest(organizationId: string, { landmarkId, title, description, labels, thumbnail, answers, assets, points }: CreateQuestParams): Promise<{ quest?: Quest, error?: Error }> {
     try {
         const [quest] = await database.insert(quests).values({
             organization_id: organizationId,
@@ -85,6 +86,7 @@ export async function createQuest(organizationId: string, { landmarkId, title, d
             labels,
             thumbnail,
             assets,
+            answers,
             points,
         }).returning();
 
