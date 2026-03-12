@@ -59,6 +59,10 @@ export async function getLandmark(id: string): Promise<{ landmark?: Landmark, er
 }
 
 export async function getRecentLandmarks(organizationId: string, memberId: string): Promise<{ landmarks: Landmark[], error?: Error }> {
+
+    
+
+
     return { 
         landmarks: [],
         error: { code: 501, error: "Not implemented" },
