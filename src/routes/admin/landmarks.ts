@@ -52,6 +52,14 @@ landmarksRouter.get("/list", async (c) => {
     // });
 });
 
+landmarksRouter.get("/recent", async(c) => {
+
+    const organization = c.get("organization")!;
+
+    return c.json({}, 200);
+
+});
+
 landmarksRouter.get("/:id", async (c) => {
     const id = c.req.param("id");
 

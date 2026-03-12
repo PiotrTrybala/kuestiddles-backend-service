@@ -62,6 +62,14 @@ questsRouter.get("/list", async (c) => {
 // TODO: Add input validation
 // TODO: Improve code consistancy
 
+questsRouter.get("/recent", async (c) => {
+
+    const organization = c.get("organization")!;
+
+    
+
+});
+
 questsRouter.get("/:id", async (c) => {
 
     const id = c.req.param("id");
