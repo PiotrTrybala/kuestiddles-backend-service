@@ -6,38 +6,30 @@ export const recentId = (organizationId: string, userId: string, type: 'quests' 
     return `recent:${organizationId}:${type}:${userId}`;
 }
 
-export async function getRecentQuests(organizationId: string, userId: string): Promise<{ questIds: string[], error?: string }> {
+export async function getRecent(organizationId: string, userId: string, type: 'quests' | 'landmarks'): Promise<{ recent: string[], error?: string }> {
     try {
-        const quests = await redis.lrange(recentId(organizationId, userId, 'quests'), 0, -1);
-        return { questIds: quests };
+        const quests = await redis.lrange(recentId(organizationId, userId, type), 0, -1);
+        return { recent: quests };
     } catch (error) {
         console.error('Error fetching quests:', error);
-        return { questIds: [], error: String(error) };
+        return { recent: [], error: String(error) };
     }
 }
 
-export async function addQuest(organizationId: string, userId: string, questId: string): Promise<{ questIds: string[], error?: string }> {
+export async function addRecent(organizationId: string, userId: string, id: string, type: 'quests' | 'landmarks'): Promise<{ recent: string[], error?: string }> {
     try {
-        const id = recentId(organizationId, userId, 'quests');
+        const id = recentId(organizationId, userId, type);
 
-        await redis.lrem(id, 0, questId);
-        await redis.lpush(id, questId);
+        await redis.lrem(id, 0, id);
+        await redis.lpush(id, id);
         await redis.ltrim(id, 0, RECENT_LIMIT - 1);
 
-        const updatedQuests = await redis.lrange(id, 0, -1);
-        
-        return { questIds: updatedQuests };
+        const updated = await redis.lrange(id, 0, -1);
+
+        return { recent: updated };
         
     } catch(error) {
         console.error('Error adding quest:', error);
-        return { questIds: [], error: String(error) };
+        return { recent: [], error: String(error) };
     }
-}
-
-export async function getRecentLandmarks(organizationId: string, userId: string) {
-
-}
-
-export async function addLandmark(organizationId: string, userId: string, landmarkId: string) {
-
 }
