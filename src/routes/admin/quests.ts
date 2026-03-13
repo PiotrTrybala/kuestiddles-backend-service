@@ -4,7 +4,7 @@ import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { type AppEnv } from "../../config/app";
 import { quests } from "../../database/schema/games";
 import { database } from "../../database/db";
-import { createQuest, deleteQuest, getQuest, listQuests, updateQuest } from "../../repositories/quests";
+import { createQuest, deleteQuest, getQuest, getRecentQuests, listQuests, updateQuest } from "../../repositories/quests";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { requireOrganization } from "./middleware";
 
@@ -65,13 +65,22 @@ questsRouter.get("/list", async (c) => {
 questsRouter.get("/recent", async (c) => {
 
     const organization = c.get("organization")!;
+    const user = c.get("user")!;
 
+    const { quests, error } = await getRecentQuests(organization.id, user.id);
+
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
     
-
+    return c.json(quests);
 });
 
 questsRouter.get("/:id", async (c) => {
-
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
     const id = c.req.param("id");
     const { quest, error } = await getQuest(id);
 
@@ -82,6 +91,9 @@ questsRouter.get("/:id", async (c) => {
             message: error.error,
         }, error.code as ContentfulStatusCode);
     }
+
+    await registerRecentEntity('quest', organization.id, user.id, quest?.id);
+
     return c.json(quest);
 
     // const id = c.req.param("id");
@@ -107,9 +119,10 @@ type QuestCreate = {
 };
 
 questsRouter.post("/", async (c) => {
+    const user = c.get("user")!;
     const organization = c.get("organization")!;
     const body = await c.req.json<QuestCreate>();
-    const { error } = await createQuest(organization.id, body);
+    const { quest, error } = await createQuest(organization.id, body);
     if (error) {
         return c.json({
             message: error.error,
@@ -140,6 +153,10 @@ type QuestUpdate = {
 };
 
 questsRouter.patch("/:id", async (c) => {
+
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
+
     const id = c.req.param("id");
     const body = await c.req.json<QuestUpdate>();
 
@@ -153,6 +170,8 @@ questsRouter.patch("/:id", async (c) => {
             message: error.error,
         }, error.code as ContentfulStatusCode);
     }
+
+    await registerRecentEntity(organization.id, user.id, quest?.id);
 
     return c.json(quest);
 

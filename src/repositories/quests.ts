@@ -1,7 +1,8 @@
 import { arrayOverlaps, eq, ilike, and } from "drizzle-orm";
 import { database } from "../database/db";
-import { addRecent, getRecent } from "../controllers/recent";
+// import { addRecent, getRecent } from "../controllers/recent";
 import { quests } from "../database/schema/games";
+import { getRecentEntities } from "../controllers/recent";
 
 export type Error = {
     code: number;
@@ -63,24 +64,14 @@ export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Err
     }
 }
 
-export async function getRecentQuests(organizationId: string, userId: string): Promise<{ quests: Quest[], error?: Error }> { 
+export async function getRecentQuests(organizationId: string, userId: string): Promise<{ quests: Quest[], error?: Error }> {
     try {
 
-        const { recent, error } = await getRecent(organizationId, userId, 'quests');
-
-        if (error) {
-            return {
-                quests: [],
-                error: {
-                    code: 500,
-                    error: "Internal error while retrieving recent quests"
-                }
-            }
-        }
+        const { questsIds } = await getRecentEntities('quests', organizationId, userId);
 
         const conditions = [];
-        for (const questId of recent) {
-            conditions.push(eq(quests.id, questId));
+        for (const id of questsIds) {
+            conditions.push(eq(quests.id, id));
         }
 
         const result = await database.select()
@@ -90,18 +81,58 @@ export async function getRecentQuests(organizationId: string, userId: string): P
         return {
             quests: result,
         }
-
     } catch(error) {
         console.log('error detected:', error);
         return {
             quests: [],
             error: {
                 code: 500,
-                error: "Internal error while retrieving quests",
+                error: "Internal error while retrieving recently edited quests"
             }
         }
     }
+
 }
+
+// export async function getRecentQuests(organizationId: string, userId: string): Promise<{ quests: Quest[], error?: Error }> { 
+//     try {
+
+//         const { recent, error } = await getRecent(organizationId, userId, 'quests');
+
+//         if (error) {
+//             return {
+//                 quests: [],
+//                 error: {
+//                     code: 500,
+//                     error: "Internal error while retrieving recent quests"
+//                 }
+//             }
+//         }
+
+//         const conditions = [];
+//         for (const questId of recent) {
+//             conditions.push(eq(quests.id, questId));
+//         }
+
+//         const result = await database.select()
+//             .from(quests)
+//             .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+//         return {
+//             quests: result,
+//         }
+
+//     } catch(error) {
+//         console.log('error detected:', error);
+//         return {
+//             quests: [],
+//             error: {
+//                 code: 500,
+//                 error: "Internal error while retrieving quests",
+//             }
+//         }
+//     }
+// }
 
 export type CreateQuestParams = {
     landmarkId: string,
