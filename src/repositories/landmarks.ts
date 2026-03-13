@@ -1,4 +1,4 @@
-import { eq, or, ilike, arrayOverlaps, and } from "drizzle-orm";
+import { eq, or, ilike, arrayOverlaps, and, sql } from "drizzle-orm";
 import { landmarks } from "../database/schema/games";
 import { database } from "../database/db";
 import { getRecentEntities } from "../controllers/recent";
@@ -194,4 +194,41 @@ export async function deleteLandmark(landmarkId: string): Promise<{ error?: Erro
 export async function visitLandmark(landmarkId: string, userId: string) {
     console.log(`User ${userId} visited landmark ${landmarkId}`);
     return { success: true };
+}
+/**
+ * checkLandmark - check if position is in range of landmark
+ * 
+ * landmarkId - landmark id
+ * position - position to check within range
+ * range - range in meters
+ * 
+ *  */
+export async function checkLandmark(landmarkId: string, position: { longitude: number, latitide: number }, range: number): Promise<{ isRange: boolean, error?: Error }> {
+
+    try {
+        const { landmark } = await getLandmark(landmarkId);
+
+        const landmarkPosition = landmark!.coords;
+
+        const result = await database.execute(sql`
+                SELECT ST_DWithin(
+                    ST_MakePoint(${landmarkPosition.x}, ${landmarkPosition.y})::geography,
+                    ST_MakePoint(${position.longitude}, ${position.latitide})::geography,
+                    ${range}
+                ) as in_range;
+            `);
+
+        return {
+            isRange: result.rows[0]?.in_range as boolean,
+        }
+    } catch (error) {
+        console.error('error detected:', error);
+        return {
+            isRange: false,
+            error: {
+                code: 500,
+                error: "Internal error while checking landmark range",
+            }
+        }
+    }
 }
