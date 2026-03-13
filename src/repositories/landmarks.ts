@@ -1,6 +1,7 @@
-import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
+import { eq, or, ilike, arrayOverlaps, and } from "drizzle-orm";
 import { landmarks } from "../database/schema/games";
 import { database } from "../database/db";
+import { getRecentEntities } from "../controllers/recent";
 
 export type Error = {
     code: number;
@@ -46,7 +47,7 @@ export async function listLandmarks(organizationId: string, { page, pageSize, na
 export async function getLandmark(id: string): Promise<{ landmark?: Landmark, error?: Error }> {
     try {
         const result = await database.select().from(landmarks).where(eq(landmarks.id, id));
-        
+
         if (result.length === 0) {
             return { error: { code: 404, error: "Landmark not found" } };
         }
@@ -58,14 +59,32 @@ export async function getLandmark(id: string): Promise<{ landmark?: Landmark, er
     }
 }
 
-export async function getRecentLandmarks(organizationId: string, memberId: string): Promise<{ landmarks: Landmark[], error?: Error }> {
+export async function getRecentLandmarks(organizationId: string, userId: string): Promise<{ landmarks: Landmark[], error?: Error }> {
+    try {
 
-    
+        const { entitiesIds } = await getRecentEntities('landmarks', organizationId, userId);
 
+        const conditions = [];
+        for (const id of entitiesIds) {
+            conditions.push(eq(landmarks.id, id));
+        }
 
-    return { 
-        landmarks: [],
-        error: { code: 501, error: "Not implemented" },
+        const result = await database.select()
+            .from(landmarks)
+            .where(conditions.length > 0 ? or(...conditions) : undefined);
+
+        return {
+            landmarks: result,
+        }
+    } catch (error) {
+        console.log('error detected:', error);
+        return {
+            landmarks: [],
+            error: {
+                code: 500,
+                error: "Internal error while retrieving recently edited quests"
+            }
+        }
     }
 }
 
@@ -160,7 +179,7 @@ export async function deleteLandmark(landmarkId: string): Promise<{ error?: Erro
         const result = await database.delete(landmarks)
             .where(eq(landmarks.id, landmarkId))
             .returning();
-        
+
         if (result.length === 0) {
             return { error: { code: 404, error: "Landmark not found for deletion" } };
         }

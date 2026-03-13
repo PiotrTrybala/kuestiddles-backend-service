@@ -67,10 +67,10 @@ export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Err
 export async function getRecentQuests(organizationId: string, userId: string): Promise<{ quests: Quest[], error?: Error }> {
     try {
 
-        const { questsIds } = await getRecentEntities('quests', organizationId, userId);
+        const { entitiesIds } = await getRecentEntities('quests', organizationId, userId);
 
         const conditions = [];
-        for (const id of questsIds) {
+        for (const id of entitiesIds) {
             conditions.push(eq(quests.id, id));
         }
 

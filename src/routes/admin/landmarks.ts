@@ -1,8 +1,10 @@
 import { Hono } from "hono";
-import { createLandmark, deleteLandmark, getLandmark, listLandmarks, updateLandmark } from "../../repositories/landmarks";
 import type { AppEnv } from "../../config/app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { requireOrganization } from "./middleware";
+import { createLandmark, deleteLandmark, getLandmark, listLandmarks, updateLandmark } from "../../repositories/landmarks";
+import { registerRecentEntity } from "../../controllers/recent";
+import { organization } from "better-auth/plugins";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
@@ -61,6 +63,9 @@ landmarksRouter.get("/recent", async(c) => {
 });
 
 landmarksRouter.get("/:id", async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
+
     const id = c.req.param("id");
 
     const { landmark, error } = await getLandmark(id);
@@ -70,6 +75,8 @@ landmarksRouter.get("/:id", async (c) => {
             message: error.error,
         }, error.code as ContentfulStatusCode);
     }
+
+    await registerRecentEntity('landmarks', organization.id, user.id, landmark!.id);
 
     return c.json(landmark);
 
@@ -137,6 +144,9 @@ type LandmarkUpdate = {
 };
 
 landmarksRouter.patch("/:id", async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
+    
     const id = c.req.param("id");
     const body = await c.req.json<LandmarkUpdate>();
 
@@ -155,6 +165,8 @@ landmarksRouter.patch("/:id", async (c) => {
             message: error.error,
         }, error.code as ContentfulStatusCode);
     }
+
+    await registerRecentEntity('landmarks', organization.id, user.id, landmark!.id);
 
     return c.json(landmark);
 
@@ -213,7 +225,6 @@ landmarksRouter.patch("/:id", async (c) => {
 });
 
 landmarksRouter.delete("/:id", async (c) => {
-    const organization = c.get("organization")!;
     const id = c.req.param("id");
 
     const { error } = await deleteLandmark(id);

@@ -14,17 +14,17 @@ export const recentEntityID = (type: EntityType, organizationId: string, userId:
     return `kuest:${type}:${organizationId}:${userId}`;
 };
 
-export async function getRecentEntities(type: EntityType, organizationId: string, userId: string): Promise<{ questsIds: string[], error?: Error }> {
+export async function getRecentEntities(type: EntityType, organizationId: string, userId: string): Promise<{ entitiesIds: string[], error?: Error }> {
 
     try {
 
         const id = recentEntityID(type, organizationId, userId);
-        const questsIds = await redis.lrange(id, 0, -1); // Read entire queue
+        const entitiesIds = await redis.lrange(id, 0, -1); // Read entire queue
 
-        console.log(id,":", questsIds);
+        console.log(id,":", entitiesIds);
 
         return {
-            questsIds,
+            entitiesIds,
         }
     } catch(error) {
         console.log('error detected:', error);
