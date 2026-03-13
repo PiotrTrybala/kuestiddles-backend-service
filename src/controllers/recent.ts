@@ -11,7 +11,7 @@ export const RECENT_ENTITY_LIMIT = 5;
 export type EntityType = 'quests' | 'landmarks';
 
 export const recentEntityID = (type: EntityType, organizationId: string, userId: string) => {
-    return `${type}:${organizationId}:${userId}`;
+    return `kuest:${type}:${organizationId}:${userId}`;
 };
 
 export async function getRecentEntities(type: EntityType, organizationId: string, userId: string): Promise<{ questsIds: string[], error?: Error }> {
@@ -20,6 +20,9 @@ export async function getRecentEntities(type: EntityType, organizationId: string
 
         const id = recentEntityID(type, organizationId, userId);
         const questsIds = await redis.lrange(id, 0, -1); // Read entire queue
+
+        console.log(id,":", questsIds);
+
         return {
             questsIds,
         }
@@ -37,9 +40,19 @@ export async function registerRecentEntity(type: EntityType, organizationId: str
     try {
 
         const id = recentEntityID(type, organizationId, userId);
-        await redis.lrem(id, 0, entityId);
+
+
         await redis.lpush(id, entityId);
-        await redis.ltrim(id, 0, RECENT_ENTITY_LIMIT - 1);
+        const size = await redis.llen(id);
+        if (size - 1 === RECENT_ENTITY_LIMIT) {
+            await redis.lpop(id);
+        }
+
+        await redis.ltrim(id, 0, RECENT_ENTITY_LIMIT - 1); // Check if this command will cause trouble
+
+        // await redis.lrem(id, 0, entityId);
+        // await redis.lpush(id, entityId);
+        // await redis.ltrim(id, 0, RECENT_ENTITY_LIMIT - 1);
 
         const updated = await redis.lrange(id, 0, -1);
 
@@ -53,31 +66,3 @@ export async function registerRecentEntity(type: EntityType, organizationId: str
     }
 
 }
-
-// export async function getRecent(organizationId: string, userId: string, type: 'quests' | 'landmarks'): Promise<{ recent: string[], error?: string }> {
-//     try {
-//         const quests = await redis.lrange(recentId(organizationId, userId, type), 0, -1);
-//         return { recent: quests };
-//     } catch (error) {
-//         console.error('Error fetching quests:', error);
-//         return { recent: [], error: String(error) };
-//     }
-// }
-
-// export async function addRecent(organizationId: string, userId: string, id: string, type: 'quests' | 'landmarks'): Promise<{ recent: string[], error?: string }> {
-//     try {
-//         const id = recentId(organizationId, userId, type);
-
-//         await redis.lrem(id, 0, id);
-//         await redis.lpush(id, id);
-//         await redis.ltrim(id, 0, RECENT_LIMIT - 1);
-
-//         const updated = await redis.lrange(id, 0, -1);
-
-//         return { recent: updated };
-        
-//     } catch(error) {
-//         console.error('Error adding quest:', error);
-//         return { recent: [], error: String(error) };
-//     }
-// }

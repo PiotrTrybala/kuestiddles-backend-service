@@ -7,6 +7,7 @@ import { database } from "../../database/db";
 import { createQuest, deleteQuest, getQuest, getRecentQuests, listQuests, updateQuest } from "../../repositories/quests";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { requireOrganization } from "./middleware";
+import { registerRecentEntity } from "../../controllers/recent";
 
 export const questsRouter = new Hono<AppEnv>();
 
@@ -92,7 +93,7 @@ questsRouter.get("/:id", async (c) => {
         }, error.code as ContentfulStatusCode);
     }
 
-    await registerRecentEntity('quest', organization.id, user.id, quest?.id);
+    await registerRecentEntity('quests', organization.id, user.id, quest!.id);
 
     return c.json(quest);
 
@@ -171,7 +172,7 @@ questsRouter.patch("/:id", async (c) => {
         }, error.code as ContentfulStatusCode);
     }
 
-    await registerRecentEntity(organization.id, user.id, quest?.id);
+    await registerRecentEntity('landmarks', organization.id, user.id, quest!.id);
 
     return c.json(quest);
 

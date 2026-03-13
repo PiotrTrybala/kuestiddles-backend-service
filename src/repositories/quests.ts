@@ -1,4 +1,4 @@
-import { arrayOverlaps, eq, ilike, and } from "drizzle-orm";
+import { arrayOverlaps, eq, ilike, and, or } from "drizzle-orm";
 import { database } from "../database/db";
 // import { addRecent, getRecent } from "../controllers/recent";
 import { quests } from "../database/schema/games";
@@ -76,7 +76,7 @@ export async function getRecentQuests(organizationId: string, userId: string): P
 
         const result = await database.select()
             .from(quests)
-            .where(conditions.length > 0 ? and(...conditions) : undefined);
+            .where(conditions.length > 0 ? or(...conditions) : undefined);
 
         return {
             quests: result,
