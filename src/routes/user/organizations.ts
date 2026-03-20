@@ -9,12 +9,15 @@ export const organizationsRouter = new Hono<AppEnv>();
 
 const organization = organizationsRouter.basePath("/:organizationSlug");
 
-// USER ROUTES: Only for authenticated users (role = user)
+// USER ROUTES: Only for authenticated users (role = user) and for entities in organizations
 
 organization.route("/landmarks", landmarksRouter);
 organization.route("/quests", questsRouter);
-organization.route("/settings", settingsRouter);
-organization.route("/statistics", statisticsRouter);
+
+// USER ROUTES: Only for authenticated users (role = user)
+
+organizationsRouter.route("/settings", settingsRouter);
+organizationsRouter.route("/statistics", statisticsRouter);
 
 // GENERAL ROUTES: To be accessed by anyone
 
