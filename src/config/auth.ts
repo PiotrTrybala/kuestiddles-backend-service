@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
 import { stripeClient } from './stripe';
 import { OAuth2Client } from "google-auth-library";
+
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
         provider: "pg",
@@ -54,7 +55,8 @@ export const auth = betterAuth({
                         const base = user.email.split('@')[0];
                         const random = Math.floor(1000 + Math.random() * 9000);
                         user.username = `${base}${random}`;
-                        user.role = "admin";
+                        if (!user.role)
+                            user.role = "admin";
                     }
                     return { 
                         data: user
@@ -71,7 +73,6 @@ export const auth = betterAuth({
                 required: true,
             }
         },
-        
     },
 
     plugins: [

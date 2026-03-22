@@ -1,5 +1,5 @@
 import { eq, or, ilike, arrayOverlaps, and, sql } from "drizzle-orm";
-import { landmarks } from "../database/schema/games";
+import { landmarks, landmarksVisited } from "../database/schema/games";
 import { database } from "../database/db";
 import { getRecentEntities } from "../controllers/recent";
 
@@ -192,8 +192,30 @@ export async function deleteLandmark(landmarkId: string): Promise<{ error?: Erro
 }
 
 export async function visitLandmark(landmarkId: string, userId: string) {
-    console.log(`User ${userId} visited landmark ${landmarkId}`);
-    return { success: true };
+
+    try {
+        const result = await database.query.landmarksVisited.findFirst({
+            where: and(eq(landmarksVisited.landmark_id, landmarkId), eq(landmarksVisited.user_id, userId))
+        });
+
+        if (!result) {
+
+            await database.insert(landmarksVisited).values({
+                landmark_id: landmarkId,
+                user_id: userId,
+                visited: true,
+            });
+
+        }
+
+        console.log(`User ${userId} visited landmark ${landmarkId}`);
+        return { success: true };
+    } catch(error) {
+        console.log('error detected:', error);
+        return {
+            success: false,
+        }
+    }
 }
 /**
  * checkLandmark - check if position is in range of landmark
@@ -203,7 +225,7 @@ export async function visitLandmark(landmarkId: string, userId: string) {
  * range - range in meters
  * 
  *  */
-export async function checkLandmark(landmarkId: string, position: { longitude: number, latitide: number }, range: number): Promise<{ isRange: boolean, error?: Error }> {
+export async function checkLandmark(landmarkId: string, position: { longitude: number, latitude: number }, range: number): Promise<{ isRange: boolean, error?: Error }> {
 
     try {
         const { landmark } = await getLandmark(landmarkId);
@@ -213,7 +235,7 @@ export async function checkLandmark(landmarkId: string, position: { longitude: n
         const result = await database.execute(sql`
                 SELECT ST_DWithin(
                     ST_MakePoint(${landmarkPosition.x}, ${landmarkPosition.y})::geography,
-                    ST_MakePoint(${position.longitude}, ${position.latitide})::geography,
+                    ST_MakePoint(${position.longitude}, ${position.latitude})::geography,
                     ${range}
                 ) as in_range;
             `);
