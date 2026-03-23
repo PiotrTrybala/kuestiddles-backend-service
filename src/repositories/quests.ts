@@ -1,7 +1,7 @@
 import { arrayOverlaps, eq, ilike, and, or } from "drizzle-orm";
 import { database } from "../database/db";
 // import { addRecent, getRecent } from "../controllers/recent";
-import { quests } from "../database/schema/games";
+import { quests, questsSolved } from "../database/schema/games";
 import { getRecentEntities } from "../controllers/recent";
 
 export type Error = {
@@ -81,7 +81,7 @@ export async function getRecentQuests(organizationId: string, userId: string): P
         return {
             quests: result,
         }
-    } catch(error) {
+    } catch (error) {
         console.log('error detected:', error);
         return {
             quests: [],
@@ -248,6 +248,29 @@ export async function deleteQuest(organizationId: string, id: string): Promise<{
     }
 }
 
-export async function solveQuest(questId: string, userId: string, answers: string[]) {
-    // Implementation pending
+export async function solveQuest(questId: string, userId: string, answers: string[]): Promise<{ solved: boolean, error?: string }> {
+    try {
+
+        const result = await database.query.questsSolved.findFirst({
+            where: and(eq(questsSolved.user_id, userId), eq(questsSolved.quest_id, questId))
+        })
+
+        if (!result) {
+            await database.insert(questsSolved).values({
+                user_id: userId,
+                quest_id: questId,
+                solved: true,
+            });
+        }
+
+        return {
+            solved: true,
+        }
+    } catch (error) {
+        console.log('error detected:', error);
+        return {
+            solved: false,
+            error: "Internal error while solving quest",
+        }
+    }
 }

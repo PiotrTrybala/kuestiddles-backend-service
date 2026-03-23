@@ -1,9 +1,5 @@
 import { Hono } from "hono";
-import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
-
-import { type AppEnv } from "../../config/app";
-import { quests } from "../../database/schema/games";
-import { database } from "../../database/db";
+import type { AppEnv } from "../../config/app";
 import { createQuest, deleteQuest, getQuest, getRecentQuests, listQuests, updateQuest } from "../../repositories/quests";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { requireOrganization } from "./middleware";
