@@ -17,6 +17,7 @@ export type ListQuestsParams = {
 };
 
 type Quest = typeof quests.$inferSelect;
+type Landmark = typeof landmarks.$inferSelect;
 
 export async function listQuests(organizationId: string, { page, pageSize, title, labels }: ListQuestsParams): Promise<{ quests: Quest[] }> {
     const offset = page * pageSize;
@@ -45,7 +46,7 @@ export async function listQuests(organizationId: string, { page, pageSize, title
     }
 }
 
-export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Error }> {
+export async function getQuest(id: string): Promise<{ quest?: Quest, landmark?: Landmark, error?: Error }> {
     try {
         const quest = await database.query.quests.findFirst({
             where: eq(quests.id, id)
@@ -64,7 +65,7 @@ export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Err
             return { error: { code: 404, error: "Quests landmark not found" } };
         }
 
-        return { quest }
+        return { quest, landmark }
     } catch (error) {
         console.log('error detected:', error);
         return {

@@ -79,9 +79,7 @@ questsRouter.get("/:id", async (c) => {
     const organization = c.get("organization")!;
     const user = c.get("user")!;
     const id = c.req.param("id");
-    const { quest, error } = await getQuest(id);
-
-    console.log('quest:', quest);
+    const { quest, landmark, error } = await getQuest(id);
 
     if (error) {
         return c.json({
@@ -91,7 +89,10 @@ questsRouter.get("/:id", async (c) => {
 
     await registerRecentEntity('quests', organization.id, user.id, quest!.id);
 
-    return c.json(quest);
+    return c.json({
+        ...quest,
+        landmark,
+    });
 
     // const id = c.req.param("id");
 
