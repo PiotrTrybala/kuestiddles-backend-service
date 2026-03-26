@@ -1,7 +1,7 @@
 import { arrayOverlaps, eq, ilike, and, or } from "drizzle-orm";
 import { database } from "../database/db";
 // import { addRecent, getRecent } from "../controllers/recent";
-import { quests, questsSolved } from "../database/schema/games";
+import { landmarks, quests, questsSolved } from "../database/schema/games";
 import { getRecentEntities } from "../controllers/recent";
 
 export type Error = {
@@ -51,8 +51,17 @@ export async function getQuest(id: string): Promise<{ quest?: Quest, error?: Err
             where: eq(quests.id, id)
         });
 
+        
         if (!quest) {
             return { error: { code: 404, error: "Quest not found" } };
+        }
+
+        const landmark = await database.query.landmarks.findFirst({
+            where: eq(landmarks.id, quest.landmark_id!), // TODO: Check if this will cause bugs
+        });
+
+        if (!landmark) {
+            return { error: { code: 404, error: "Quests landmark not found" } };
         }
 
         return { quest }
