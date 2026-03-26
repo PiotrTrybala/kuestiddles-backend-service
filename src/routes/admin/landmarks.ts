@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { AppEnv } from "../../config/app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { requireOrganization } from "./middleware";
-import { createLandmark, deleteLandmark, getLandmark, listLandmarks, updateLandmark } from "../../repositories/landmarks";
+import { createLandmark, deleteLandmark, getLandmark, getRecentLandmarks, listLandmarks, updateLandmark } from "../../repositories/landmarks";
 import { registerRecentEntity } from "../../controllers/recent";
 import { organization } from "better-auth/plugins";
 
@@ -57,9 +57,17 @@ landmarksRouter.get("/list", async (c) => {
 landmarksRouter.get("/recent", async(c) => {
 
     const organization = c.get("organization")!;
+    const user = c.get("user")!;
 
-    return c.json({}, 200);
+    const { landmarks, error } = await getRecentLandmarks(organization.id, user.id);
 
+    if (error) {
+        return c.json({
+            message: error.error,
+        }, error.code as ContentfulStatusCode);
+    }
+
+    return c.json(landmarks);
 });
 
 landmarksRouter.get("/:id", async (c) => {
