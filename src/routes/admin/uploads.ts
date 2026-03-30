@@ -25,7 +25,6 @@ assetsRouter.get("/list", async (c) => {
 
     return c.json({ page, assets });
 
-
     // const offset = page * pageSize;
     // const limit = pageSize;
 

@@ -93,15 +93,6 @@ questsRouter.get("/:id", async (c) => {
         ...quest,
         landmark,
     });
-
-    // const id = c.req.param("id");
-
-    // const result = await database.select().from(quests).where(eq(quests.id, id));
-    // if (result.length === 0) return c.notFound();
-
-    // const [quest] = result;
-
-    // return c.json(quest);
 });
 
 // TODO: Add QuestCreate validation
