@@ -30,7 +30,10 @@ mobileRouter.post("/google", async (c) => {
                     token: idToken,
                 }
             },
-            headers: c.req.raw.headers,
+            headers: {
+                ...c.req.raw.headers,
+                "x-auth-source": "mobile",
+            },
         });
 
         return c.json(session);

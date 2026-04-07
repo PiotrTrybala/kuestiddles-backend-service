@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
 import { stripeClient } from './stripe';
 import { OAuth2Client } from "google-auth-library";
+import { USER_DEFAULT_PROFILE_PICTURE_URL } from '../globals';
 
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
@@ -50,14 +51,28 @@ export const auth = betterAuth({
     databaseHooks: {
         user: {
             create: {
-                before: async (user) => {
+                before: async (user, ctx) => {
+
+                    // TODO: Implement sign up for admin user and mobile app user separately
+
+                    const isMobile = ctx!.headers?.get("x-auth-source") === "mobile";
+
+                    if (isMobile) {
+                        user.role = "user";
+                    } else {
+                        user.role = "admin";
+                    }
+
                     if (!user.username) {
                         const base = user.email.split('@')[0];
                         const random = Math.floor(1000 + Math.random() * 9000);
                         user.username = `${base}${random}`;
                         if (!user.role)
-                            user.role = "admin";
+                            user.role = "user";
                     }
+
+                    user.image = USER_DEFAULT_PROFILE_PICTURE_URL;
+
                     return { 
                         data: user
                     };
