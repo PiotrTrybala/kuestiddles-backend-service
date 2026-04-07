@@ -5,9 +5,20 @@ import { timestamps } from './utils';
 
 export const UPLOADS_LABELS = ['profile', 'asset'];
 
+// export const uploads = pgTable('uploads', {
+//     id: uuid().primaryKey().defaultRandom(),
+//     organization_id: text().references(() => organization.id, { onDelete: 'cascade' }),
+//     member_id: text().references(() => member.id, { onDelete: 'no action' }),
+//     name: text().notNull(),
+//     labels: text().array().default(sql`'{}'::text[]`),
+//     path: text().notNull(),
+//     hash: text().notNull(),
+//     ...timestamps,
+// });
+
 export const uploads = pgTable('uploads', {
-    id: uuid().primaryKey().defaultRandom(),
-    organization_id: text().references(() => organization.id, { onDelete: 'cascade' }),
+    id: uuid().primaryKey().defaultRandom().notNull(),
+    organization_id: text().notNull().references(() => organization.id, { onDelete: 'cascade' }),
     member_id: text().references(() => member.id, { onDelete: 'no action' }),
     name: text().notNull(),
     labels: text().array().default(sql`'{}'::text[]`),

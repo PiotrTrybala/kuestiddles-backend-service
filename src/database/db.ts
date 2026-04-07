@@ -35,4 +35,4 @@ async function populatePlans() {
     }
 }
 
-await populatePlans();
+// await populatePlans();
