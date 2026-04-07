@@ -19,12 +19,6 @@ export const requireAuth = (role: "user" | "admin" | "none") => {
             if (session.user.role !== role) return c.json({ message: "Forbidden" }, 403);
         }
 
-        const organizationSlug = c.req.param("organizationSlug");
-        console.log("organizationSlug:", organizationSlug, c.req.param(), c.req.raw.url);
-        c.set("organizationSlug", organizationSlug);
-
-        console.log(c.get("organizationSlug"));
-
         await next();
     });
 };

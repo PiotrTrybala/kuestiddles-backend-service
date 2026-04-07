@@ -4,7 +4,7 @@ import { adminRouter } from "./admin/admin";
 import { userRouter } from "./user/user";
 import { requireAuth } from "./middleware";
 import { avatarsRouter } from "./public/avatars";
-import { mobileRouter } from "./mobile";
+import { mobileRouter } from "./auth/mobile";
 
 export const api = new Hono().basePath("/v1");
 

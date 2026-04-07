@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { type AppEnv } from "../config/app";
-import { auth, googleMobileClient } from "../config/auth";
+import { type AppEnv } from "../../config/app";
+import { auth, googleMobileClient } from "../../config/auth";
 
 export const mobileRouter = new Hono<AppEnv>();
 

@@ -8,10 +8,7 @@ import { showRoutes } from 'hono/dev';
 
 import { type AppEnv } from './config/app';
 
-// TODO: Rewrite index.ts 
-
 const app = new Hono<AppEnv>();
-
 
 app.use(
 	"/api/auth/*",
