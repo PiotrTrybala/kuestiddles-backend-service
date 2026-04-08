@@ -3,9 +3,11 @@ import type { AppEnv } from "../../config/app";
 import { requireOrganization } from "./middleware";
 import { extractPagingParams, parseBodyFiles } from "../utils";
 import { deleteUpload, getUploadFile, getUploadMetadata, listUploads, uploadFiles } from "../../repositories/uploads";
-import { uploads } from "../../database/schema/uploads";
+
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { meta } from "zod/v4/core";
+import { z } from 'zod';
+import { zValidator } from '@hono/zod-validator';
+import { uploadsSchema } from "../validators";
 
 export const uploadsRouter = new Hono<AppEnv>();
 
@@ -13,6 +15,8 @@ uploadsRouter.use("*", requireOrganization);
 
 uploadsRouter.get("/", async (c) => {
     const organization = c.get("organization")!;
+
+    console.log('organization:', organization);
 
     const { page, pageSize, name, labels } = extractPagingParams(c.req.url);
 
@@ -26,10 +30,12 @@ uploadsRouter.get("/", async (c) => {
     });
 });
 
-uploadsRouter.get("/:uploadId/metadata", async (c) => {
+uploadsRouter.get("/:uploadId/metadata", zValidator('param', z.object({
+    uploadId: z.uuid({ error: "Invalid parameter" }),
+})), async (c) => {
 
-    const id = c.req.param("id") || "";
-    const { metadata, error } = await getUploadMetadata(id);
+    const { uploadId } = c.req.valid('param');
+    const { metadata, error } = await getUploadMetadata(uploadId);
     if (error) {
         return c.json({
             message: error.error,
@@ -39,11 +45,12 @@ uploadsRouter.get("/:uploadId/metadata", async (c) => {
     return c.json(metadata);
 });
 
-uploadsRouter.get("/:uploadId", async (c) => {
+uploadsRouter.get("/:uploadId", zValidator('param', z.object({
+    uploadId: z.uuid({ error: "Invalid parameter" }),
+})), async (c) => {
 
-    const id = c.req.param("id") || "";
-
-    const { upload, error } = await getUploadFile(id);
+    const { uploadId } = c.req.valid('param');
+    const { upload, error } = await getUploadFile(uploadId);
     if (error) {
         return c.json({
             message: error.error,
@@ -60,14 +67,12 @@ uploadsRouter.get("/:uploadId", async (c) => {
 
 
 
-uploadsRouter.post("/", async (c) => {
+uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
 
     const organization = c.get("organization")!;
     const member = c.get("membership")!;
 
-    const body = await c.req.parseBody({ all: true });
-    const uploads = parseBodyFiles(body);
-
+    const { uploads } = c.req.valid('form');
     if (uploads.length === 0) return c.json({ message: "0 uploads found." }, 400);
 
     const { results, error } = await uploadFiles(
@@ -85,9 +90,12 @@ uploadsRouter.post("/", async (c) => {
 
 });
 
-uploadsRouter.delete("/:uploadId", async (c) => {
-    const id = c.req.param("id") || "";
-    const { error } = await deleteUpload(id);
+uploadsRouter.delete("/:uploadId", zValidator('param', z.object({
+    uploadId: z.uuid({ error: "Invalid parameter" }),
+})), async (c) => {
+
+    const { uploadId } = c.req.valid('param');
+    const { error } = await deleteUpload(uploadId);
     if (error) {
         return c.json({
             message: error.error,
