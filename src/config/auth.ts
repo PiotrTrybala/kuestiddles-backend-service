@@ -81,14 +81,14 @@ export const auth = betterAuth({
         }
     },
 
-    user: {
-        additionalFields: {
-            username: {
-                type: "string",
-                required: true,
-            }
-        },
-    },
+    // user: {
+    //     additionalFields: {
+    //         username: {
+    //             type: "string",
+    //             required: true,
+    //         }
+    //     },
+    // },
 
     plugins: [
         admin(),

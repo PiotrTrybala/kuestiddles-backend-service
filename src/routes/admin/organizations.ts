@@ -2,8 +2,7 @@ import { Hono } from "hono";
 import { type AppEnv } from "../../config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
-import { assetsRouter } from "./uploads";
-import { requireOrganization } from "./middleware";
+import { assetsRouter } from "./assets";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
