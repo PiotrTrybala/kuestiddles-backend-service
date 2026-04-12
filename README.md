@@ -1,31 +1,26 @@
-# backend_service
+# Kuestiddles Backend Service
 
-To install dependencies:
+## Routes
 
-```bash
-bun install
-```
+- /api:
+  - /auth:
+  - /v2:
+    - /settings
+      - /avatars
+    - /admin
+      - /landmarks
+      - /quests
+      - /competitions  
+      - /uploads
+    - /user:
+      - /landmarks
+      - /quests
+      - /competitions
+      - /auth
+        - /mobile
+      - /statistics  
 
-To run:
+## Images and avatars
 
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.3.9. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
-
-# user (admin) quotas
-
-plans:
-- basic:
-    - 1 organization
-    - 10 landmarks
-    - 20 quests
-    - 3 simulteneous competitions
-- enterprise:
-    - 5 organizations
-    - 20 landmarks
-    - 50 quests
-    - 8 simulteneous competitions
-- custom
-    - user chooses what he/she wants to have
+Avatars: <https://cdn.kuestiddles.com/avatars/><uuid_of_user>.webp
+Images: <https://cdn.kuestiddles.com/images/><uuid_of_image>.webp  
