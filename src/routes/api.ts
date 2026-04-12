@@ -1,14 +1,11 @@
 import { Hono } from "hono";
 
-import { adminRouter } from "./admin/admin";
-import { userRouter } from "./user/user";
-import { avatarsRouter } from "./public/avatars";
-import { mobileRouter } from "./auth/mobile";
+import { adminRouter } from "./v2/admin/admin";
+import { userRouter } from "./v2/user/user";
+import { settingsRouter } from "./v2/settings/settings";
 
-export const api = new Hono().basePath("/v1");
+export const api = new Hono().basePath("/v2");
 
-// api.route("/admin", adminRouter);
-// api.route("/user", userRouter);
-// api.route("/avatars", avatarsRouter);
-
-// api.route("/mobile", mobileRouter);
+api.route("/settings", settingsRouter);
+api.route("/admin", adminRouter);
+api.route("/user", userRouter);

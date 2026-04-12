@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { organizationsRouter } from "./organizations";
-import { requireAuth } from "../middleware";
+import { requireAuth } from "@/routes/middleware";
 
 export const adminRouter = new Hono();
 
