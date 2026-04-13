@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { type AppEnv } from "../../config/app";
+import { type AppEnv } from "@/config/app";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
 import { assetsRouter } from "./assets";

@@ -1,41 +1,58 @@
 
-import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
-import { user } from './auth';
-import { timestamps } from './utils';
-import { quests } from './games';
+import { boolean, integer, pgTable, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { organization } from "./auth";
+import { timestamps } from "./utils";
+import { quests } from "./games";
 
-export const DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
-
-export const competitions = pgTable('competitions', {
-    id: uuid().primaryKey().defaultRandom(),
-    user_id: text().references(() => user.id),
-    quest_id: uuid().references(() => quests.id),
-    expires_at: timestamp().notNull().$defaultFn(() => {
-        const date = new Date();
-        const expiresAt = date.getTime() + DAY_IN_MILLIS;
-        return new Date(expiresAt);
+export const competitions = pgTable("competitions", {
+    
+    id: uuid().primaryKey().defaultRandom().notNull(),
+    organization_id: text().notNull().references(() => organization.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    name: text().notNull(),
+    groups: integer().notNull().default(0),
+    created_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    expires_at: timestamp({ withTimezone: true }).notNull().$defaultFn(() => {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 1); // next day
+        return expiresAt;
     }),
-    ...timestamps,
-});
-export const groups = pgTable('groups', {
-    id: uuid().primaryKey().defaultRandom(),
-    competition_id: uuid().references(() => competitions.id),
+
+}, (t) => ([
+    unique("unique_competition_idx").on(t.organization_id, t.name),
+]));
+
+export const competitionsGroups = pgTable("competition_groups", {
+    id: uuid().primaryKey().defaultRandom().notNull(),
+    competition_id: uuid().references(() => competitions.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
     name: text().notNull(),
     members: integer().notNull().default(0),
+    solved: integer().notNull().default(0),
     ...timestamps,
 });
 
-export const groupUsers = pgTable('groups_users', {
-    id: uuid().primaryKey().defaultRandom(),
-    competition_id: uuid().references(() => competitions.id),
-    group_id: uuid().references(() => groups.id),
+export const competitionGroupUsers = pgTable("competition_group_users", {
+    id: uuid().primaryKey().defaultRandom().notNull(),
+    group_id: uuid().notNull().references(() => competitionsGroups.id, { onUpdate: 'cascade', onDelete: 'cascade' }),
     username: text().notNull(),
+    access_token: text().notNull(),
     ...timestamps,
 });
 
-export const groupQuestsSolved = pgTable('group_quests_solved', {
-    quest_id: uuid().references(() => quests.id),
-    group_user_id: uuid().references(() => groupUsers.id),
-    solved: boolean().default(false).notNull(),
+export const competitionGroupSolved = pgTable("competition_group_solved", {
+    group_id: uuid().notNull().references(() => competitionsGroups.id),
+    user_id: uuid().notNull().references(() => competitionGroupUsers.id),
+    quest_Id: uuid().notNull().references(() => quests.id),
+    solved: boolean().notNull().default(false),
+    ...timestamps,
+});
+
+export const competitionGroupInvites = pgTable("competition_group_invites", {
+    id: uuid().primaryKey().defaultRandom().notNull(),
+    group_id: uuid().notNull().references(() => competitionsGroups.id),
+    expires_at: timestamp({ withTimezone: true }).notNull().$defaultFn(() => {
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+        return expiresAt;
+    }),
     ...timestamps,
 });
