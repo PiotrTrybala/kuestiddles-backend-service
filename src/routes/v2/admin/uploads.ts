@@ -1,13 +1,13 @@
 import { Hono } from "hono";
-import type { AppEnv } from "../../config/app";
+import type { AppEnv } from "@/config/app";
 import { requireOrganization } from "./middleware";
-import { extractPagingParams, parseBodyFiles } from "../utils";
-import { deleteUpload, getUploadFile, getUploadMetadata, listUploads, uploadFiles } from "../../repositories/uploads";
+import { extractPagingParams } from "@/routes/utils";
+import { deleteUpload, getUploadFile, getUploadMetadata, listUploads, uploadFiles } from "@/repositories/uploads";
 
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { uploadsSchema } from "../validators";
+import { uploadsSchema } from "@/routes/validators";
 
 export const uploadsRouter = new Hono<AppEnv>();
 

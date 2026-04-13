@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { member, organization, user } from './auth';
 import { timestamps } from './utils';
 
@@ -14,4 +14,7 @@ export const uploads = pgTable('uploads', {
     path: text().notNull(),
     hash: text().notNull(),
     ...timestamps,
-});
+}, (t) => ([
+    unique("upload_org_idx").on(t.organization_id, t.name),
+]));
+

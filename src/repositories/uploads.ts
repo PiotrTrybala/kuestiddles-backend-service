@@ -47,7 +47,7 @@ export async function listUploads(organizationId: string, params: ListUploadsPar
             error: {
                 code: 500,
                 error: "Internal server error",
-            }
+            } 
         }
     }
 

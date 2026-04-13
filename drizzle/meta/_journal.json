@@ -64,6 +64,20 @@
       "when": 1776087615848,
       "tag": "0008_calm_mandrill",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776088047065,
+      "tag": "0009_dark_veda",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776088606969,
+      "tag": "0010_rich_silvermane",
+      "breakpoints": true
     }
   ]
 }
