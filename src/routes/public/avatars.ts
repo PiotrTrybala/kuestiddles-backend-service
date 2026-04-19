@@ -7,7 +7,7 @@ import { defaultProfilePictureFile } from "../../static";
 import { s3 } from "../../config/s3";
 import sharp from "sharp";
 import { sha256 } from "hono/utils/crypto";
-import { user } from "../../database/schema/auth";
+import { user } from "../../database/auth";
 
 export const avatarsRouter = new Hono<AppEnv>();
 

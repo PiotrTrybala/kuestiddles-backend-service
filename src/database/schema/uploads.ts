@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { member, organization, user } from '../auth';
-import { timestamps } from './utils';
+import { member, organization } from '../auth';
+import { timestamps } from '../utils';
 
 export const UPLOADS_LABELS = ['profile', 'asset'];
 

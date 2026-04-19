@@ -1,7 +1,7 @@
 
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
 import { user } from '../auth';
-import { timestamps } from './utils';
+import { timestamps } from '../utils';
 import { quests } from './games';
 
 export const DAY_IN_MILLIS = 1000 * 60 * 60 * 24;

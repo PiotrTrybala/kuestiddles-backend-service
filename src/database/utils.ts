@@ -1,7 +1,6 @@
 
 import { arrayOverlaps, eq, ilike } from 'drizzle-orm';
 import { timestamp } from 'drizzle-orm/pg-core';
-import { uploads } from './uploads';
 
 export const DEFAULT_THUMBNAIL = "";
 export const DEFAULT_PAGE_SIZE = 20;
@@ -24,21 +23,4 @@ export function getPageBounds(page: number, pageSize: number) {
         offset: page * pageSize,
         limit: pageSize,
     }
-}
-
-export function getUploadListConditions(organizationId: string, name: string, labels: string[]) {
-
-    const conditions = [
-        eq(uploads.organization_id, organizationId),
-    ];
-
-    if (name && name.trim() !== "") {
-        conditions.push(ilike(uploads.name, `%${name}%`));
-    }
-
-    if (labels.length > 0) {
-        conditions.push(arrayOverlaps(uploads.labels, labels));
-    }
-
-    return conditions;
 }

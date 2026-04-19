@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, geometry, index, uuid, timestamp, boolean, PgBigSerial53 } from 'drizzle-orm/pg-core';
 import { organization, user } from '../auth';
-import { timestamps } from './utils';
-import { DEFAULT_THUMBNAIL } from './utils';
+import { timestamps } from '../utils';
+import { DEFAULT_THUMBNAIL } from '../utils';
 
 export const quests = pgTable('quests', {
     id: uuid().defaultRandom().primaryKey(),

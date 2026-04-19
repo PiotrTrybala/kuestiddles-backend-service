@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { auth } from "../config/auth";
 import { database } from "../database/db";
-import { user } from "../database/schema/auth";
+import { user } from "../database/auth";
 
 export async function initWithMockData() {
 

@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { database } from "../database/db";
 import { uploads } from "../database/schema/uploads";
-import { DEFAULT_UPLOAD_HEIGHT, DEFAULT_UPLOAD_WIDTH, DEFAULT_UPLOAD_WEBP_QUALITY, getPageBounds, getUploadListConditions } from "../database/schema/utils";
+import { DEFAULT_UPLOAD_HEIGHT, DEFAULT_UPLOAD_WIDTH, DEFAULT_UPLOAD_WEBP_QUALITY, getPageBounds, getUploadListConditions } from "../database/utils";
 import { s3 } from "../config/s3";
 import type { S3File } from "bun";
 import sharp from "sharp";
