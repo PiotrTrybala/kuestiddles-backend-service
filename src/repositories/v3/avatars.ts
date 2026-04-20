@@ -1,4 +1,11 @@
 
-export async function get() {}
+export async function get(userId: string) {
 
-export async function upload() {}
+}
+
+export async function upload(
+    userId: string,
+    avatar: File,
+) {
+    
+}
