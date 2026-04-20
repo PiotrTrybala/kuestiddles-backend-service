@@ -1,4 +1,4 @@
-import { pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { organization, user } from "../auth";
 import { sql } from "drizzle-orm";
 import { timestamps } from "../utils";
@@ -15,6 +15,10 @@ export const uploads = pgTable("uploads", {
     ...timestamps
 }, (table) => [
     uniqueIndex("uploads_organization_slug_idx").on(table.organization_id, table.slug),
+    
+    index("uploads_labels_gin_idx").using("gin", table.labels),
+    index("uploads_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops")),
+    index("uploads_organization_id_idx").on(table.organization_id),
 ]);
 
 // avatars

@@ -3,7 +3,6 @@ import { createMiddleware } from "hono/factory";
 import { auth } from "../config/auth";
 
 export const requireAuth = (role: "user" | "admin" | "none") => {
-    console.log('require auth:', role);
     return createMiddleware<AppEnv>(async (c, next) => {
         console.log('require auth middleware with:', role);
         const session = await auth.api.getSession({
