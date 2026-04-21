@@ -10,7 +10,7 @@ import { getUploadMetadata } from "../uploads";
 export type UploadType = typeof uploads.$inferSelect;
 export type UploadInsertType = typeof uploads.$inferInsert;
 
-export async function search(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]) {
+export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]) {
     try {
 
         const offset = page * pageSize;
@@ -51,7 +51,7 @@ export async function search(organizationId: string, page: number, pageSize: num
     }
 }
 
-export async function getMetadataById(id: string) {
+export async function getUploadMetadataById(id: string) {
     try {
         const metadata = await database.query.uploads.findFirst({
             where: eq(uploads.id, id)
@@ -79,9 +79,9 @@ export async function getMetadataById(id: string) {
 
 }
 
-export async function getDataById(id: string) {
+export async function getUploadDataById(id: string) {
     try {
-        const { metadata, error } = await getMetadataById(id);
+        const { metadata, error } = await getUploadMetadataById(id);
         if (error) {
             return {
                 file: undefined,
@@ -101,7 +101,7 @@ export async function getDataById(id: string) {
     }
 }
 
-export async function getMetadataBySlug(organizationId: string, slug: string) {
+export async function getUploadMetadataBySlug(organizationId: string, slug: string) {
     try {
         const metadata = await database.query.uploads.findFirst({
             where: and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug))
@@ -192,9 +192,9 @@ export async function upload(organizationId: string, files: File[]) {
     }
 }
 
-export async function removeById(id: string) {
+export async function removeUploadById(id: string) {
     try {
-        const { metadata, error } = await getMetadataById(id);
+        const { metadata, error } = await getUploadMetadataById(id);
 
         if (error || !metadata) {
             return {
@@ -223,9 +223,9 @@ export async function removeById(id: string) {
     }
 }
 
-export async function removeBySlug(organizationId: string, slug: string) {
+export async function removeUploadBySlug(organizationId: string, slug: string) {
     try {
-const { metadata, error } = await getMetadataBySlug(organizationId, slug);
+const { metadata, error } = await getUploadMetadataBySlug(organizationId, slug);
 
         if (error || !metadata) {
             return {
