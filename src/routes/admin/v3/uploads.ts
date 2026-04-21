@@ -94,27 +94,6 @@ uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
     return c.json(metadata);
 });
 
-uploadsRouter.get("/:slug", zValidator('param', z.object({
-    slug: z.string({ error: "invalid parameter" }),
-})), async (c) => {
-    const organization = c.get("organization")!;
-    const { slug } = c.req.valid('param');
-
-    const { file, error } = await getUploadMetadataBySlug(organization.id, slug);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.body(file!.stream(), {
-        headers: {
-            "Content-Type": "image/webp",
-            "Cache-Control": "public, max-age=31536000",
-        }
-    });
-});
-
 uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
 
     const organization = c.get("organization")!;

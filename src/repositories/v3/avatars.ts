@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
-export async function get(userId: string) {
+export async function getAvatar(userId: string) {
     try {
 
         const [metadata] = await database.select()
@@ -35,7 +35,7 @@ export const DEFAULT_AVATAR_QUALITY = 75;
 export const DEFAULT_AVATAR_WIDTH = 128;
 export const DEFAULT_AVATAR_HEIGHT = 128;
 
-export async function upload(
+export async function uploadAvatar(
     userId: string,
     avatar: File,
 ) {
