@@ -3,14 +3,16 @@ import { getAvatar, uploadAvatar } from "@/repositories/v3/avatars";
 import { Hono } from "hono";
 import { uploadSchema } from "../validators";
 import { zValidator } from "@hono/zod-validator";
+import z from "zod";
 
 export const avatarsRouter = new Hono<AppEnv>();
 
-avatarsRouter.get("/", async (c) => {
-    const user = c.get("user");
-    if (!user) return c.json({ message: "Unauthorized" }, 401);
+avatarsRouter.get("/:userId", zValidator('param', z.object({
+    userId: z.string().transform((value) => value.replace(".webp", "")),
+})), async (c) => {
+    const { userId } = c.req.valid("param");
 
-    const { file, error } = await getAvatar(user.id);
+    const { file, error } = await getAvatar(userId);
     if (error) {
         return c.notFound(); // TODO: Add different error response
     }

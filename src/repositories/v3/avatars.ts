@@ -7,10 +7,11 @@ import sharp from "sharp";
 
 export async function getAvatar(userId: string) {
     try {
-
         const [metadata] = await database.select()
             .from(avatars)
             .where(eq(avatars.user_id, userId));
+
+        console.log(metadata);
 
         if (!metadata) {
             return {
@@ -51,7 +52,6 @@ export async function uploadAvatar(
         const avatarId = await sha256(userId);
 
         const uploadPath = `avatars/${avatarId!}`;
-
 
         const [metadata] = await database.insert(avatars)
             .values({

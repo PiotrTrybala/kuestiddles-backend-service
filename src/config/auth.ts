@@ -6,7 +6,7 @@ import { sendResetPasswordEmail, sendVerificationEmail } from './mailgun';
 import { stripe } from "@better-auth/stripe";
 import { admin, organization, twoFactor } from 'better-auth/plugins';
 
-import { eq } from 'drizzle-orm';
+import { ConsoleLogWriter, eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
 import { stripeClient } from './stripe';
 import { OAuth2Client } from "google-auth-library";
@@ -52,7 +52,13 @@ export const auth = betterAuth({
     databaseHooks: {
         user: {
             create: {
-                before: async (user, ctx) => {
+                after: async (user) => {
+                    console.log(`user.id = ${user.id}`);
+
+                    await uploadAvatar(user.id, defaultProfilePictureFile as File);
+                    user.image = `http://localhost:3000/api/v3/avatars/${user.id}.webp`;
+                },
+                before: async (user) => {
 
                     // const isMobile = ctx!.headers?.get("x-auth-source") === "mobile";
                     
@@ -64,6 +70,9 @@ export const auth = betterAuth({
                     //     user.role = "admin";
                     // }
 
+                    user.role = "admin";
+                    console.log(`user = ${JSON.stringify(user)}`);
+
                     if (!user.username) {
                         const base = user.email.split('@')[0];
                         const random = Math.floor(1000 + Math.random() * 9000);
@@ -71,9 +80,7 @@ export const auth = betterAuth({
                         if (!user.role)
                             user.role = "user";
                     }
-                    // const { error } = 
-                    await uploadAvatar(user.id, defaultProfilePictureFile as File);
-                    user.image = `http://localhost:3000/api/v3/avatars/${user.id}.webp`;
+                    // const { error } =
 
                     return { 
                         data: user

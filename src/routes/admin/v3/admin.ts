@@ -7,4 +7,4 @@ export const adminRouter = new Hono<AppEnv>();
 
 adminRouter.use("*", requireAuth("admin"));
 
-adminRouter.route("/", organizationsRouter);
+adminRouter.route("/v3", organizationsRouter);

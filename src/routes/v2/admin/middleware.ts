@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
-import {type AppEnv } from "../../config/app";
-import { auth } from "../../config/auth";
+import {type AppEnv } from "@/config/app";
+import { auth } from "@/config/auth";
 import {
   matchedRoutes,
   routePath,
