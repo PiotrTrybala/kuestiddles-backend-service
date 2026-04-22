@@ -10,7 +10,8 @@ import { eq } from 'drizzle-orm';
 import { plans } from '../database/schema/stripe';
 import { stripeClient } from './stripe';
 import { OAuth2Client } from "google-auth-library";
-import { USER_DEFAULT_PROFILE_PICTURE_URL } from '../globals';
+import { uploadAvatar } from '@/repositories/v3/avatars';
+import { defaultProfilePictureFile } from '@/static';
 
 export const auth = betterAuth({
     database: drizzleAdapter(database, {
@@ -53,15 +54,15 @@ export const auth = betterAuth({
             create: {
                 before: async (user, ctx) => {
 
-                    // TODO: Implement sign up for admin user and mobile app user separately
+                    // const isMobile = ctx!.headers?.get("x-auth-source") === "mobile";
+                    
+                    // TODO: Add user creation based on user agent (web-admin, mobile-user)
 
-                    const isMobile = ctx!.headers?.get("x-auth-source") === "mobile";
-
-                    if (isMobile) {
-                        user.role = "user";
-                    } else {
-                        user.role = "admin";
-                    }
+                    // if (isMobile) {
+                    //     user.role = "user";
+                    // } else {
+                    //     user.role = "admin";
+                    // }
 
                     if (!user.username) {
                         const base = user.email.split('@')[0];
@@ -70,8 +71,9 @@ export const auth = betterAuth({
                         if (!user.role)
                             user.role = "user";
                     }
-
-                    user.image = USER_DEFAULT_PROFILE_PICTURE_URL;
+                    // const { error } = 
+                    await uploadAvatar(user.id, defaultProfilePictureFile as File);
+                    user.image = `http://localhost:3000/api/v3/avatars/${user.id}.webp`;
 
                     return { 
                         data: user
@@ -80,15 +82,6 @@ export const auth = betterAuth({
             }
         }
     },
-
-    // user: {
-    //     additionalFields: {
-    //         username: {
-    //             type: "string",
-    //             required: true,
-    //         }
-    //     },
-    // },
 
     plugins: [
         admin(),
