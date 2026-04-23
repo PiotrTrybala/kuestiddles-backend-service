@@ -1,7 +1,7 @@
 import type { AppEnv } from "@/config/app";
 import { createQuest } from "@/repositories/quests";
 import { getUploadDataById, getUploadMetadataById, getUploadMetadataBySlug, removeUploadById, removeUploadBySlug, searchUploads, upload } from "@/repositories/v3/uploads";
-import { requireOrganization } from "@/routes/v2/admin/middleware";
+import { requireOrganization } from "@/routes/_v2/admin/middleware";
 import { uploadsSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";

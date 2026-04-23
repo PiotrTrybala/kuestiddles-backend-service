@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { settingsRouter } from "./v2/settings/settings";
+import { settingsRouter } from "./_v2/settings/settings";
 import { adminRouter } from "./admin/v3/admin";
 import { userRouter } from "./user/v3/user";
 import { v3Router } from "./v3/v3";
