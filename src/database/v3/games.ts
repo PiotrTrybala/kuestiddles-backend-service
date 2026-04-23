@@ -12,7 +12,9 @@ export const games = pgTable("games", {
     name: text().notNull(),
     assets: text().array().notNull().default(sql`'{}'::text[]`),
     ...timestamps,
-});
+}, (table) => [
+    uniqueIndex("games_organization_slug_idx").on(table.organization_id, table.slug)
+]);
 
 export const quests = pgTable("quests", {
     id: uuid().notNull().defaultRandom().primaryKey(),

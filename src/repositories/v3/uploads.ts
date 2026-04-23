@@ -6,9 +6,6 @@ import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 import slugify from "slugify";
 
-export type UploadType = typeof uploads.$inferSelect;
-export type UploadInsertType = typeof uploads.$inferInsert;
-
 export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]) {
     try {
 
