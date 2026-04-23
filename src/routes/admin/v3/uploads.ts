@@ -12,10 +12,10 @@ export const uploadsRouter = new Hono<AppEnv>();
 uploadsRouter.use("*", requireOrganization);
 
 uploadsRouter.get("/search", zValidator('param', z.object({
-    page: z.coerce.number(),
-    pageSize: z.coerce.number(),
-    name: z.string(),
-    labels: z.string().transform((value) => value.split(',')),
+    page: z.coerce.number().default(0),
+    pageSize: z.coerce.number().default(20),
+    name: z.string().default(""),
+    labels: z.string().transform((value) => value.split(',')).default([]),
 })), async (c) => {
 
     const organization = c.get("organization")!;
@@ -78,7 +78,7 @@ uploadsRouter.get("/:id", zValidator('param', z.object({
     });
 });
 
-uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
+uploadsRouter.get("/slug/:slug/metadata", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
 })), async (c) => {
     const organization = c.get("organization")!;

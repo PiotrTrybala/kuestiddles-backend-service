@@ -20,7 +20,7 @@ organizationsRouter.post("/create", requireAuth("admin"), async (c) => {
 
     const organization = await auth.api.createOrganization({
         body: { name, slug, },
-        headers: c.req.header,
+        headers: c.req.raw.headers,
     });
 
     return c.json({

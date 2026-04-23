@@ -5,7 +5,6 @@ import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 import slugify from "slugify";
-import { getUploadMetadata } from "../uploads";
 
 export type UploadType = typeof uploads.$inferSelect;
 export type UploadInsertType = typeof uploads.$inferInsert;
@@ -53,9 +52,9 @@ export async function searchUploads(organizationId: string, page: number, pageSi
 
 export async function getUploadMetadataById(id: string) {
     try {
-        const metadata = await database.query.uploads.findFirst({
-            where: eq(uploads.id, id)
-        });
+        const [ metadata ] = await database.select()
+            .from(uploads)
+            .where(eq(uploads.id, id));
 
         if (!metadata) {
             return {
@@ -103,9 +102,9 @@ export async function getUploadDataById(id: string) {
 
 export async function getUploadMetadataBySlug(organizationId: string, slug: string) {
     try {
-        const metadata = await database.query.uploads.findFirst({
-            where: and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug))
-        });
+        const [ metadata ] = await database.select()
+            .from(uploads)
+            .where(and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug)));
 
         if (!metadata) {
             return {
