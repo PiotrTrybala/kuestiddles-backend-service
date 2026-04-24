@@ -145,6 +145,25 @@ export async function updateGameAssetsById(id: string, assets: string[]) {
 
 export async function updateGameAssetsBySlug(organizationId: string, slug: string, assets: string[]) {
 
+    try {
+        const [ game ] = await database.update(games)
+            .set({
+                assets,
+            })
+            .where(and(eq(games.organization_id, organizationId), eq(games.slug, slug)))
+            .returning();
+        
+        return {
+            id: game?.id,
+        }
+    } catch(error) {
+        console.error("Internal database error:", error);
+
+        return {
+            error: "An unexpected database error occured",
+        }
+    }
+
 }
 
 export async function removeGameById(id: string) {
