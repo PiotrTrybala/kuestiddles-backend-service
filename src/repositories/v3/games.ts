@@ -40,6 +40,22 @@ export async function searchGames(organizationId: string, page: number, pageSize
 
 }
 
+export async function checkGameSlug(organizationId: string, slug: string) {
+    try {
+        const [game] = await database.select()
+            .from(games)
+            .where(and(eq(games.organization_id, organizationId), eq(games.slug, slug)));
+
+        return !game; // return true if slug is not used by any game
+    } catch(error) {
+        console.error("Internal database error:", error);
+        return {
+            metadata: undefined,
+            error: "An unexpected database error occured",
+        }
+    }
+}
+
 export async function getGameById(id: string) {
     try {
         const [game] = await database.select()
@@ -59,7 +75,6 @@ export async function getGameById(id: string) {
 
     } catch (error) {
         console.error("Internal database error:", error);
-
         return {
             metadata: undefined,
             error: "An unexpected database error occured",

@@ -1,5 +1,5 @@
 {
-  "id": "705b4dcf-faf5-466f-8b21-95685c622694",
+  "id": "3011b322-641b-4f38-b5ae-3e2e452f78b5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1020,7 +1020,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "games_organization_slug_idx": {
+          "name": "games_organization_slug_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "games_organization_id_organization_id_fk": {
           "name": "games_organization_id_organization_id_fk",
@@ -1078,6 +1100,13 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "labels": {
+          "name": "labels",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
         },
         "title": {
           "name": "title",
@@ -1225,6 +1254,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "labels": {
+          "name": "labels",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
         },
         "description": {
           "name": "description",
@@ -1945,6 +1981,52 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "uploads_labels_gin_idx": {
+          "name": "uploads_labels_gin_idx",
+          "columns": [
+            {
+              "expression": "labels",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "uploads_name_trgm_idx": {
+          "name": "uploads_name_trgm_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last",
+              "opclass": "gin_trgm_ops"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "uploads_organization_id_idx": {
+          "name": "uploads_organization_id_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
