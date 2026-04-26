@@ -109,7 +109,7 @@ export async function getGameBySlug(organizationId: string, slug: string) {
     }
 }
 
-export async function createGame(organizationId: string, name: string, slug?: string) {
+export async function createGame(organizationId: string, name: string, slug?: string | null) {
     try {
 
         if (!slug) slug = slugify(name, {
@@ -200,5 +200,19 @@ export async function removeGameById(id: string) {
 }
 
 export async function removeGameBySlug(organizationId: string, slug: string) {
+try {
+        const [ game ] = await database.delete(games)
+            .where(and(eq(games.organization_id, organizationId), eq(games.slug, slug)))
+            .returning();
 
+        return {
+            id: game?.id,
+        }
+    } catch(error) {
+        console.error("Internal database error:", error);
+
+        return {
+            error: "An unexpected database error occured",
+        }
+    }
 }

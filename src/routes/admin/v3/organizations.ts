@@ -4,6 +4,9 @@ import { uploadsRouter } from "./uploads";
 import { requireAuth } from "@/routes/middleware";
 import { auth } from "@/config/auth";
 import slugify from "slugify";
+import { gamesRouter } from "./games";
+import { landmarksRouter } from "./landmarks";
+import { questsRouter } from "./quests";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
@@ -29,3 +32,6 @@ organizationsRouter.post("/create", requireAuth("admin"), async (c) => {
 });
 
 organization.route("/uploads", uploadsRouter);
+organization.route("/games", gamesRouter);
+organization.route("/landmarks", landmarksRouter);
+organization.route("/quests", questsRouter);
