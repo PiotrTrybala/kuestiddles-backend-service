@@ -6,7 +6,7 @@ import { createGame, getGameById, getGameBySlug, removeGameById, removeGameBySlu
 
 export const gamesRouter = new Hono<AppEnv>();
 
-gamesRouter.get("/search", zValidator('param', z.object({
+gamesRouter.get("/search", zValidator("query", z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
     name: z.string().default(""),
@@ -14,7 +14,7 @@ gamesRouter.get("/search", zValidator('param', z.object({
 })), async (c) => {
 
     const organization = c.get("organization")!;
-    const { page, pageSize, name, labels } = c.req.valid("param");
+    const { page, pageSize, name, labels } = c.req.valid("query");
 
     const { results, error } = await searchGames(
         organization.id,

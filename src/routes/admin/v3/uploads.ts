@@ -11,7 +11,7 @@ export const uploadsRouter = new Hono<AppEnv>();
 
 uploadsRouter.use("*", requireOrganization);
 
-uploadsRouter.get("/search", zValidator('param', z.object({
+uploadsRouter.get("/search", zValidator('query', z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
     name: z.string().default(""),
@@ -19,7 +19,7 @@ uploadsRouter.get("/search", zValidator('param', z.object({
 })), async (c) => {
 
     const organization = c.get("organization")!;
-    const { page, pageSize, name, labels } = c.req.valid('param');
+    const { page, pageSize, name, labels } = c.req.valid('query');
 
     const { results, error } = await searchUploads(
         organization.id,
