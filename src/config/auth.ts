@@ -11,7 +11,7 @@ import { OAuth2Client } from "google-auth-library";
 
 export const googleMobileClient = new OAuth2Client(process.env.GOOGLE_MOBILE_CLIENT_ID!);
 
-export const authConfig = betterAuth({
+export const auth = betterAuth({
 
     appName: process.env.APP_NAME ?? "kuestiddles",
     baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
