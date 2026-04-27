@@ -59,7 +59,6 @@ export const auth = betterAuth({
                     user.image = `http://localhost:3000/api/v3/avatars/${user.id}.webp`;
                 },
                 before: async (user) => {
-
                     // const isMobile = ctx!.headers?.get("x-auth-source") === "mobile";
                     
                     // TODO: Add user creation based on user agent (web-admin, mobile-user)
