@@ -14,7 +14,7 @@ avatarsRouter.get("/:userId", zValidator('param', z.object({
 
     const { file, error } = await getAvatar(userId);
     if (error) {
-        return c.notFound(); // TODO: Add different error response
+        return c.notFound();
     }
 
     return c.body(file!.stream(), {
