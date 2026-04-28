@@ -7,5 +7,6 @@ import { landmarksRouter } from "./landmarks";
 export const userRouter = new Hono<AppEnv>();
 
 userRouter.use("*", requireAuth("user"));
+
 userRouter.route("/quests", questsRouter);
 userRouter.route("/landmarks", landmarksRouter);

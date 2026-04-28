@@ -7,6 +7,7 @@ import slugify from "slugify";
 import { gamesRouter } from "./games";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
+import { competitionsRouter } from "./competitions/competitions";
 
 export const organizationsRouter = new Hono<AppEnv>();
 
@@ -27,7 +28,7 @@ organizationsRouter.post("/create", requireAuth("admin"), async (c) => {
     });
 
     return c.json({
-        organizationId: organization?.id,
+        id: organization?.id,
     })
 });
 
