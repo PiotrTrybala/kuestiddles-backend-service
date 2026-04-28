@@ -8,6 +8,7 @@ export const INVITE_SECRET_LENGTH = 64;
 
 export const competitions = pgTable("competitions", {
     id: uuid().primaryKey().notNull().defaultRandom(),
+    name: text().notNull(),
     slug: text().notNull(),
     organization_id: text().notNull().references(() => organization.id),
     invite_secret: text().notNull().$defaultFn(() => {
