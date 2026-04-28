@@ -109,3 +109,66 @@ export async function getSouvenirCertificate(competitionId: string, groupId: str
         };
     }
 }
+
+export async function solveQuest(groupId: string, questId: string, answers: string[]) {
+    try {
+        const [quest] = await database.select()
+            .from(quests)
+            .where(eq(quests.id, questId));
+ 
+        if (!quest) {
+            return { error: "Quest has not been found" };
+        }
+ 
+        const [existing] = await database.select()
+            .from(groupSolves)
+            .where(
+                and(
+                    eq(groupSolves.group_id, groupId),
+                    eq(groupSolves.quest_id, questId),
+                )
+            );
+ 
+        if (existing?.solved) {
+            return { error: "Quest has already been solved" };
+        }
+        
+        const correctAnswers = quest!.answers ?? [];
+        const isCorrect = answers.some((answer) =>
+            correctAnswers.some((correct) => correct.toLowerCase() === answer.toLowerCase())
+        );
+ 
+        if (!isCorrect) {
+            return { error: "Incorrect answer" };
+        }
+ 
+        if (existing) {
+            await database.update(groupSolves)
+                .set({ solved: true })
+                .where(
+                    and(
+                        eq(groupSolves.group_id, groupId),
+                        eq(groupSolves.quest_id, questId),
+                    )
+                );
+        } else {
+            await database.insert(groupSolves)
+                .values({
+                    group_id: groupId,
+                    quest_id: questId,
+                    solved: true,
+                });
+        }
+ 
+        await database.update(leaderboard)
+            .set({ points: sql`${leaderboard.points} + ${quest.points}` })
+            .where(eq(leaderboard.group_id, groupId));
+ 
+        return { success: true };
+    } catch (error) {
+        console.error("Internal database error:", error);
+        return {
+            error: "An unexpected database error occured",
+        };
+    }
+}

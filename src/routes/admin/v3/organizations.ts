@@ -35,3 +35,4 @@ organization.route("/uploads", uploadsRouter);
 organization.route("/games", gamesRouter);
 organization.route("/landmarks", landmarksRouter);
 organization.route("/quests", questsRouter);
+organization.route("/competitions", competitionsRouter);
