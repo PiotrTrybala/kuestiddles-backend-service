@@ -2,30 +2,95 @@
 
 ## Routes
 
-- /api:
-  - /auth:
-  - /v2:
-    - /settings
-      - /avatars
-    - /admin
-      - /organizations
-        - /:organizationSlug
-          - /landmarks
-          - /quests
-          - /competitions  
-          - /uploads
-    - /user:
-        - /organizations
-          - /:organizationSlug
-            - /landmarks
-            - /quests
-            - /competitions
-      - /auth
-        - /mobile
-      - /statistics  
+Routes:
 
-## Images and avatars
-
-Avatars: <https://cdn.kuestiddles.com/avatars/><uuid_of_user>.webp
-Images: <https://cdn.kuestiddles.com/images/><uuid_of_image>.webp
-
+- /api
+  - /admin - requireAdmin("admin")
+    - /v3 - requireOrganization(...)
+      - /uploads
+        - /search - GET
+        - /:id/metadata - GET
+        - /:id - GET
+        - /slug/:slug/metadata - GET
+        - /slug/:slug - GET
+        - / - POST
+        - /:id - DELETE
+        - /slug/:slug/metadata - DELETE
+      - /games
+        - /search - GET
+        - /:id - GET
+        - /slug/:slug - GET
+        - / - POST
+        - /:gameId/assets - PATCH
+        - /slug/:gameSlug/assets - PATCH
+        - /:gameId - DELETE
+        - /slug/:gameSlug - DELETE
+      - /landmarks
+        - /search - GET
+        - /:id - GET
+        - /slug/:slug - GET
+        - / - POST
+        - /:id - PATCH
+        - /:id/assets - PATCH
+        - /:id/labels - PATCH
+        - /:id/location - PATCH
+        - /:id - DELETE
+        - /slug/:slug - DELETE
+      - /quests
+        - /search - GET
+        - /:id - GET
+        - /slug/:slug - GET
+        - /game/:gameId - GET
+        - / - POST
+        - /:id - PATCH
+        - /:id/thumbnail - PATCH
+        - /:id/labels - PATCH
+        - /:id/answers - PATCH
+        - /:id - DELETE
+        - /slug/:slug - DELETE
+        - /game/:gameId - DELETE
+      - /competitions
+        - /:competitionId
+          - /groups
+            - /search - GET
+            - /:id - GET
+            - /slug/:slug - GET
+            - /:id/users - GET
+            - / - POST
+            - /:id - DELETE
+            - /slug/:slug - DELETE
+          - /invites
+            - /search - GET
+            - / - POST
+            - /:id - DELETE
+        - /search - GET
+        - /:id - GET
+        - /slug/:slug - GET
+        - /:id/leaderboard - GET
+        - / - POST
+        - /:id - PATCH
+        - /:id - DELETE
+        - /slug/:slug - DELETE
+  - /user
+    - /v3
+      - /landmarks
+        - /search - GET
+        - /:id - GET
+        - /visit - POST
+      - /quests
+        - /search - GET
+        - /:id - GET
+        - /solve - POST
+      - /uploads
+        - /:id - GET
+  - /v3
+    - /competitions
+      - /groups
+        - /current
+      - /quests
+        - /solve - POST
+      - /invites
+        - /accept - GET
+    - /avatars
+      - /:userId - GET
+      - / - POST

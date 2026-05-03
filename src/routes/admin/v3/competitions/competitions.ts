@@ -25,6 +25,10 @@ competitionsRouter.get("/:id/leaderboard", requireAuth("admin"), async (c) => {
 
 });
 
+competitionsRouter.post("/", requireAuth("admin"), async (c) => {
+
+});
+
 competitionsRouter.patch("/:id", requireAuth("admin"), async (c) => {
 
 });

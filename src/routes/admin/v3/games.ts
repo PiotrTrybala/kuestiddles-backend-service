@@ -50,7 +50,7 @@ gamesRouter.get("/:id", zValidator("param", z.object({
     return c.json(metadata);
 });
 
-gamesRouter.get("/:gameSlug", zValidator("param", z.object({
+gamesRouter.get("/slug/:gameSlug", zValidator("param", z.object({
     gameSlug: z.string(),
 })), async (c) => {
     const organization = c.get("organization");
@@ -110,7 +110,7 @@ gamesRouter.patch("/:gameId/assets", zValidator("json", z.object({
     });
 });
 
-gamesRouter.patch("/:gameSlug/assets", zValidator("json", z.object({
+gamesRouter.patch("/slug/:gameSlug/assets", zValidator("json", z.object({
     assets: z.string().array(),
 })), zValidator("param", z.object({
     gameSlug: z.uuid(),

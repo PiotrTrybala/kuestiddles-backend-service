@@ -127,7 +127,7 @@ uploadsRouter.delete("/:id", zValidator('param', z.object({
     return c.body(null, 200);
 });
 
-uploadsRouter.delete("/:slug", zValidator('param', z.object({
+uploadsRouter.delete("/slug/:slug", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
 })), async (c) => {
     const organization = c.get("organization")!;
