@@ -5,9 +5,9 @@ import { sendResetPasswordEmail, sendVerificationEmail } from "./mailgun";
 import { admin, organization, twoFactor } from "better-auth/plugins";
 import { stripeClient } from "./stripe";
 import { stripe } from "@better-auth/stripe";
-import { plans } from "@/database/schema/stripe";
 import { eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
+import { plans } from "@/database/payments";
 
 export const googleMobileClient = new OAuth2Client(process.env.GOOGLE_MOBILE_CLIENT_ID!);
 
@@ -124,12 +124,12 @@ export const auth = betterAuth({
                     const rows = await database.select().from(plans).where(eq(plans.active, true));
                     return rows.map((plan) => ({
                         name: plan.name,
-                        priceId: plan.stripe_price_id,
+                        priceId: plan.price_id,
                         limits: {
-                            organizationsQuota: plan.organizations_quota,
-                            landmarksPerOrgQuota: plan.landmarks_org_quota,
-                            questsPerOrgQuota: plan.landmarks_org_quota,
-                            simultaneousCompsPerQuota: plan.simultaneous_comps_per_org_quota,
+                            organizationsQuota: plan.organizations,
+                            landmarksPerOrgQuota: plan.organizations_landmarks,
+                            questsPerOrgQuota: plan.organizations_quests,
+                            simultaneousCompsPerQuota: plan.organizations_competitions,
                         }
                     }));
                 },
