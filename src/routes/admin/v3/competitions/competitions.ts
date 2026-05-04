@@ -10,33 +10,33 @@ competitionsRouter.route("/:competitionId/groups", groupsRouter);
 competitionsRouter.route("/:competitionId/invites", invitesRouter);
 
 competitionsRouter.get("/search", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.get("/:id", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.get("/slug/:slug", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.get("/:id/leaderboard", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.post("/", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.patch("/:id", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.delete("/:id", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
 
 competitionsRouter.delete("/slug/:slug", requireAuth("admin"), async (c) => {
-
+    return c.body(null, 501)
 });
