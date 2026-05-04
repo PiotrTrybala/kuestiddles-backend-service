@@ -1,6 +1,7 @@
 
+import type { plans } from "@/database/payments";
 import { auth } from "./auth";
-import { plans } from "../database/schema/stripe";
+import type { CompetitionTokenPayload } from "@/routes/utils";
 
 export type AppEnv = {
     Variables: {
@@ -12,5 +13,8 @@ export type AppEnv = {
         // Initialize this in Admin middleware somewhere
         organization: typeof auth.$Infer.Organization | null,
         membership: typeof auth.$Infer.Member | null,
+
+        // Only used by temporary competition users
+        competition: CompetitionTokenPayload | null,
     }
 };

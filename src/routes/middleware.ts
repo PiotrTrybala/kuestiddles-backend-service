@@ -1,6 +1,7 @@
 import type { AppEnv } from "../config/app";
 import { createMiddleware } from "hono/factory";
 import { auth } from "../config/auth";
+import { verifyCompetitionToken } from "./utils";
 
 export const requireAuth = (role: "user" | "admin" | "none") => {
     return createMiddleware<AppEnv>(async (c, next) => {
@@ -21,3 +22,19 @@ export const requireAuth = (role: "user" | "admin" | "none") => {
         await next();
     });
 };
+
+export const COMPETITION_TOKEN_HEADER = "x-competition-token";
+
+export const requireCompetition = () => {
+    return createMiddleware<AppEnv>(async (c, next) => {
+        const competitionToken = c.req.header(COMPETITION_TOKEN_HEADER);
+        if (!competitionToken) return c.body(null, 400);
+
+        const token = verifyCompetitionToken(competitionToken);
+        if (!token) return c.body(null, 403);
+
+        c.set("competition", token);
+
+        await next();
+    });
+}
