@@ -86,7 +86,7 @@ Routes:
   - /v3
     - /competitions
       - /groups
-        - /current
+        - /current - GET
       - /quests
         - /solve - POST
       - /invites

@@ -1,16 +1,18 @@
-import { boolean, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { organization } from "../auth";
 import { timestamps } from "../utils";
 import { randomBytes } from "crypto";
 import { quests } from "./games";
 
 export const INVITE_SECRET_LENGTH = 64;
+export const competitionStatus = pgEnum('competition_status', ['created', 'started', 'paused', 'terminated']);
 
 export const competitions = pgTable("competitions", {
     id: uuid().primaryKey().notNull().defaultRandom(),
-    name: text().notNull(),
     slug: text().notNull(),
     organization_id: text().notNull().references(() => organization.id),
+    name: text().notNull(),
+    status: competitionStatus().notNull().default("created"),
     invite_secret: text().notNull().$defaultFn(() => {
         return randomBytes(INVITE_SECRET_LENGTH).toBase64({ alphabet: "base64url" });
     }),
