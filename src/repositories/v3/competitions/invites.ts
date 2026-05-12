@@ -4,6 +4,31 @@ import { quests } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
+export async function searchInvites(organizationId: string, page: number, pageSize: number) {
+    try {
+        const offset = page * pageSize;
+        const limit = pageSize;
+
+        const filters = [
+            eq(competitions.organization_id, organizationId),
+        ];
+
+
+        const results = await database.select()
+            .from(invites)
+            .where(and(...filters))
+            .limit(limit)
+            .offset(offset);
+
+        return { results };
+    } catch (error) {
+        console.error("Internal database error:", error);
+        return {
+            results: [],
+            error: "An unexpected database error occured",
+        };
+    }
+}
 
 export async function generateGroupInvite(competitionId: string, groupId: string, expiresAt: Date) {
     try {
@@ -87,4 +112,19 @@ export async function getInviteById(id: string) {
             error: "An unexpected database error occured",
         };
     }
+}
+
+export async function deleteInvite(competitionId: string, id: string) {
+      try {
+        const [competition] = await database.delete(competitions)
+            .where(and(eq(invites.id, id), eq(invites.competition_id, competitionId)))
+            .returning();
+
+        return { id: competition?.id };
+    } catch (error) {
+        console.error("Internal database error:", error);
+        return {
+            error: "An unexpected database error occured",
+        };
+    }  
 }
