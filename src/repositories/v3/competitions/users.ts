@@ -1,7 +1,6 @@
 import { database } from "@/database/db";
 import { competitions, groups, groupUsers, invites, leaderboard, groupSolves, quests } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
-import slugify from "slugify";
 
 
 export async function getCompetitionQuests(competitionId: string) {
