@@ -5,14 +5,14 @@ import { randomBytes } from "crypto";
 import { quests } from "./games";
 
 export const INVITE_SECRET_LENGTH = 64;
-export const competitionStatus = pgEnum('competition_status', ['created', 'started', 'paused', 'terminated']);
+export const competitionStatus = pgEnum('competition_status', ['onboarding', 'playing', 'summarized', 'archived']);
 
 export const competitions = pgTable("competitions", {
     id: uuid().primaryKey().notNull().defaultRandom(),
     slug: text().notNull(),
     organization_id: text().notNull().references(() => organization.id),
     name: text().notNull(),
-    status: competitionStatus().notNull().default("created"),
+    status: competitionStatus().notNull().default("onboarding"),
     invite_secret: text().notNull().$defaultFn(() => {
         return randomBytes(INVITE_SECRET_LENGTH).toBase64({ alphabet: "base64url" });
     }),

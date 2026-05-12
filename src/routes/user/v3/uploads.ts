@@ -1,6 +1,6 @@
 import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
-import { requireAuth } from "../middleware";
+import { requireAuth } from "../../middleware";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 

@@ -1,6 +1,6 @@
 import { database } from "@/database/db";
 import { competitions, groups, groupUsers, invites, leaderboard, groupSolves } from "@/database/schema";
-import { quests } from "@/database/schema/games";
+import { quests } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
@@ -25,7 +25,7 @@ export async function generateGroupInvite(competitionId: string, groupId: string
     }
 }
 
-export async function acceptGroupInvite(competitionId: string, groupId: string, inviteId: string, id: string, username: string) {
+export async function acceptGroupInvite(competitionId: string, groupId: string, inviteId: string, username: string) {
     try {
         const [invite] = await database.select()
             .from(invites)
@@ -47,7 +47,6 @@ export async function acceptGroupInvite(competitionId: string, groupId: string, 
 
         const [groupUser] = await database.insert(groupUsers)
             .values({
-                id,
                 group_id: groupId,
                 username,
             })

@@ -13,6 +13,7 @@ export type AppEnv = {
         // Initialize this in Admin middleware somewhere
         organization: typeof auth.$Infer.Organization | null,
         membership: typeof auth.$Infer.Member | null,
+        isOwner: boolean,
 
         // Only used by temporary competition users
         competition: CompetitionTokenPayload | null,

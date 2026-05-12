@@ -5,7 +5,7 @@ import { uploadsSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import z from "zod";
-
+ 
 export const uploadsRouter = new Hono<AppEnv>();
 
 uploadsRouter.use("*", requireOrganization);

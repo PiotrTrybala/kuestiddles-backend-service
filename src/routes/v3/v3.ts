@@ -1,6 +1,5 @@
 import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
-import { requireAuth } from "../middleware";
 import { avatarsRouter } from "./avatars";
 import { competitionsRouter } from "./competitions";
 import { authRouter } from "./auth";

@@ -62,8 +62,17 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
     const currentMember = organization.members.find(member => member.userId === user.id);
     if (!currentMember) return c.json({ message: "Forbidden" }, 403);
 
+    const isOwner = currentMember.role === "owner";
+
     c.set("organization", organization);
     c.set("membership", currentMember);
+    c.set("isOwner", isOwner);
 
     await next();
 }); 
+
+export const requireOrganizationOwner = createMiddleware<AppEnv>(async (c, next) => {
+    const isOwner = c.get("isOwner");
+    if (!isOwner) return c.json({ message: "Forbidden: Owner access required" }, 403);
+    await next();
+});
