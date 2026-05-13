@@ -120,19 +120,32 @@ export const auth = betterAuth({
             createCustomerOnSignUp: true,
             subscription: {
                 enabled: true,
-                plans: async () => {
-                    const rows = await database.select().from(plans).where(eq(plans.active, true));
-                    return rows.map((plan) => ({
-                        name: plan.name,
-                        priceId: plan.price_id,
+                plans: [
+                    {
+                        name: "standard",
+                        priceId: process.env.PLAN_STANDARD_PRICE_ID!,
                         limits: {
-                            organizationsQuota: plan.organizations,
-                            landmarksPerOrgQuota: plan.organizations_landmarks,
-                            questsPerOrgQuota: plan.organizations_quests,
-                            simultaneousCompsPerQuota: plan.organizations_competitions,
+                            landmarks: 20, // per game
+                            quests: 20, // per game
+                            uploads: 100,
+                            games: 5,
+                            competitions: 5, // at the same time
                         }
-                    }));
-                },
+                    }
+                ]
+                // plans: async () => {
+                //     const rows = await database.select().from(plans).where(eq(plans.active, true));
+                //     return rows.map((plan) => ({
+                //         name: plan.name,
+                //         priceId: plan.price_id,
+                //         limits: {
+                //             organizationsQuota: plan.organizations,
+                //             landmarksPerOrgQuota: plan.organizations_landmarks,
+                //             questsPerOrgQuota: plan.organizations_quests,
+                //             simultaneousCompsPerQuota: plan.organizations_competitions,
+                //         }
+                //     }));
+                // },
             },
         })
     ],
