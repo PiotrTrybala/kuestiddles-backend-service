@@ -31,7 +31,7 @@ export async function getUserQuotas(userId: string) {
 
 export type QuotaType = 'landmarks' | 'quests' | 'games' | 'uploads' | 'organizations';
 
-const quotaColumnMap: Record<QuotaType, keyof typeof user_quotas> = {
+export const quotaColumnMap: Record<QuotaType, keyof typeof user_quotas> = {
     landmarks: "landmarks_quota",
     quests: "quests_quota",
     games: "games_quota",
