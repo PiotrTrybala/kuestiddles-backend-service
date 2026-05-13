@@ -10,3 +10,6 @@ export const IMAGES_URL = process.env.IMAGES_URL!;
 export const USER_API_URL = process.env.USER_API_URL!;
 export const ADMIN_API_URL = process.env.ADMIN_API_URL!;
 export const MOBILE_API_URL = process.env.MOBILE_API_URL!;
+
+export const STRIPE_SUCCESS_URL = process.env.STRIPE_SUCCESS_URL!;
+export const STRIPE_CANCEL_URL = process.env.STRIPE_CANCEL_URL!;
