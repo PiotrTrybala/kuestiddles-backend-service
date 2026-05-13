@@ -39,19 +39,28 @@ type UpgradeSubscriptionPayload = {
 paymentsRouter.post("/upgrade", requireAuth("admin"), async (c) => {
     const { plan } = await c.req.json<UpgradeSubscriptionPayload>();
 
-    const data = await auth.api.upgradeSubscription({
-        headers: c.req.raw.headers,
-        body: {
-            plan,
-            successUrl: STRIPE_SUCCESS_URL ?? null,
-            cancelUrl: STRIPE_CANCEL_URL ?? null,
-        }
-    });
-
-    if (data?.url) {
-        return c.redirect(data?.url);
+    if (!STRIPE_SUCCESS_URL || !STRIPE_CANCEL_URL) {
+        return c.json({ error: "Stripe URLs are not configured" }, 500);
     }
 
-    return c.json({ error: "No redirect URL returned" }, 400);
+    try {
+        const data = await auth.api.upgradeSubscription({
+            headers: c.req.raw.headers,
+            body: {
+                plan,
+                successUrl: STRIPE_SUCCESS_URL,
+                cancelUrl: STRIPE_CANCEL_URL,
+            }
+        });
+
+        if (data?.url) {
+            return c.redirect(data.url);
+        }
+
+        return c.json({ error: "No redirect URL returned" }, 400);
+    } catch (err) {
+        console.error("[upgradeSubscription] error:", err);
+        return c.json({ error: "Failed to initiate subscription upgrade" }, 500);
+    }
 });
 
