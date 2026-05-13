@@ -2,6 +2,7 @@ import type { AppEnv } from "../config/app";
 import { createMiddleware } from "hono/factory";
 import { auth } from "../config/auth";
 import { verifyCompetitionToken } from "./utils";
+import type { QuotaType } from "@/repositories/v3/payments";
 
 export const requireAuth = (role: "user" | "admin" | "none") => {
     return createMiddleware<AppEnv>(async (c, next) => {
@@ -10,11 +11,11 @@ export const requireAuth = (role: "user" | "admin" | "none") => {
             headers: c.req.raw.headers,
         });
 
-        if (!session) return c.json({ message: "Unauthorized"}, 401);
+        if (!session) return c.json({ message: "Unauthorized" }, 401);
 
         c.set("session", session.session);
         c.set("user", session.user);
-        
+
         if (role != "none") {
             if (session.user.role !== role) return c.json({ message: "Forbidden" }, 403);
         }
@@ -69,10 +70,20 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
     c.set("isOwner", isOwner);
 
     await next();
-}); 
+});
 
 export const requireOrganizationOwner = createMiddleware<AppEnv>(async (c, next) => {
     const isOwner = c.get("isOwner");
     if (!isOwner) return c.json({ message: "Forbidden: Owner access required" }, 403);
     await next();
 });
+
+export const requireQuota = (type: QuotaType) => {
+    return createMiddleware<AppEnv>(async (c, next) => {
+
+
+
+
+        await next();
+    });
+}
