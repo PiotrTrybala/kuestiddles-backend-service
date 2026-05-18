@@ -44,10 +44,6 @@ competitionsRouter.post("/groups/solve", async (c) => {
     return c.json({ success }, 200);
 });
 
-type AcceptGroupInvite = {
-    username: string,
-};
-
 competitionsRouter.post("/groups/accept", zValidator("query", z.object({
     inviteId: z.string(),
 })), zValidator("json", z.object({
@@ -63,5 +59,7 @@ competitionsRouter.post("/groups/accept", zValidator("query", z.object({
     const { id, error} = await acceptGroupInvite(invite.competition_id, invite.group_id, inviteId, username);
     if (error) return c.json({ message: error }, 500);
 
-    return c.body(null, 501); 
+    return c.json({
+        message: id,
+    }, 200); 
 });
