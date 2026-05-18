@@ -4,8 +4,11 @@ import { Hono } from "hono";
 import { uploadSchema } from "../validators";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
+import { requireAuth } from "../middleware";
 
 export const avatarsRouter = new Hono<AppEnv>();
+
+avatarsRouter.use("*", requireAuth("none"));
 
 avatarsRouter.get("/:userId", zValidator('param', z.object({
     userId: z.string().transform((value) => value.replace(".webp", "")),
