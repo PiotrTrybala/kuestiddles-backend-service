@@ -6,7 +6,7 @@ import { authRouter } from "./auth";
 
 export const v3Router = new Hono<AppEnv>();
 
-// v3Router.use("*", requireAuth("none"));
 v3Router.route("/auth", authRouter);
 v3Router.route("/avatars", avatarsRouter);
+
 v3Router.route("/competitions", competitionsRouter);

@@ -13,11 +13,11 @@ avatarsRouter.get("/:userId", zValidator('param', z.object({
     const { userId } = c.req.valid("param");
 
     const { file, error } = await getAvatar(userId);
-    if (error) {
+    if (error || !file) {
         return c.notFound();
     }
 
-    return c.body(file!.stream(), {
+    return c.body(file.stream(), {
         headers: {
             "Content-Type": "image/webp",
             "Cache-Control": "public, max-age=31536000",
