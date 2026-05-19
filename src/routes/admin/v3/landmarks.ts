@@ -14,6 +14,7 @@ import {
     removeLandmarkById,
     removeLandmarkBySlug,
 } from "@/repositories/v3/landmarks";
+import { landmarks } from "@/database/schema";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
@@ -40,6 +41,10 @@ landmarksRouter.get("/search", zValidator("query", z.object({
     }
 
     return c.json({ results });
+});
+
+landmarksRouter.get("/recent", async (c) => {
+    return c.body(null, 501);
 });
 
 landmarksRouter.get("/:id", zValidator("param", z.object({

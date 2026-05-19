@@ -16,6 +16,7 @@ import {
     removeQuestBySlug,
     removeQuestByGameId,
 } from "@/repositories/v3/quests";
+import { getRecentEntities, registerRecentEntity } from "@/controllers/recent";
 
 export const questsRouter = new Hono<AppEnv>();
 
@@ -44,16 +45,41 @@ questsRouter.get("/search", zValidator("query", z.object({
     return c.json({ results });
 });
 
+questsRouter.get("/recent", async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
+
+    const { entitiesIds, error } = await getRecentEntities('quests', organization.id, user.id);
+    if (!error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    const quests = await Promise.all(entitiesIds.map(async (id) => {
+        const { quest, error } = await getQuestById(id);
+        if (!error) {
+            return;
+        }
+        return quest!;
+    }));
+    return c.json(quests);
+});
+
 // Get by ID
 questsRouter.get("/:id", zValidator("param", z.object({
     id: z.uuid(),
 })), async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
 
     const { quest, error } = await getQuestById(id);
-    if (error) {
+    if (error || !quest) {
         return c.json({ message: error }, 500);
     }
+
+    await registerRecentEntity('quests', organization.id, user.id, quest.id);
 
     return c.json(quest);
 });
@@ -77,14 +103,17 @@ questsRouter.get("/slug/:slug", zValidator("param", z.object({
     slug: z.string(),
 })), async (c) => {
     const organization = c.get("organization");
+    const user = c.get("user")!;
     if (!organization) return c.notFound();
 
     const { slug } = c.req.valid("param");
 
     const { quest, error } = await getQuestBySlug(organization.id, slug);
-    if (error) {
+    if (error || !quest) {
         return c.json({ message: error }, 500);
     }
+
+    await registerRecentEntity('quests', organization.id, user.id, quest.id);
 
     return c.json(quest);
 });
@@ -103,6 +132,7 @@ questsRouter.post("/", zValidator("json", z.object({
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
+    const user = c.get("user")!;
 
     const { landmarkId, title, description, points, gameId, slug, labels, answers, thumbnail } = c.req.valid("json");
 
@@ -119,9 +149,11 @@ questsRouter.post("/", zValidator("json", z.object({
         thumbnail ?? undefined,
     );
 
-    if (error) {
+    
+    if (error || !id) {
         return c.json({ message: error }, 500);
     }
+    await registerRecentEntity('quests', organization.id, user.id, id);
 
     return c.json({ id });
 });
@@ -135,6 +167,8 @@ questsRouter.patch("/:id", zValidator("param", z.object({
     points: z.number().optional(),
     landmark_id: z.string().uuid().optional(),
 })), async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
     const { id } = c.req.valid("param");
     const data = c.req.valid("json");
 
@@ -142,6 +176,8 @@ questsRouter.patch("/:id", zValidator("param", z.object({
     if (error) {
         return c.json({ message: error }, 500);
     }
+
+    await registerRecentEntity('quests', organization.id, user.id, id);
 
     return c.json({ id: questId });
 });
