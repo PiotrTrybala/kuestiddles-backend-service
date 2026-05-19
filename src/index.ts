@@ -13,7 +13,7 @@ const app = new Hono<AppEnv>();
 app.use(
 	"/api/auth/*",
 	cors({
-		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl"],
+		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl", "http://127.0.0.1:8000"], // Add your local ADB bridge origin just in case],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "OPTIONS"],
 		exposeHeaders: ["Content-Length"],
@@ -25,7 +25,7 @@ app.use(
 app.use(
 	"/api/*",
 	cors({
-		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl"],
+		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl", "http://127.0.0.1:8000"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["POST", "GET", "PATCH", "DELETE"],
 		exposeHeaders: ["Content-Length"],
@@ -59,8 +59,8 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
     return auth.handler(c.req.raw);
 });
 
-app.get("/ping", (c) => {
-    return c.json({ message: "Pong" });
+app.get("/health", (c) => {
+    return c.json({ message: "Healthy service" });
 });
 
 app.route("/api", api);
@@ -70,4 +70,8 @@ showRoutes(app, {
 	colorize: true,
 });
 
-export default app;
+export default {
+	port: 3000,
+	hostname: '0.0.0.0',
+	fetch: app.fetch,
+};
