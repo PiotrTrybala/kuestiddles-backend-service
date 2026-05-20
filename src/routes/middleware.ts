@@ -49,8 +49,6 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
 
     const slug = c.req.param("organizationSlug");
 
-    console.info('organization slug:', slug);
-
     const organization = await auth.api.getFullOrganization({
         headers: c.req.raw.headers,
         query: {
@@ -58,7 +56,7 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
         },
     });
 
-    if (!organization) return c.json({ message: "Not found or forbidden" }, 403);
+    if (!organization) return c.json({ message: "Forbidden" }, 403);
 
     const currentMember = organization.members.find(member => member.userId === user.id);
     if (!currentMember) return c.json({ message: "Forbidden" }, 403);

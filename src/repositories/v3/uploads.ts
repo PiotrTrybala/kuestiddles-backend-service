@@ -8,41 +8,45 @@ import slugify from "slugify";
 
 export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]) {
     try {
+        const pageIndex = Math.max(1, page) - 1; 
+        const limit = Math.max(1, pageSize);
+        
+        const offset = pageIndex * limit;
 
-        const offset = page * pageSize;
-        const limit = pageSize;
-
+        console.info(pageIndex, limit, offset);
 
         const filters = [
             eq(uploads.organization_id, organizationId),
         ];
 
         if (name && name.length > 0) {
+            console.log('added uploads name:', name);
             filters.push(ilike(uploads.name, `%${name}%`));
         }
 
+        console.log(labels);
+
         if (labels && labels.length > 0) {
+            console.log('added uploads labels:', labels);
             filters.push(arrayOverlaps(uploads.labels, labels));
         }
 
-        let searchResults = await database.select()
-            .from(uploads)
-            .where(and(...filters))
-            .limit(limit)
-            .offset(offset);
+        let searchResults = await database.select().from(uploads)
+            .where(and(...filters));
+            // .limit(limit)
+            // .offset(offset);
+        
+        console.log(searchResults);
 
         return {
             results: searchResults,
         };
 
     } catch (error) {
-
         console.error("Internal database error:", error);
-
-
         return {
             results: [],
-            error: "An unexpected database error occured",
+            error: "An unexpected database error occurred",
         }
     }
 }

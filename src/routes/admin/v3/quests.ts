@@ -17,8 +17,11 @@ import {
     removeQuestByGameId,
 } from "@/repositories/v3/quests";
 import { getRecentEntities, registerRecentEntity } from "@/controllers/recent";
+import { requireOrganization } from "@/routes/middleware";
 
 export const questsRouter = new Hono<AppEnv>();
+
+questsRouter.use("*", requireOrganization);
 
 // Search
 questsRouter.get("/search", zValidator("query", z.object({
@@ -46,24 +49,29 @@ questsRouter.get("/search", zValidator("query", z.object({
 });
 
 questsRouter.get("/recent", async (c) => {
-    const organization = c.get("organization")!;
-    const user = c.get("user")!;
+    // const organization = c.get("organization")!;
+    // const user = c.get("user")!;
 
-    const { entitiesIds, error } = await getRecentEntities('quests', organization.id, user.id);
-    if (!error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
+    // const { entitiesIds, error } = await getRecentEntities('quests', organization.id, user.id);
+    // if (!error) {
+    //     console.log(error);
+    //     return c.json({
+    //         message: error,
+    //     }, 500);
+    // }
 
-    const quests = await Promise.all(entitiesIds.map(async (id) => {
-        const { quest, error } = await getQuestById(id);
-        if (!error) {
-            return;
-        }
-        return quest!;
-    }));
-    return c.json(quests);
+    // const quests = await Promise.all(entitiesIds.map(async (id) => {
+    //     const { quest, error } = await getQuestById(id);
+    //     if (!error) {
+    //         return;
+    //     }
+    //     return quest!;
+    // }));
+
+    // console.log('recent quests:', quests);
+
+    // return c.json(quests);
+    return c.body(null, 501); 
 });
 
 // Get by ID

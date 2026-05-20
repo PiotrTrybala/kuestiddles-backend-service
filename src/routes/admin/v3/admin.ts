@@ -6,6 +6,5 @@ import { paymentsRouter } from "./payments";
 
 export const adminRouter = new Hono<AppEnv>();
 
-
 adminRouter.route("/v3", organizationsRouter);
 adminRouter.route("/payments", paymentsRouter);

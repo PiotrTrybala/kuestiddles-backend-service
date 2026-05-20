@@ -15,8 +15,11 @@ import {
     removeLandmarkBySlug,
 } from "@/repositories/v3/landmarks";
 import { landmarks } from "@/database/schema";
+import { requireOrganization } from "@/routes/middleware";
 
 export const landmarksRouter = new Hono<AppEnv>();
+
+landmarksRouter.use("*", requireOrganization);
 
 // Search
 landmarksRouter.get("/search", zValidator("query", z.object({

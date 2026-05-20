@@ -13,12 +13,16 @@ uploadsRouter.use("*", requireOrganization);
 uploadsRouter.get("/search", zValidator('query', z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
-    name: z.string().default(""),
-    labels: z.string().transform((value) => value.split(',')).default([]),
+    name: z.string().optional(),
+    labels: z.string()
+        .optional()
+        .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
 })), async (c) => {
 
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid('query');
+
+    console.log(c.req.url);
 
     const { results, error } = await searchUploads(
         organization.id,
@@ -33,6 +37,8 @@ uploadsRouter.get("/search", zValidator('query', z.object({
             message: error,
         }, 500);
     }
+
+    console.log('uploads search results:', results);
 
     return c.json({
         results,
@@ -97,6 +103,9 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
 
     const organization = c.get("organization")!;
     const { uploads } = c.req.valid("form");
+
+    console.log('uploaded uploads:', uploads);
+
     if (uploads.length === 0) return c.json({ message: "0 uploads found." }, 400);
 
     const { results, error } = await upload(
