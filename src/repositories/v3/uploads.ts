@@ -20,14 +20,12 @@ export async function searchUploads(organizationId: string, page: number, pageSi
         ];
 
         if (name && name.length > 0) {
-            console.log('added uploads name:', name);
             filters.push(ilike(uploads.name, `%${name}%`));
         }
 
         console.log(labels);
 
         if (labels && labels.length > 0) {
-            console.log('added uploads labels:', labels);
             filters.push(arrayOverlaps(uploads.labels, labels));
         }
 

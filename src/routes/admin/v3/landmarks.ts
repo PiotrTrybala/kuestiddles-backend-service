@@ -16,6 +16,8 @@ import {
 } from "@/repositories/v3/landmarks";
 import { landmarks } from "@/database/schema";
 import { requireOrganization } from "@/routes/middleware";
+import type z from "../../../../node_modules/zod/v4/classic/external.d.cts";
+import { ConsoleLogWriter } from "drizzle-orm";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
@@ -25,8 +27,10 @@ landmarksRouter.use("*", requireOrganization);
 landmarksRouter.get("/search", zValidator("query", z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
-    title: z.string().default(""),
-    labels: z.string().transform((value) => value.split(",")).default([]),
+    title: z.string().optional(),
+    labels: z.string()
+        .optional()
+        .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
 })), async (c) => {
     const organization = c.get("organization")!;
     const { page, pageSize, title, labels } = c.req.valid("query");
@@ -38,6 +42,8 @@ landmarksRouter.get("/search", zValidator("query", z.object({
         title,
         labels,
     );
+
+    console.log('landmarks:', landmarks);
 
     if (error) {
         return c.json({ message: error }, 500);
@@ -85,8 +91,8 @@ landmarksRouter.post("/", zValidator("json", z.object({
     longitude: z.number(),
     latitude: z.number(),
     slug: z.string().nullish(),
-    labels: z.string().array().nullish(),
-    assets: z.string().array().nullish(),
+    labels: z.string().array().optional(),
+    assets: z.string().array().optional(),
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();

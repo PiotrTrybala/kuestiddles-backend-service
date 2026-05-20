@@ -38,8 +38,6 @@ uploadsRouter.get("/search", zValidator('query', z.object({
         }, 500);
     }
 
-    console.log('uploads search results:', results);
-
     return c.json({
         results,
     });

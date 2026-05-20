@@ -18,3 +18,19 @@ export const uploadsSchema = z.object({
         return [];
     }, z.array(uploadSchema).min(1, "At least one file is required")),
 });
+
+export const createLandmark = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().min(1, "Slug is required"),
+  description: z.string(),
+  labels: z.array(z.string()),
+  
+  thumbnail: z.string(),
+  
+  assets: z.string().array(),
+  
+  position: z.object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+  }),
+});
