@@ -2,12 +2,14 @@ import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
 import { groupsRouter } from "./groups";
 import { invitesRouter } from "./invites";
-import { requireAuth } from "@/routes/middleware";
+import { requireAuth, requireOrganization } from "@/routes/middleware";
 import { createCompetition, getCompetitionById, getCompetitionBySlug, getLeaderboard, removeCompetitionById, removeCompetitionBySlug, searchCompetitions, updateCompetitionStatusById } from "@/repositories/v3/competitions/competitions";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 
 export const competitionsRouter = new Hono<AppEnv>();
+
+competitionsRouter.use("*", requireOrganization);
 
 competitionsRouter.route("/:competitionId/groups", groupsRouter);
 competitionsRouter.route("/:competitionId/invites", invitesRouter);
@@ -62,7 +64,7 @@ competitionsRouter.get("/:id", requireAuth("admin"), async (c) => {
 
 competitionsRouter.post("/", requireAuth("admin"), async (c) => {
     const organization = c.get("organization")!;
-    const { name, slug, expiresAt, retainUntil } = await c.req.json();
+    const { name, slug } = await c.req.json();
 
     if (!name) return c.json({ error: "Name is required" }, 400);
 
@@ -70,8 +72,10 @@ competitionsRouter.post("/", requireAuth("admin"), async (c) => {
         organization.id,
         name,
         slug,
-        expiresAt ? new Date(expiresAt) : null,
-        retainUntil ? new Date(retainUntil) : null
+        null,
+        null,
+        // expiresAt ? new Date(expiresAt) : null,
+        // retainUntil ? new Date(retainUntil) : null
     );
 
     if (error) return c.json({ error }, 500);

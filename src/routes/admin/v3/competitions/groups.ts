@@ -13,16 +13,17 @@ import { zValidator } from "@hono/zod-validator";
 
 export const groupsRouter = new Hono<AppEnv>();
 
-groupsRouter.get("/search", zValidator("query", z.object({
-    page: z.coerce.number(),
-    pageSize: z.coerce.number(),
-    name: z.string(),
+groupsRouter.get("/search", zValidator('query', z.object({
+    page: z.coerce.number().default(0),
+    pageSize: z.coerce.number().default(20),
+    name: z.string().optional(),
 })), async (c) => {
     const organization = c.get("organization")!;
+    const competitionId = c.req.param("competitionId")!;
     const { page, pageSize, name } = c.req.valid("query");
 
     const { results, error } = await searchGroups(
-        organization.id,
+        competitionId,
         page,
         pageSize,
         name
@@ -62,11 +63,12 @@ groupsRouter.get("/:id", async (c) => {
 
 groupsRouter.post("/", async (c) => {
     const organization = c.get("organization")!;
+    const competitionId = c.req.param("competitionId")!;
     const { name, slug } = await c.req.json();
 
     if (!name) return c.json({ error: "name is required" }, 400);
 
-    const { id, error } = await createGroup(organization.id, name, slug);
+    const { id, error } = await createGroup(competitionId, name, slug);
 
     if (error) return c.json({ error }, 500);
     return c.json({ id }, 201);

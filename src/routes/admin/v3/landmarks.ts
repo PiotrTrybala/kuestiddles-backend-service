@@ -16,8 +16,6 @@ import {
 } from "@/repositories/v3/landmarks";
 import { landmarks } from "@/database/schema";
 import { requireOrganization } from "@/routes/middleware";
-import type z from "../../../../node_modules/zod/v4/classic/external.d.cts";
-import { ConsoleLogWriter } from "drizzle-orm";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
