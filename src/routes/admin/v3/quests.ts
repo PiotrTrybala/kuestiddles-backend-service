@@ -18,12 +18,12 @@ import {
 } from "@/repositories/v3/quests";
 import { getRecentEntities, registerRecentEntity } from "@/controllers/recent";
 import { requireOrganization } from "@/routes/middleware";
+import { UUID_PATTERN } from "@/routes/api";
 
 export const questsRouter = new Hono<AppEnv>();
 
 questsRouter.use("*", requireOrganization);
 
-// Search
 questsRouter.get("/search", zValidator("query", z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
@@ -49,84 +49,9 @@ questsRouter.get("/search", zValidator("query", z.object({
 });
 
 questsRouter.get("/recent", async (c) => {
-    // const organization = c.get("organization")!;
-    // const user = c.get("user")!;
-
-    // const { entitiesIds, error } = await getRecentEntities('quests', organization.id, user.id);
-    // if (!error) {
-    //     console.log(error);
-    //     return c.json({
-    //         message: error,
-    //     }, 500);
-    // }
-
-    // const quests = await Promise.all(entitiesIds.map(async (id) => {
-    //     const { quest, error } = await getQuestById(id);
-    //     if (!error) {
-    //         return;
-    //     }
-    //     return quest!;
-    // }));
-
-    // console.log('recent quests:', quests);
-
-    // return c.json(quests);
     return c.body(null, 501); 
 });
 
-// Get by ID
-questsRouter.get("/:id", zValidator("param", z.object({
-    id: z.uuid(),
-})), async (c) => {
-    const organization = c.get("organization")!;
-    const user = c.get("user")!;
-    const { id } = c.req.valid("param");
-
-    const { quest, error } = await getQuestById(id);
-    if (error || !quest) {
-        return c.json({ message: error }, 500);
-    }
-
-    await registerRecentEntity('quests', organization.id, user.id, quest.id);
-
-    return c.json(quest);
-});
-
-// Get by game ID
-questsRouter.get("/game/:gameId", zValidator("param", z.object({
-    gameId: z.uuid(),
-})), async (c) => {
-    const { gameId } = c.req.valid("param");
-
-    const { quests, error } = await getQuestsByGameId(gameId);
-    if (error) {
-        return c.json({ message: error }, 500);
-    }
-
-    return c.json({ quests });
-});
-
-// Get by slug
-questsRouter.get("/slug/:slug", zValidator("param", z.object({
-    slug: z.string(),
-})), async (c) => {
-    const organization = c.get("organization");
-    const user = c.get("user")!;
-    if (!organization) return c.notFound();
-
-    const { slug } = c.req.valid("param");
-
-    const { quest, error } = await getQuestBySlug(organization.id, slug);
-    if (error || !quest) {
-        return c.json({ message: error }, 500);
-    }
-
-    await registerRecentEntity('quests', organization.id, user.id, quest.id);
-
-    return c.json(quest);
-});
-
-// Create
 questsRouter.post("/", zValidator("json", z.object({
     landmarkId: z.uuid(),
     title: z.string(),
@@ -157,7 +82,6 @@ questsRouter.post("/", zValidator("json", z.object({
         thumbnail ?? undefined,
     );
 
-    
     if (error || !id) {
         return c.json({ message: error }, 500);
     }
@@ -166,8 +90,38 @@ questsRouter.post("/", zValidator("json", z.object({
     return c.json({ id });
 });
 
-// Update title/description/points/landmark
-questsRouter.patch("/:id", zValidator("param", z.object({
+
+questsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
+    id: z.uuid(),
+})), async (c) => {
+    const organization = c.get("organization")!;
+    const user = c.get("user")!;
+    const { id } = c.req.valid("param");
+
+    const { quest, error } = await getQuestById(id);
+    if (error || !quest) {
+        return c.json({ message: error }, 500);
+    }
+
+    await registerRecentEntity('quests', organization.id, user.id, quest.id);
+
+    return c.json(quest);
+});
+
+questsRouter.get(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.object({
+    gameId: z.uuid(),
+})), async (c) => {
+    const { gameId } = c.req.valid("param");
+
+    const { quests, error } = await getQuestsByGameId(gameId);
+    if (error) {
+        return c.json({ message: error }, 500);
+    }
+
+    return c.json({ quests });
+});
+
+questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     title: z.string().optional(),
@@ -190,8 +144,7 @@ questsRouter.patch("/:id", zValidator("param", z.object({
     return c.json({ id: questId });
 });
 
-// Update thumbnail
-questsRouter.patch("/:id/thumbnail", zValidator("param", z.object({
+questsRouter.patch(`/:id{${UUID_PATTERN}}/thumbnail`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     thumbnail: z.string(),
@@ -207,8 +160,7 @@ questsRouter.patch("/:id/thumbnail", zValidator("param", z.object({
     return c.json({ id: questId });
 });
 
-// Update labels
-questsRouter.patch("/:id/labels", zValidator("param", z.object({
+questsRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     labels: z.string().array(),
@@ -224,8 +176,7 @@ questsRouter.patch("/:id/labels", zValidator("param", z.object({
     return c.json({ id: questId });
 });
 
-// Update answers
-questsRouter.patch("/:id/answers", zValidator("param", z.object({
+questsRouter.patch(`/:id{${UUID_PATTERN}}/answers`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     answers: z.string().array(),
@@ -241,8 +192,7 @@ questsRouter.patch("/:id/answers", zValidator("param", z.object({
     return c.json({ id: questId });
 });
 
-// Delete by ID
-questsRouter.delete("/:id", zValidator("param", z.object({
+questsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
 })), async (c) => {
     const { id } = c.req.valid("param");
@@ -252,11 +202,10 @@ questsRouter.delete("/:id", zValidator("param", z.object({
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: questId });
+    return c.body(null, 204);
 });
 
-// Delete by game ID
-questsRouter.delete("/game/:gameId", zValidator("param", z.object({
+questsRouter.delete(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.object({
     gameId: z.uuid(),
 })), async (c) => {
     const { gameId } = c.req.valid("param");
@@ -269,8 +218,26 @@ questsRouter.delete("/game/:gameId", zValidator("param", z.object({
     return c.json({ count });
 });
 
-// Delete by slug
-questsRouter.delete("/slug/:slug", zValidator("param", z.object({
+questsRouter.get("/:slug", zValidator("param", z.object({
+    slug: z.string(),
+})), async (c) => {
+    const organization = c.get("organization");
+    const user = c.get("user")!;
+    if (!organization) return c.notFound();
+
+    const { slug } = c.req.valid("param");
+
+    const { quest, error } = await getQuestBySlug(organization.id, slug);
+    if (error || !quest) {
+        return c.json({ message: error }, 500);
+    }
+
+    await registerRecentEntity('quests', organization.id, user.id, quest.id);
+
+    return c.json(quest);
+});
+
+questsRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
 })), async (c) => {
     const organization = c.get("organization");

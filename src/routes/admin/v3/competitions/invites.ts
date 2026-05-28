@@ -1,5 +1,6 @@
 import type { AppEnv } from "@/config/app";
 import { deleteInvite, generateGroupInvite, searchInvites } from "@/repositories/v3/competitions/invites";
+import { UUID_PATTERN } from "@/routes/api";
 import { requireAuth } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -39,12 +40,12 @@ invitesRouter.post("/", async (c) => {
     return c.json({ id }, 201);
 });
 
-invitesRouter.delete("/:id", async (c) => {
+invitesRouter.delete(`/:id{${UUID_PATTERN}}`, async (c) => {
 
     const id = c.req.param("id");
-    const organization = c.get("organization")!;
+    const competitionId = c.req.param("competitionId")!;
 
-    const { error } = await deleteInvite(organization.id, id);
+    const { error } = await deleteInvite(competitionId, id);
     if (error) return c.json({ message: error }, 500);
 
     return c.body(null, 200);

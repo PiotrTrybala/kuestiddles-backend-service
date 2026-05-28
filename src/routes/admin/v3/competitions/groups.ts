@@ -10,6 +10,7 @@ import {
 } from "@/repositories/v3/competitions/groups";
 import z from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { UUID_PATTERN } from "@/routes/api";
 
 export const groupsRouter = new Hono<AppEnv>();
 
@@ -32,36 +33,7 @@ groupsRouter.get("/search", zValidator('query', z.object({
     return c.json({ results });
 });
 
-groupsRouter.get("/:id/users", async (c) => {
-    const id = c.req.param("id");
-
-    const { users, error } = await getGroupUsers(id);
-
-    if (error) return c.json({ error }, 500);
-    return c.json({ users });
-});
-
-groupsRouter.get("/slug/:slug", async (c) => {
-    const organization = c.get("organization")!;
-    const slug = c.req.param("slug");
-
-    const { group, error } = await getGroupBySlug(organization.slug, slug);
-
-    if (error) return c.json({ error }, 404);
-    return c.json({ group });
-});
-
-groupsRouter.get("/:id", async (c) => {
-    const id = c.req.param("id");
-
-    const { group, error } = await getGroupById(id);
-
-    if (error) return c.json({ error }, 404);
-    return c.json({ group });
-});
-
 groupsRouter.post("/", async (c) => {
-    const organization = c.get("organization")!;
     const competitionId = c.req.param("competitionId")!;
     const { name, slug } = await c.req.json();
 
@@ -73,7 +45,35 @@ groupsRouter.post("/", async (c) => {
     return c.json({ id }, 201);
 });
 
-groupsRouter.delete("/:id", async (c) => {
+groupsRouter.get(`/:id{${UUID_PATTERN}}/users`, async (c) => {
+    const id = c.req.param("id");
+
+    const { users, error } = await getGroupUsers(id);
+
+    if (error) return c.json({ error }, 500);
+    return c.json({ users });
+});
+
+groupsRouter.get("/:slug", async (c) => {
+    const organization = c.get("organization")!;
+    const slug = c.req.param("slug");
+
+    const { group, error } = await getGroupBySlug(organization.slug, slug);
+
+    if (error) return c.json({ error }, 404);
+    return c.json({ group });
+});
+
+groupsRouter.get(`/:id{${UUID_PATTERN}}`, async (c) => {
+    const id = c.req.param("id");
+
+    const { group, error } = await getGroupById(id);
+
+    if (error) return c.json({ error }, 404);
+    return c.json({ group });
+});
+
+groupsRouter.delete(`/:id{${UUID_PATTERN}}`, async (c) => {
     const id = c.req.param("id");
 
     const { id: deletedId, error } = await removeGroupById(id);

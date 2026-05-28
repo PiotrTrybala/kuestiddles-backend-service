@@ -13,7 +13,7 @@ export const organizationsRouter = new Hono<AppEnv>();
 
 const organization = organizationsRouter.basePath("/:organizationSlug");
 
-organizationsRouter.post("/create", requireAuth("admin"), async (c) => {
+organizationsRouter.post("/", requireAuth("admin"), async (c) => {
 
     const user = c.get("user");
     if (!user) return c.json({ message: "Unauthorized" }, 401);

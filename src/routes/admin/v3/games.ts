@@ -3,14 +3,17 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { createGame, getGameById, getGameBySlug, removeGameById, removeGameBySlug, searchGames, updateGameAssetsById, updateGameAssetsBySlug } from "@/repositories/v3/games";
+import { UUID_PATTERN } from "@/routes/api";
 
 export const gamesRouter = new Hono<AppEnv>();
 
-gamesRouter.get("/search", zValidator("query", z.object({
+gamesRouter.get("/search", zValidator('query', z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
-    name: z.string().default(""),
-    labels: z.string().transform((value) => value.split(',')).default([]),
+    name: z.string().optional(),
+    labels: z.string()
+        .optional()
+        .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
 })), async (c) => {
 
     const organization = c.get("organization")!;
@@ -35,42 +38,6 @@ gamesRouter.get("/search", zValidator("query", z.object({
     });
 });
 
-gamesRouter.get("/:id", zValidator("param", z.object({
-    id: z.uuid(),
-})), async (c) => {
-    const { id } = c.req.valid("param");
-
-    const { metadata, error } = await getGameById(id);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json(metadata);
-});
-
-gamesRouter.get("/slug/:gameSlug", zValidator("param", z.object({
-    gameSlug: z.string(),
-})), async (c) => {
-    const organization = c.get("organization");
-    if (!organization) return c.notFound();
-    const { gameSlug } = c.req.valid("param");
-
-    const { metadata, error } = await getGameBySlug(
-        organization.id,
-        gameSlug,
-    );
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json(metadata);
-
-});
-
 gamesRouter.post("/", zValidator("json", z.object({
     name: z.string(),
     slug: z.string().nullish(),
@@ -90,15 +57,51 @@ gamesRouter.post("/", zValidator("json", z.object({
     });
 });
 
-gamesRouter.patch("/:gameId/assets", zValidator("json", z.object({
+gamesRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
+    id: z.uuid(),
+})), async (c) => {
+    const { id } = c.req.valid("param");
+
+    const { metadata, error } = await getGameById(id);
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.json(metadata);
+});
+
+gamesRouter.get("/:slug", zValidator("param", z.object({
+    slug: z.string(),
+})), async (c) => {
+    const organization = c.get("organization");
+    if (!organization) return c.notFound();
+    const { slug } = c.req.valid("param");
+
+    const { metadata, error } = await getGameBySlug(
+        organization.id,
+        slug,
+    );
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.json(metadata);
+
+});
+
+gamesRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("json", z.object({
     assets: z.string().array(),
 })), zValidator("param", z.object({
-    gameId: z.uuid(),
+    id: z.uuid(),
 })), async (c) => {
-    const { gameId } = c.req.valid("param");
+    const { id } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
-    const { id, error } = await updateGameAssetsById(gameId, assets);
+    const { id: gameId, error } = await updateGameAssetsById(id, assets);
 
     if (error) {
         return c.json({
@@ -106,22 +109,22 @@ gamesRouter.patch("/:gameId/assets", zValidator("json", z.object({
         }, 500);
     }
     return c.json({
-        id: id,
+        gameId: gameId,
     });
 });
 
-gamesRouter.patch("/slug/:gameSlug/assets", zValidator("json", z.object({
+gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
     assets: z.string().array(),
 })), zValidator("param", z.object({
-    gameSlug: z.uuid(),
+    slug: z.uuid(),
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
-    const { gameSlug } = c.req.valid("param");
+    const { slug } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
-    const { id, error } = await updateGameAssetsBySlug(organization.id, gameSlug, assets);
+    const { id, error } = await updateGameAssetsBySlug(organization.id, slug, assets);
 
     if (error) {
         return c.json({
@@ -133,31 +136,31 @@ gamesRouter.patch("/slug/:gameSlug/assets", zValidator("json", z.object({
     });
 });
 
-gamesRouter.delete("/:gameId", zValidator("param", z.object({
-    gameId: z.uuid(),
+gamesRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
+    id: z.uuid(),
 })), async (c) => {
-    const { gameId } = c.req.valid("param");
+    const { id } = c.req.valid("param");
 
-    const { id, error } = await removeGameById(gameId);
+    const { id: gameId, error } = await removeGameById(id);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
     return c.json({
-        id: id,
+        id: gameId,
     });
 });
 
-gamesRouter.delete("/:gameSlug", zValidator("param", z.object({
-    gameSlug: z.string(),
+gamesRouter.delete("/:slug", zValidator("param", z.object({
+    slug: z.string(),
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
-    const { gameSlug } = c.req.valid("param");
+    const { slug } = c.req.valid("param");
 
-    const { id, error } = await removeGameBySlug(organization.id, gameSlug);
+    const { id, error } = await removeGameBySlug(organization.id, slug);
     if (error) {
         return c.json({
             message: error,

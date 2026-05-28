@@ -1,5 +1,6 @@
 import type { AppEnv } from "@/config/app";
 import { getUploadDataById, getUploadMetadataById, getUploadMetadataBySlug, removeUploadById, removeUploadBySlug, searchUploads, upload } from "@/repositories/v3/uploads";
+import { UUID_PATTERN } from "@/routes/api";
 import { requireOrganization } from "@/routes/middleware";
 import { uploadsSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
@@ -22,8 +23,6 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid('query');
 
-    console.log(c.req.url);
-
     const { results, error } = await searchUploads(
         organization.id,
         page,
@@ -41,60 +40,6 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     return c.json({
         results,
     });
-});
-
-uploadsRouter.get("/:id/metadata", zValidator('param', z.object({
-    id: z.uuid({ error: "invalid parameter" }),
-})), async (c) => {
-
-    const { id } = c.req.valid('param');
-
-    const { metadata, error } = await getUploadMetadataById(id);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json(metadata);
-
-});
-
-uploadsRouter.get("/:id", zValidator('param', z.object({
-    id: z.uuid({ error: "invalid parameter" }),
-})), async (c) => {
-
-    const { id } = c.req.valid('param');
-
-    const { file, error } = await getUploadDataById(id);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.body(file!.stream(), {
-        headers: {
-            "Content-Type": "image/webp",
-            "Cache-Control": "public, max-age=31536000",
-        }
-    });
-});
-
-uploadsRouter.get("/slug/:slug/metadata", zValidator('param', z.object({
-    slug: z.string({ error: "invalid parameter" }),
-})), async (c) => {
-    const organization = c.get("organization")!;
-    const { slug } = c.req.valid('param');
-
-    const { metadata, error } = await getUploadMetadataBySlug(organization.id, slug);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json(metadata);
 });
 
 uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
@@ -118,7 +63,61 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
     return c.json(results);
 });
 
-uploadsRouter.delete("/:id", zValidator('param', z.object({
+uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object({
+    id: z.uuid({ error: "invalid parameter" }),
+})), async (c) => {
+
+    const { id } = c.req.valid('param');
+
+    const { metadata, error } = await getUploadMetadataById(id);
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.json(metadata);
+
+});
+
+uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
+    id: z.uuid({ error: "invalid parameter" }),
+})), async (c) => {
+
+    const { id } = c.req.valid('param');
+
+    const { file, error } = await getUploadDataById(id);
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.body(file!.stream(), {
+        headers: {
+            "Content-Type": "image/webp",
+            "Cache-Control": "public, max-age=31536000",
+        }
+    });
+});
+
+uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
+    slug: z.string({ error: "invalid parameter" }),
+})), async (c) => {
+    const organization = c.get("organization")!;
+    const { slug } = c.req.valid('param');
+
+    const { metadata, error } = await getUploadMetadataBySlug(organization.id, slug);
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.json(metadata);
+});
+
+uploadsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
 })), async (c) => {
     const { id } = c.req.valid("param");
@@ -133,7 +132,7 @@ uploadsRouter.delete("/:id", zValidator('param', z.object({
     return c.body(null, 200);
 });
 
-uploadsRouter.delete("/slug/:slug", zValidator('param', z.object({
+uploadsRouter.delete("/:slug", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
 })), async (c) => {
     const organization = c.get("organization")!;

@@ -16,6 +16,7 @@ import {
 } from "@/repositories/v3/landmarks";
 import { landmarks } from "@/database/schema";
 import { requireOrganization } from "@/routes/middleware";
+import { UUID_PATTERN } from "@/routes/api";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
@@ -54,35 +55,6 @@ landmarksRouter.get("/recent", async (c) => {
     return c.body(null, 501);
 });
 
-landmarksRouter.get("/:id", zValidator("param", z.object({
-    id: z.uuid(),
-})), async (c) => {
-    const { id } = c.req.valid("param");
-
-    const { landmark, error } = await getLandmarkById(id);
-    if (error) {
-        return c.json({ message: error }, 500);
-    }
-
-    return c.json(landmark);
-});
-
-landmarksRouter.get("/slug/:slug", zValidator("param", z.object({
-    slug: z.string(),
-})), async (c) => {
-    const organization = c.get("organization");
-    if (!organization) return c.notFound();
-
-    const { slug } = c.req.valid("param");
-
-    const { landmark, error } = await getLandmarkBySlug(organization.id, slug);
-    if (error) {
-        return c.json({ message: error }, 500);
-    }
-
-    return c.json(landmark);
-});
-
 landmarksRouter.post("/", zValidator("json", z.object({
     title: z.string(),
     description: z.string(),
@@ -115,7 +87,36 @@ landmarksRouter.post("/", zValidator("json", z.object({
     return c.json({ id });
 });
 
-landmarksRouter.patch("/:id", zValidator("param", z.object({
+landmarksRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
+    id: z.uuid(),
+})), async (c) => {
+    const { id } = c.req.valid("param");
+
+    const { landmark, error } = await getLandmarkById(id);
+    if (error) {
+        return c.json({ message: error }, 500);
+    }
+
+    return c.json(landmark);
+});
+
+landmarksRouter.get("/:slug", zValidator("param", z.object({
+    slug: z.string(),
+})), async (c) => {
+    const organization = c.get("organization");
+    if (!organization) return c.notFound();
+
+    const { slug } = c.req.valid("param");
+
+    const { landmark, error } = await getLandmarkBySlug(organization.id, slug);
+    if (error) {
+        return c.json({ message: error }, 500);
+    }
+
+    return c.json(landmark);
+});
+
+landmarksRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     title: z.string().optional(),
@@ -133,7 +134,7 @@ landmarksRouter.patch("/:id", zValidator("param", z.object({
 });
 
 // Update assets
-landmarksRouter.patch("/:id/assets", zValidator("param", z.object({
+landmarksRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("param", z.object({
     id: z.uuid(), 
 })), zValidator("json", z.object({
     assets: z.string().array(),
@@ -150,7 +151,7 @@ landmarksRouter.patch("/:id/assets", zValidator("param", z.object({
 });
 
 // Update labels
-landmarksRouter.patch("/:id/labels", zValidator("param", z.object({
+landmarksRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     labels: z.string().array(),
@@ -166,7 +167,7 @@ landmarksRouter.patch("/:id/labels", zValidator("param", z.object({
     return c.json({ id: landmarkId });
 });
 
-landmarksRouter.patch("/:id/location", zValidator("param", z.object({
+landmarksRouter.patch(`/:id{${UUID_PATTERN}}/location`, zValidator("param", z.object({
     id: z.uuid(),
 })), zValidator("json", z.object({
     longitude: z.number(),
@@ -183,7 +184,7 @@ landmarksRouter.patch("/:id/location", zValidator("param", z.object({
     return c.json({ id: landmarkId });
 });
 
-landmarksRouter.delete("/:id", zValidator("param", z.object({
+landmarksRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
 })), async (c) => {
     const { id } = c.req.valid("param");
@@ -196,7 +197,7 @@ landmarksRouter.delete("/:id", zValidator("param", z.object({
     return c.json({ id: landmarkId });
 });
 
-landmarksRouter.delete("/slug/:slug", zValidator("param", z.object({
+landmarksRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
 })), async (c) => {
     const organization = c.get("organization");

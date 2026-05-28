@@ -6,6 +6,7 @@ import { requireAuth, requireOrganization } from "@/routes/middleware";
 import { createCompetition, getCompetitionById, getCompetitionBySlug, getLeaderboard, removeCompetitionById, removeCompetitionBySlug, searchCompetitions, updateCompetitionStatusById } from "@/repositories/v3/competitions/competitions";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
+import { UUID_PATTERN } from "@/routes/api";
 
 export const competitionsRouter = new Hono<AppEnv>();
 
@@ -34,34 +35,6 @@ competitionsRouter.get("/search", zValidator("query", z.object({
     return c.json({ results });
 });
 
-competitionsRouter.get("/:id/leaderboard", requireAuth("admin"), async (c) => {
-    const id = c.req.param("id");
-
-    const { entries, error } = await getLeaderboard(id);
-
-    if (error) return c.json({ error }, 500);
-    return c.json({ entries });
-});
-
-competitionsRouter.get("/slug/:slug", requireAuth("admin"), async (c) => {
-    const organization = c.get("organization")!;
-    const slug = c.req.param("slug");
-
-    const { competition, error } = await getCompetitionBySlug(organization.id, slug);
-
-    if (error) return c.json({ error }, 404);
-    return c.json({ competition });
-});
-
-competitionsRouter.get("/:id", requireAuth("admin"), async (c) => {
-    const id = c.req.param("id");
-
-    const { competition, error } = await getCompetitionById(id);
-
-    if (error) return c.json({ error }, 404);
-    return c.json({ competition });
-});
-
 competitionsRouter.post("/", requireAuth("admin"), async (c) => {
     const organization = c.get("organization")!;
     const { name, slug } = await c.req.json();
@@ -82,7 +55,37 @@ competitionsRouter.post("/", requireAuth("admin"), async (c) => {
     return c.json({ id }, 201);
 });
 
-competitionsRouter.patch("/:id", requireAuth("admin"), async (c) => {
+competitionsRouter.get(`/:id{${UUID_PATTERN}}/leaderboard`, requireAuth("admin"), async (c) => {
+    const id = c.req.param("id");
+
+    const { entries, error } = await getLeaderboard(id);
+
+    if (error) return c.json({ error }, 500);
+    return c.json({ entries });
+});
+
+competitionsRouter.get("/:slug", requireAuth("admin"), async (c) => {
+    const organization = c.get("organization")!;
+    const slug = c.req.param("slug");
+
+    const { competition, error } = await getCompetitionBySlug(organization.id, slug);
+
+    if (error) return c.json({ error }, 404);
+    return c.json({ competition });
+});
+
+competitionsRouter.get(`/:id{${UUID_PATTERN}}`, requireAuth("admin"), async (c) => {
+    const id = c.req.param("id");
+
+    const { competition, error } = await getCompetitionById(id);
+
+    if (error) return c.json({ error }, 404);
+    return c.json({ competition });
+});
+
+
+
+competitionsRouter.patch(`/:id{${UUID_PATTERN}}`, requireAuth("admin"), async (c) => {
     const id = c.req.param("id");
     const { expiresAt, retainUntil } = await c.req.json();
 
@@ -100,7 +103,7 @@ competitionsRouter.patch("/:id", requireAuth("admin"), async (c) => {
     return c.json({ id: updatedId });
 });
 
-competitionsRouter.delete("/slug/:slug", requireAuth("admin"), async (c) => {
+competitionsRouter.delete("/:slug", requireAuth("admin"), async (c) => {
     const organization = c.get("organization")!;
     const slug = c.req.param("slug");
 
@@ -110,7 +113,7 @@ competitionsRouter.delete("/slug/:slug", requireAuth("admin"), async (c) => {
     return c.json({ id });
 });
 
-competitionsRouter.delete("/:id", requireAuth("admin"), async (c) => {
+competitionsRouter.delete(`/:id{${UUID_PATTERN}}`, requireAuth("admin"), async (c) => {
     const id = c.req.param("id");
 
     const { id: deletedId, error } = await removeCompetitionById(id);

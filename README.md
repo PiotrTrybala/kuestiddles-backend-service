@@ -8,27 +8,27 @@ Routes:
   - /admin - requireAdmin("admin")
     - /v3 - requireOrganization(...)
       - /uploads
-        - /search - GET
+        - /search?page=0>=&pageSize=>0&name=aabbcc&labels=aa,bb,cc - GET
         - /:id/metadata - GET
-        - /:id - GET
-        - /slug/:slug/metadata - GET
-        - /slug/:slug - GET
+        - /:id/data - GET
+        - /:slug/metadata - GET
+        - /:slug/data - GET
         - / - POST
         - /:id - DELETE
-        - /slug/:slug/metadata - DELETE
+        - /:slug - DELETE
       - /games
         - /search - GET
         - /:id - GET
-        - /slug/:slug - GET
+        - /:slug - GET
         - / - POST
-        - /:gameId/assets - PATCH
-        - /slug/:gameSlug/assets - PATCH
+        - /:id/assets - PATCH
+        - /:slug/assets - PATCH
         - /:gameId - DELETE
-        - /slug/:gameSlug - DELETE
+        - /:slug - DELETE
       - /landmarks
         - /search - GET
         - /:id - GET
-        - /slug/:slug - GET
+        - /:slug - GET
         - / - POST
         - /:id - PATCH
         - /:id/assets - PATCH
@@ -39,7 +39,7 @@ Routes:
       - /quests
         - /search - GET
         - /:id - GET
-        - /slug/:slug - GET
+        - /:slug - GET
         - /game/:gameId - GET
         - / - POST
         - /:id - PATCH
@@ -47,30 +47,30 @@ Routes:
         - /:id/labels - PATCH
         - /:id/answers - PATCH
         - /:id - DELETE
-        - /slug/:slug - DELETE
+        - /:slug - DELETE
         - /game/:gameId - DELETE
       - /competitions
         - /:competitionId
           - /groups
             - /search - GET
             - /:id - GET
-            - /slug/:slug - GET
+            - /:slug - GET
             - /:id/users - GET
             - / - POST
             - /:id - DELETE
-            - /slug/:slug - DELETE
+            - /:slug - DELETE
           - /invites
             - /search - GET
             - / - POST
             - /:id - DELETE
         - /search - GET
         - /:id - GET
-        - /slug/:slug - GET
+        - /:slug - GET
         - /:id/leaderboard - GET
         - / - POST
         - /:id - PATCH
         - /:id - DELETE
-        - /slug/:slug - DELETE
+        - /:slug - DELETE
   - /user
     - /v3
       - /landmarks
