@@ -18,7 +18,6 @@ groupsRouter.get("/search", zValidator('query', z.object({
     pageSize: z.coerce.number().default(20),
     name: z.string().optional(),
 })), async (c) => {
-    const organization = c.get("organization")!;
     const competitionId = c.req.param("competitionId")!;
     const { page, pageSize, name } = c.req.valid("query");
 
