@@ -1,21 +1,20 @@
 import { database } from "@/database/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { sendResetPasswordEmail, sendVerificationEmail } from "./mailgun";
 import { admin, organization, twoFactor } from "better-auth/plugins";
 import { stripeClient } from "./stripe";
 import { stripe } from "@better-auth/stripe";
-import { eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
-import { plans } from "@/database/payments";
+import { APP_NAME, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/globals";
+import { sendAccountResetPasswordEmail, sendAccountVerificationEmail } from "./mailgun";
 
-export const googleMobileClient = new OAuth2Client(process.env.GOOGLE_MOBILE_CLIENT_ID!);
+export const googleMobileClient = new OAuth2Client(GOOGLE_MOBILE_CLIENT_ID);
 
 export const auth = betterAuth({
 
-    appName: process.env.APP_NAME ?? "kuestiddles",
-    baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-    secret: process.env.BETTER_AUTH_SECRET!,
+    appName: APP_NAME ?? "kuestiddles",
+    baseURL: BETTER_AUTH_URL ?? "http://localhost:3000",
+    secret: BETTER_AUTH_SECRET!,
 
     trustedOrigins: [
         "http://localhost:5173",
@@ -35,14 +34,14 @@ export const auth = betterAuth({
         autoSignIn: true,
         sendResetPassword: async ({ user, url, token }, _) => {
             console.log(`sent reset password email to ${user.email}`);
-            await sendResetPasswordEmail(user.email, url);
+            await sendAccountResetPasswordEmail(user.email, url);
         }
     },
 
     emailVerification: {
         async sendVerificationEmail({ user, url, token }) {
             console.log(`sent verification message to ${user.email}: ${token}`);
-            await sendVerificationEmail(user.email, url);
+            await sendAccountVerificationEmail(user.email, url);
         }
     },
 
@@ -57,8 +56,8 @@ export const auth = betterAuth({
 
     socialProviders: {
         google: {
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: GOOGLE_CLIENT_ID,
+            clientSecret: GOOGLE_CLIENT_SECRET,
         },
     },
 
@@ -116,14 +115,14 @@ export const auth = betterAuth({
         }),
         stripe({
             stripeClient,
-            stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+            stripeWebhookSecret: STRIPE_WEBHOOK_SECRET,
             createCustomerOnSignUp: true,
             subscription: {
                 enabled: true,
                 plans: [
                     {
                         name: "standard",
-                        priceId: process.env.PLAN_STANDARD_PRICE_ID!,
+                        priceId: STANDARD_PLAN_PRICE_ID,
                         limits: {
                             landmarks: 20, // per game
                             quests: 20, // per game
@@ -133,19 +132,6 @@ export const auth = betterAuth({
                         }
                     }
                 ]
-                // plans: async () => {
-                //     const rows = await database.select().from(plans).where(eq(plans.active, true));
-                //     return rows.map((plan) => ({
-                //         name: plan.name,
-                //         priceId: plan.price_id,
-                //         limits: {
-                //             organizationsQuota: plan.organizations,
-                //             landmarksPerOrgQuota: plan.organizations_landmarks,
-                //             questsPerOrgQuota: plan.organizations_quests,
-                //             simultaneousCompsPerQuota: plan.organizations_competitions,
-                //         }
-                //     }));
-                // },
             },
         })
     ],
