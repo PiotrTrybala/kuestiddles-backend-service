@@ -6,7 +6,9 @@ import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 import slugify from "slugify";
 
-export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]) {
+type Upload = typeof uploads.$inferSelect;
+
+export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]): Promise<{ uploads: Upload[], error?: string}> {
     try {
         const pageIndex = Math.max(1, page) - 1; 
         const limit = Math.max(1, pageSize);
@@ -31,25 +33,21 @@ export async function searchUploads(organizationId: string, page: number, pageSi
 
         let searchResults = await database.select().from(uploads)
             .where(and(...filters));
-            // .limit(limit)
-            // .offset(offset);
-        
-        console.log(searchResults);
 
         return {
-            results: searchResults,
+            uploads: searchResults,
         };
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving uploads:", error);
         return {
-            results: [],
-            error: "An unexpected database error occurred",
+            uploads: [],
+            error: "An unexpected database error has occurred",
         }
     }
 }
 
-export async function getUploadMetadataById(id: string) {
+export async function getUploadMetadataById(id: string): Promise<{ metadata?: Upload, error?: string }> {
     try {
         const [ metadata ] = await database.select()
             .from(uploads)
@@ -58,7 +56,7 @@ export async function getUploadMetadataById(id: string) {
         if (!metadata) {
             return {
                 metadata: undefined,
-                error: "Metadata has not been found"
+                error: "upload metadata has been not found"
             }
         }
 
@@ -67,39 +65,39 @@ export async function getUploadMetadataById(id: string) {
         }
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving upload metadata:", error);
 
         return {
             metadata: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         }
     }
 
 }
 
-export async function getUploadDataById(id: string) {
+export async function getUploadDataById(id: string): Promise<{ data?: Bun.S3File, error?: string }> {
     try {
         const { metadata, error } = await getUploadMetadataById(id);
         if (error) {
             return {
-                file: undefined,
+                data: undefined,
                 error,
             }
         }
 
         const file = s3.file(metadata!.path);
-        return { file }
+        return { data: file, }
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving upload data:", error);
 
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            data: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function getUploadMetadataBySlug(organizationId: string, slug: string) {
+export async function getUploadMetadataBySlug(organizationId: string, slug: string): Promise<{ metadata?: Upload, error?: string }> {
     try {
         const [ metadata ] = await database.select()
             .from(uploads)
@@ -117,11 +115,11 @@ export async function getUploadMetadataBySlug(organizationId: string, slug: stri
         }
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving upload metadata by slug:", error);
 
         return {
             metadata: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         }
     }
 }
@@ -130,7 +128,7 @@ export const DEFAULT_UPLOAD_QUALITY = 75;
 export const DEFAULT_UPLOAD_WIDTH = 400;
 export const DEFAULT_UPLOAD_HEIGHT = 300;
 
-export async function upload(organizationId: string, files: File[]) {
+export async function upload(organizationId: string, files: File[]): Promise<{ uploads: { id: string, hash: string }[], error?: string }> {
     try {
         const results = await Promise.all(files.map(async (file) => {
 
@@ -148,6 +146,10 @@ export async function upload(organizationId: string, files: File[]) {
             const uploadPath = `assets/${organizationHash}/${uploadId}.webp`;
             const uploadHash = await sha256(webpBuffer);
 
+            await s3.write(uploadPath, webpBuffer, {
+                type: "image/webp",
+            });
+
             const [metadata] = await database.insert(uploads)
                 .values({
                     id: uploadId,
@@ -164,12 +166,8 @@ export async function upload(organizationId: string, files: File[]) {
                 .returning();
 
             if (!metadata) {
-                throw new Error(`Could not upload new file`);
+                throw new Error(`Error occured while uploading new file: ${file.name}`);
             }
-
-            await s3.write(uploadPath, webpBuffer, {
-                type: "image/webp",
-            });
 
             return {
                 id: metadata.id,
@@ -178,75 +176,69 @@ export async function upload(organizationId: string, files: File[]) {
         }));
 
         return {
-            results,
+            uploads: results,
         };
     } catch (error: any) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while uploading new uploads:", error);
+
+        const userMessage = error instanceof Error ? error.message : "An unexpected error has occurred";
 
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            uploads: [],
+            error: userMessage,
         }
     }
 }
 
-export async function removeUploadById(id: string) {
+export async function removeUploadById(id: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const { metadata, error } = await getUploadMetadataById(id);
 
         if (error || !metadata) {
             return {
-                error: {
-                    code: 404,
-                    error: "Upload was not found",
-                }
-            }
+                deleted: false,
+                error: `Error occurred while deleting upload by id: ${error ?? "Upload not found"}`,
+            };
         }
 
+        await database.delete(uploads).where(eq(uploads.id, id));
         await s3.delete(metadata.path);
-        await database.transaction(async (tx) => {
-            await tx.delete(uploads)
-                .where(eq(uploads.id, id));
-        });
-
-        return {}
-    } catch (error) {
-        console.error("Internal database error:", error);
-
 
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            deleted: true,
         }
+    } catch (error) {
+        console.error("Internal system error during upload deletion:", error);
+
+        return {
+            deleted: false,
+            error: "An unexpected database error occurred",
+        };
     }
 }
 
-export async function removeUploadBySlug(organizationId: string, slug: string) {
+export async function removeUploadBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
     try {
-const { metadata, error } = await getUploadMetadataBySlug(organizationId, slug);
+        const { metadata, error } = await getUploadMetadataBySlug(organizationId, slug);
 
         if (error || !metadata) {
             return {
-                error: {
-                    code: 404,
-                    error: "Upload was not found",
-                }
-            }
+                deleted: false,
+                error: `Error occurred while deleting upload by id: ${error ?? "Upload not found"}`,
+            };
         }
-
+        await database.delete(uploads).where(and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug)));
         await s3.delete(metadata.path);
-        await database.transaction(async (tx) => {
-            await tx.delete(uploads)
-            .where(and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug)));
-        });
-
-        return {}
-
+           
+        return {
+            deleted: true,
+        }
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Internal system error during upload deletion:", error);
 
         return {
-            error: "An unexpected database error occured",
-        }
+            deleted: false,
+            error: "An unexpected database error occurred",
+        };
     }
 }
