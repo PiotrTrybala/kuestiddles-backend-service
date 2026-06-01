@@ -106,6 +106,8 @@ export async function getLeaderboard(competitionId: string): Promise<{ entries: 
 
 }
 
+
+
 export async function getSouvenir(competitionId: string, groupId: string, userId: string): Promise<{ souvenir?: Souvenir, error?: string }> {
     try {
 
