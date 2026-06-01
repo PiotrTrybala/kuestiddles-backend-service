@@ -167,7 +167,7 @@ export async function createQuest(
     }
 }
 
-export async function updateQuest(id: string, data: { title?: string, description?: string, points?: number, landmark_id?: string }): Promise<{ updatedId?: string, error?: string }> {
+export async function updateQuest(id: string, data: { title?: string, description?: string, points?: number, landmark_id?: string }): Promise<{ updated?: Quest, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set(data)
@@ -175,18 +175,18 @@ export async function updateQuest(id: string, data: { title?: string, descriptio
             .returning();
 
         return {
-            updatedId: quest?.id,
-        };
+            updated: quest,
+        }
     } catch (error) {
         console.error("Error occured while updating quest:", error);
         return {
-            updatedId: undefined,
+            updated: undefined,
             error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestThumbnail(id: string, thumbnail: string): Promise<{ updatedId?: string, error?: string }> {
+export async function updateQuestThumbnail(id: string, thumbnail: string): Promise<{ updated?: Quest, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ thumbnail })
@@ -194,18 +194,18 @@ export async function updateQuestThumbnail(id: string, thumbnail: string): Promi
             .returning();
 
         return {
-            updatedId: quest?.id,
+            updated: quest,
         };
     } catch (error) {
         console.error("Error occured while updating quests thumbnail:", error);
         return {
-            updatedId: undefined,
+            updated: undefined,
             error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestLabels(id: string, labels: string[]): Promise<{ updatedId?: string, error?: string }> {
+export async function updateQuestLabels(id: string, labels: string[]): Promise<{ updated?: Quest, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ labels })
@@ -213,18 +213,18 @@ export async function updateQuestLabels(id: string, labels: string[]): Promise<{
             .returning();
 
         return {
-            updatedId: quest?.id,
+            updated: quest,
         };
     } catch (error) {
         console.error("Error occured while updating quests labels:", error);
         return {
-            updatedId: undefined,
+            updated: undefined,
             error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestAnswers(id: string, answers: string[]): Promise<{ updatedId?: string, error?: string }> {
+export async function updateQuestAnswers(id: string, answers: string[]): Promise<{ updated?: Quest, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ answers })
@@ -232,12 +232,12 @@ export async function updateQuestAnswers(id: string, answers: string[]): Promise
             .returning();
 
         return {
-            updatedId: quest?.id,
+            updated: quest,
         };
     } catch (error) {
         console.error("Error occured while updating quests answers:", error);
         return {
-            updatedId: undefined,
+            updated: undefined,
             error: "An unexpected database error has occurred",
         };
     }

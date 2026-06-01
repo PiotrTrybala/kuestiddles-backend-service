@@ -3,7 +3,9 @@ import { games, landmarks } from "@/database/schema";
 import { and, eq, ilike } from "drizzle-orm";
 import slugify from "slugify";
 
-export async function searchLandmarks(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]) {
+type Landmark = typeof landmarks.$inferSelect;
+
+export async function searchLandmarks(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ landmarks: Landmark[], error?: string }> {
     try {
 
         const offset = page * pageSize;
@@ -24,19 +26,19 @@ export async function searchLandmarks(organizationId: string, page: number, page
             .offset(offset);
 
         return {
-            results: searchResults,
+            landmarks: searchResults,
         };
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving organizations landmarks:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            landmarks: [],
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function getLandmarkById(id: string) {
+export async function getLandmarkById(id: string): Promise<{ landmark?: Landmark, error?: string }> {
 try {
         const [landmark] = await database.select()
             .from(landmarks)
@@ -44,7 +46,7 @@ try {
 
         if (!landmark) {
             return {
-                metadata: undefined,
+                landmark: undefined,
                 error: "Metadata has not been found"
             }
         }
@@ -54,16 +56,16 @@ try {
         }
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving landmark by id:", error);
 
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            landmark: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function getLandmarkBySlug(organizationId: string, slug: string) {
+export async function getLandmarkBySlug(organizationId: string, slug: string): Promise<{ landmark?: Landmark, error?: string }> {
     try {
         const [landmark] = await database.select()
             .from(landmarks)
@@ -71,7 +73,7 @@ export async function getLandmarkBySlug(organizationId: string, slug: string) {
 
         if (!landmark) {
             return {
-                metadata: undefined,
+                landmark: undefined,
                 error: "Metadata has not been found"
             }
         }
@@ -81,33 +83,44 @@ export async function getLandmarkBySlug(organizationId: string, slug: string) {
         }
 
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving landmark by slug:", error);
+
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            landmark: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function checkLandmarkSlug(organizationId: string, slug: string) {
+export async function checkLandmarkSlug(organizationId: string, slug: string): Promise<{ open: boolean }> {
     try {
 
         const [landmark] = await database.select()
             .from(landmarks)
             .where(and(eq(landmarks.organization_id, organizationId), eq(landmarks.slug, slug)));
 
-        return !landmark; // return true if slug is not used by any landmark
+        return {
+            open: !landmark
+        };
 
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while checking landmark slug:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            open: false,
         }
     }
 }
 
-export async function createLandmark(organizationId: string, title: string, description: string, longitude: number, latitude: number, slug?: string, labels?: string[], assets?: string[]) {
+export async function createLandmark(
+    organizationId: string, 
+    title: string,
+    description: string, 
+    longitude: number, 
+    latitude: number, 
+    slug?: string, 
+    labels?: string[], 
+    assets?: string[]
+): Promise<{ id?: string, error?: string }> {
     try {
 
         if (!slug) slug = slugify(title, {
@@ -130,15 +143,15 @@ export async function createLandmark(organizationId: string, title: string, desc
             id: landmark?.id,
         }
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while creating landmark:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            id: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmark(id: string, title?: string, description?: string) { 
+export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ updated?: Landmark, error?: string }> { 
     try {
 
         const [landmark] = await database.update(landmarks)
@@ -150,19 +163,19 @@ export async function updateLandmark(id: string, title?: string, description?: s
             .returning();
 
         return {
-            id: landmark?.id,
+            updated: landmark,
         }
 
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating landmark:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkAssets(id: string, assets: string[]) {
+export async function updateLandmarkAssets(id: string, assets: string[]): Promise<{ updated?: Landmark, error?: string }> {
     try {
 
         const [landmark] = await database.update(landmarks)
@@ -172,19 +185,19 @@ export async function updateLandmarkAssets(id: string, assets: string[]) {
             .returning();
         
         return {
-            id: landmark?.id,
+            updated: landmark,
         }
 
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating landmarks assets:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkLabels(id: string, labels: string[]) {
+export async function updateLandmarkLabels(id: string, labels: string[]): Promise<{ updated?: Landmark, error?: string }> {
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -193,18 +206,18 @@ export async function updateLandmarkLabels(id: string, labels: string[]) {
             .returning();
         
         return {
-            id: landmark?.id,
+            updated: landmark,
         }
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating landmarks labels:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkLocation(id: string, longitude: number, latitude: number) { 
+export async function updateLandmarkLocation(id: string, longitude: number, latitude: number): Promise<{ updated?: Landmark, error?: string }> { 
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -212,21 +225,22 @@ export async function updateLandmarkLocation(id: string, longitude: number, lati
                     x: longitude, y: latitude,
                 }
             })
+            .where(eq(landmarks.id, id))
             .returning();
 
         return {
-            id: landmark?.id,
+            updated: landmark,
         }
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating landmarks location:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function removeLandmarkById(id: string) { 
+export async function removeLandmarkById(id: string): Promise<{ deleted: boolean, error?: string }> { 
     try {
 
         const [ landmark ] = await database.delete(landmarks)
@@ -234,19 +248,19 @@ export async function removeLandmarkById(id: string) {
             .returning();
 
         return {
-            id: landmark?.id,
+            deleted: true,
         }
         
     } catch(error) {
-                console.error("Internal database error:", error);
+        console.error("Error occured while deleting landmark by id:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function removeLandmarkBySlug(organizationId: string, slug: string) {
+export async function removeLandmarkBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
         try {
 
         const [ landmark ] = await database.delete(landmarks)
@@ -254,14 +268,14 @@ export async function removeLandmarkBySlug(organizationId: string, slug: string)
             .returning();
 
         return {
-            id: landmark?.id,
+            deleted: true,
         }
         
     } catch(error) {
-                console.error("Internal database error:", error);
+        console.error("Error occured while deleting landmark by slug:", error);
         return {
-            metadata: undefined,
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         }
     }
 }

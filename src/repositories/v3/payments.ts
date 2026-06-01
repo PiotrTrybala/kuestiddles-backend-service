@@ -2,7 +2,9 @@ import { database } from "@/database/db";
 import { user_quotas } from "@/database/payments";
 import { eq, sql } from "drizzle-orm";
 
-export async function getUserQuotas(userId: string) {
+type UserQuotas = typeof user_quotas.$inferSelect;
+
+export async function getUserQuotas(userId: string): Promise<{ quotas?: UserQuotas, error?: string }> {
     try {
 
         const [quotas] = await database.select()
@@ -18,13 +20,12 @@ export async function getUserQuotas(userId: string) {
 
         return {
             quotas: quotas,
-            error: undefined,
         }
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving user quotas:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            quotas: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
@@ -39,7 +40,7 @@ export const quotaColumnMap: Record<QuotaType, keyof typeof user_quotas> = {
     organizations: "organization_quota",
 } as const;
 
-export async function increaseUsagePoint(userId: string, type: QuotaType) {
+export async function increaseUsagePoint(userId: string, type: QuotaType): Promise<{ updated?: UserQuotas, error?: string }> {
     try {
         const column = quotaColumnMap[type];
 
@@ -48,17 +49,17 @@ export async function increaseUsagePoint(userId: string, type: QuotaType) {
             .where(eq(user_quotas.user_id, userId))
             .returning();
 
-        return { result };
+        return { updated: result };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while increasing user usage quota:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function removeUsagePoint(userId: string, type: QuotaType) {
+export async function removeUsagePoint(userId: string, type: QuotaType): Promise<{ updated?: UserQuotas, error?: string }> {
     try {
         const column = quotaColumnMap[type];
 
@@ -67,12 +68,12 @@ export async function removeUsagePoint(userId: string, type: QuotaType) {
             .where(eq(user_quotas.user_id, userId))
             .returning();
 
-        return { result };
+        return { updated: result };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while decreasing user usage quota:", error);
         return {
-            result: undefined,
-            error: "An unexpected database error occured",
+            updated: undefined,
+            error: "An unexpected database error has occured",
         };
     }
 }
