@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
-export async function getAvatar(userId: string) {
+export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
     try {
         const [metadata] = await database.select()
             .from(avatars)
@@ -15,19 +15,19 @@ export async function getAvatar(userId: string) {
 
         if (!metadata) {
             return {
-                file: undefined,
-                error: "Avatar has not been found",
+                avatar: undefined,
+                error: "avatar has not been found",
             }
         }
 
         const file = s3.file(metadata!.path);
-        return { file }
+        return { avatar: file }
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving users avatar:", error);
 
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            avatar: undefined,
+            error: "An unexpected database error has occured",
         }
     }
 }
@@ -39,7 +39,7 @@ export const DEFAULT_AVATAR_HEIGHT = 128;
 export async function uploadAvatar(
     userId: string,
     avatar: File,
-) {
+): Promise<{ uploaded: boolean, error?: string }> {
     try {
 
         const buffer = await avatar.arrayBuffer();
@@ -53,6 +53,10 @@ export async function uploadAvatar(
 
         const uploadPath = `avatars/${avatarId!}`;
 
+        await s3.write(uploadPath, webpBuffer, {
+            type: "image/webp",
+        });
+
         const [metadata] = await database.insert(avatars)
             .values({
                 user_id: userId,
@@ -62,19 +66,15 @@ export async function uploadAvatar(
         if (!metadata) {
             throw new Error("Avatar has not been updated");
         }
-
-        await s3.write(uploadPath, webpBuffer, {
-            type: "image/webp",
-        });
-
-        return {}
-
+        return {
+            uploaded: true,
+        }
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while uploading new users avatar:", error);
 
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            uploaded: false,
+            error: "An unexpected database error has occured",
         }
     }
 }

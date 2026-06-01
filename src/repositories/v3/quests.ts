@@ -3,7 +3,10 @@ import { quests } from "@/database/schema";
 import { and, arrayOverlaps, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
-export async function searchQuests(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]) {
+type Quest = typeof quests.$inferSelect;
+type QuestInsert = typeof quests.$inferInsert;
+
+export async function searchQuests(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ quests: Quest[], error?: string }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -27,18 +30,18 @@ export async function searchQuests(organizationId: string, page: number, pageSiz
             .offset(offset);
 
         return {
-            results: searchResults,
+            quests: searchResults,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving organizations quests:", error);
         return {
-            results: [],
-            error: "An unexpected database error occurred",
+            quests: [],
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function getQuestById(id: string) {
+export async function getQuestById(id: string): Promise<{ quest?: Quest, error?: string }> {
     try {
         const [quest] = await database.select()
             .from(quests)
@@ -55,15 +58,15 @@ export async function getQuestById(id: string) {
             quest: quest,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving quest:", error);
         return {
             quest: undefined,
-            error: "An unexpected database error occurred",
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function getQuestsByGameId(gameId: string) {
+export async function getQuestsByGameId(gameId: string): Promise<{ quests: Quest[], error?: string }> {
     try {
         const results = await database.select()
             .from(quests)
@@ -73,15 +76,15 @@ export async function getQuestsByGameId(gameId: string) {
             quests: results,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving quests by game id:", error);
         return {
             quests: [],
-            error: "An unexpected database error occurred",
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function getQuestBySlug(organizationId: string, slug: string) {
+export async function getQuestBySlug(organizationId: string, slug: string): Promise<{ quest?: Quest, error?: string }> {
     try {
         const [quest] = await database.select()
             .from(quests)
@@ -98,24 +101,28 @@ export async function getQuestBySlug(organizationId: string, slug: string) {
             quest: quest,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retriving quest by slug:", error);
         return {
             quest: undefined,
-            error: "An unexpected database error occurred",
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function checkQuestSlug(organizationId: string, slug: string) {
+export async function checkQuestSlug(organizationId: string, slug: string): Promise<{ open: boolean }> {
     try {
         const [quest] = await database.select()
             .from(quests)
             .where(and(eq(quests.organization_id, organizationId), eq(quests.slug, slug)));
 
-        return !quest;
+        return { 
+            open: !quest 
+        };
     } catch (error) {
-        console.error("Internal database error:", error);
-        return false;
+        console.error("Error occured while checking validity of quests slug:", error);
+        return { 
+            open: false 
+        };
     }
 }
 
@@ -130,7 +137,7 @@ export async function createQuest(
     labels?: string[], 
     answers?: string[], 
     thumbnail?: string
-) {
+): Promise<{ id?: string, error?: string }> {
     try {
         if (!slug) slug = slugify(title, { lower: true, trim: true });
 
@@ -152,15 +159,15 @@ export async function createQuest(
             id: quest?.id,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while creating new quest:", error);
         return {
             id: undefined,
-            error: "An unexpected database error occurred",
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuest(id: string, data: { title?: string, description?: string, points?: number, landmark_id?: string }) {
+export async function updateQuest(id: string, data: { title?: string, description?: string, points?: number, landmark_id?: string }): Promise<{ updatedId?: string, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set(data)
@@ -168,18 +175,18 @@ export async function updateQuest(id: string, data: { title?: string, descriptio
             .returning();
 
         return {
-            id: quest?.id,
+            updatedId: quest?.id,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating quest:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            updatedId: undefined,
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestThumbnail(id: string, thumbnail: string) {
+export async function updateQuestThumbnail(id: string, thumbnail: string): Promise<{ updatedId?: string, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ thumbnail })
@@ -187,18 +194,18 @@ export async function updateQuestThumbnail(id: string, thumbnail: string) {
             .returning();
 
         return {
-            id: quest?.id,
+            updatedId: quest?.id,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating quests thumbnail:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            updatedId: undefined,
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestLabels(id: string, labels: string[]) {
+export async function updateQuestLabels(id: string, labels: string[]): Promise<{ updatedId?: string, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ labels })
@@ -206,18 +213,18 @@ export async function updateQuestLabels(id: string, labels: string[]) {
             .returning();
 
         return {
-            id: quest?.id,
+            updatedId: quest?.id,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating quests labels:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            updatedId: undefined,
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function updateQuestAnswers(id: string, answers: string[]) {
+export async function updateQuestAnswers(id: string, answers: string[]): Promise<{ updatedId?: string, error?: string }> {
     try {
         const [quest] = await database.update(quests)
             .set({ answers })
@@ -225,67 +232,69 @@ export async function updateQuestAnswers(id: string, answers: string[]) {
             .returning();
 
         return {
-            id: quest?.id,
+            updatedId: quest?.id,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating quests answers:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            updatedId: undefined,
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function removeQuestById(id: string) {
+export async function removeQuestById(id: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [quest] = await database.delete(quests)
             .where(eq(quests.id, id))
             .returning();
 
         return {
-            id: quest?.id,
+            deleted: true,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while removing quest:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            deleted: false,
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function removeQuestByGameId(gameId: string) {
-    try {
+export async function removeQuestByGameId(gameId: string): Promise<{ deleted: boolean, count: number, error?: string }> {
+    try { 
         const deletedQuests = await database.delete(quests)
             .where(eq(quests.game_id, gameId))
             .returning();
 
         return {
+            deleted: true,
             count: deletedQuests.length,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting quests by game id:", error);
         return {
+            deleted: false,
             count: 0,
-            error: "An unexpected database error occurred",
+            error: "An unexpected database error has occurred",
         };
     }
 }
 
-export async function removeQuestBySlug(organizationId: string, slug: string) {
+export async function removeQuestBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [quest] = await database.delete(quests)
             .where(and(eq(quests.organization_id, organizationId), eq(quests.slug, slug)))
             .returning();
 
         return {
-            id: quest?.id,
+            deleted: true,
         };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting quest by slug:", error);
         return {
-            id: undefined,
-            error: "An unexpected database error occurred",
+            deleted: false,
+            error: "An unexpected database error has occurred",
         };
     }
 }
