@@ -1,68 +1,66 @@
-import { redis } from "../config/redis";
+import { redis } from "@/config/redis";
 
-// export const RECENT_LIMIT = 4;
+const RECENT_OBJECT_LIST_LIMIT = 5;
+export type ObjectType = "quest" | "landmark";
 
-// export const recentId = (organizationId: string, userId: string, type: 'quests' | 'landmarks') => {
-//     return `recent:${organizationId}:${type}:${userId}`;
-// }
-
-export const RECENT_ENTITY_LIMIT = 5;
-
-export type EntityType = 'quests' | 'landmarks';
-
-export const recentEntityID = (type: EntityType, organizationId: string, userId: string) => {
-    return `kuest:${type}:${organizationId}:${userId}`;
+export function getObjectId(type: ObjectType, organizatonId: string, userId: string) {
+    return `kuest:${type}:${organizatonId}:${userId}`;
 };
 
-export async function getRecentEntities(type: EntityType, organizationId: string, userId: string): Promise<{ entitiesIds: string[], error?: Error }> {
-
+async function getRecentObjects(type: ObjectType, organizationId: string, userId: string): Promise<{ ids: string[], error?: string }> {
     try {
-
-        const id = recentEntityID(type, organizationId, userId);
-        const entitiesIds = await redis.lrange(id, 0, -1); // Read entire queue
-
-        console.log(id,":", entitiesIds);
+        const id = getObjectId(type, organizationId, userId);
+        const objectsIds = await redis.lrange(id, 0, -1);
 
         return {
-            entitiesIds,
+            ids: objectsIds,
         }
     } catch(error) {
-        console.log('error detected:', error);
-        throw new Error("Failed to load recent entities", {
-            cause: error,
-        });
+        console.log('error occured while retriving recent objects:', error);
+        return {
+            ids: [],
+            error: "Error occured while retriving recent objects: " + type,
+        }
     }
-
 }
 
-export async function registerRecentEntity(type: EntityType, organizationId: string, userId: string, entityId: string): Promise<{ questsIds: string[], error?: string}> {
-
+async function addRecentObject(type: ObjectType, organizationId: string, userId: string, objectId: string): Promise<{ updated: string[], error?: string }> {
     try {
 
-        const id = recentEntityID(type, organizationId, userId);
+        const id = getObjectId(type, organizationId, userId);
 
-
-        await redis.lpush(id, entityId);
-        const size = await redis.llen(id);
-        if (size - 1 === RECENT_ENTITY_LIMIT) {
+        await redis.lpush(id, objectId);
+        const currentObjectsListSize = await redis.llen(id);
+        if (currentObjectsListSize - 1 == RECENT_OBJECT_LIST_LIMIT) {
             await redis.lpop(id);
         }
-
-        await redis.ltrim(id, 0, RECENT_ENTITY_LIMIT - 1); // Check if this command will cause trouble
-
-        // await redis.lrem(id, 0, entityId);
-        // await redis.lpush(id, entityId);
-        // await redis.ltrim(id, 0, RECENT_ENTITY_LIMIT - 1);
 
         const updated = await redis.lrange(id, 0, -1);
 
         return {
-            questsIds: updated,
+            updated,
         }
     } catch(error) {
-        throw new Error("Failed to register new recent entity", {
-            cause: error,
-        });
+        console.log('error occured while adding new object to recent objects:', error);
+        return {
+            updated: [],
+            error: "Error occured while adding new object to recent objects: " + type,
+        }
     }
+}
 
+export async function getRecentQuests(organizationId: string, userId: string): Promise<{ ids: string[], error?: string }> {
+    return getRecentObjects("quest", organizationId, userId);
+}
+
+export async function addRecentQuest(organizationId: string, userId: string, questId: string) {
+    return addRecentObject("quest", organizationId, userId, questId);
+}
+
+export async function getRecentLandmarks(organizationId: string, userId: string) {
+    return getRecentObjects("landmark", organizationId, userId);
+}
+
+export async function addRecentLandmark(organizationId: string, userId: string, landmarkId: string) {
+    return addRecentObject("landmark", organizationId, userId, landmarkId);
 }
