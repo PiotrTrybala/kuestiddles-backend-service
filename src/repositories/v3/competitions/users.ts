@@ -1,112 +1,152 @@
+import { groups, groupSolves, groupUsers, leaderboard, quests } from "@/database/schema"
+import { getCompetitionById } from "./competitions";
 import { database } from "@/database/db";
-import { competitions, groups, groupUsers, invites, leaderboard, groupSolves, quests } from "@/database/schema";
-import { and, desc, eq, ilike, sql } from "drizzle-orm";
-
+import { and, eq, sql } from "drizzle-orm";
 
 type Quest = typeof quests.$inferSelect;
-
-export async function getCompetitionQuests(competitionId: string): Promise<{ quests: { quests: Quest[], groups}[], error?: string }> {
-    try {
-        const questResults = await database.select()
-            .from(groupSolves)
-            .innerJoin(groups, eq(groupSolves.group_id, groups.id))
-            .innerJoin(quests, eq(groupSolves.quest_id, quests.id))
-            .where(eq(groups.competition_id, competitionId));
-
-        return { quests: questResults };
-    } catch (error) {
-        console.error("Error occured while retrieving competitions quests:", error);
-        return {
-            quests: [],
-            error: "An unexpected database error occured",
-        };
-    }
+type Group = typeof groups.$inferSelect;
+type GroupUser = typeof groupUsers.$inferSelect;
+type Leaderboard = typeof leaderboard.$inferSelect;
+type Souvenir = {
+    username: string,
+    groupName: string,
+    points: number,
 }
 
-export async function getGroupsUsers(competitionId: string) {
+export async function getUserGroup(competitionId: string, groupId: string): Promise<{ group?: Group, error?: string }> {
     try {
-        const users = await database.select()
-            .from(groupUsers)
-            .innerJoin(groups, eq(groupUsers.group_id, groups.id))
-            .where(eq(groups.competition_id, competitionId));
 
-        return { users };
-    } catch (error) {
-        console.error("Internal database error:", error);
-        return {
-            users: [],
-            error: "An unexpected database error occured",
-        };
-    }
-}
+        const [group] = await database.select()
+            .from(groups)
+            .where(and(eq(groups.competition_id, competitionId), eq(groups.id, groupId)));
 
-export async function getCompetitionsLeaderboard(competitionId: string) {
-    try {
-        const entries = await database.select()
-            .from(leaderboard)
-            .innerJoin(groups, eq(leaderboard.group_id, groups.id))
-            .where(eq(leaderboard.competition_id, competitionId))
-            .orderBy(desc(leaderboard.points));
-
-        return { entries };
-    } catch (error) {
-        console.error("Internal database error:", error);
-        return {
-            entries: [],
-            error: "An unexpected database error occured",
-        };
-    }
-}
-
-export async function getSouvenirCertificate(competitionId: string, groupId: string) {
-    try {
-        const [entry] = await database.select({
-            points: leaderboard.points,
-            group_name: groups.name,
-            members: groups.members,
-        })
-            .from(leaderboard)
-            .innerJoin(groups, eq(leaderboard.group_id, groups.id))
-            .where(
-                and(
-                    eq(leaderboard.competition_id, competitionId),
-                    eq(leaderboard.group_id, groupId),
-                )
-            );
-
-        if (!entry) {
-            return { certificate: undefined, error: "Leaderboard entry has not been found" };
+        if (!group) {
+            throw new Error("Group has not been found");
         }
 
-        const solves = await database.select({
-            quest_id: groupSolves.quest_id,
-            solved: groupSolves.solved,
-            title: quests.title,
-            points: quests.points,
-        })
-            .from(groupSolves)
-            .innerJoin(quests, eq(groupSolves.quest_id, quests.id))
-            .where(
-                and(
-                    eq(groupSolves.group_id, groupId),
-                    eq(groupSolves.solved, true),
-                )
-            );
+        return {
+            group,
+        }
+    } catch(error) {
+        console.log("Error occured while retrieving users group:", error);
+        return {
+            group: undefined,
+            error: "An unknown database error has occured",
+        }
+    }
+}
+export async function getCompetitionQuests(competitionId: string): Promise<{ quests: Quest[], error?: string }> {
+    try {
+
+        const { competition, error } = await getCompetitionById(competitionId);
+        if (error || !competition) {
+            throw new Error(error);
+        }
+
+        const competitionQuests = await database.select()
+            .from(quests)
+            .where(eq(quests.game_id, competition.game_id));
 
         return {
-            certificate: {
-                group_name: entry.group_name,
-                members: entry.members,
-                total_points: entry.points,
-                solves,
-            },
-        };
-    } catch (error) {
-        console.error("Internal database error:", error);
+            quests: competitionQuests,
+        }
+    } catch(error) {
+        console.log("Error occured while retrieving competitions quests:", error);
         return {
-            certificate: undefined,
-            error: "An unexpected database error occured",
-        };
+            quests: [],
+            error: "An unknown database error has occured",
+        }
+    }
+
+}
+
+export async function getGroupUsers(groupId: string): Promise<{ users: GroupUser[], error?: string }> {
+    try {
+
+        const users = await database.select()
+            .from(groupUsers)
+            .where(eq(groupUsers.group_id, groupId));
+        return {
+            users,
+        }
+
+    } catch(error) {
+        console.log("Error occured while retrieving group users:", error);
+        return {
+            users: [],
+            error: "An unknown database error has occured",
+        }
+    }
+
+}
+
+export async function getLeaderboard(competitionId: string): Promise<{ entries: Leaderboard[], groups: Group[], error?: string }> {
+    try {
+
+        const entries = await database.select()
+            .from(leaderboard)
+            .where(eq(leaderboard.competition_id, competitionId));
+
+        const competitionGroups = await database.select()
+            .from(groups)
+            .where(eq(groups.competition_id, competitionId));
+
+        return {
+            entries: entries,
+            groups: competitionGroups,
+        }
+    } catch(error) {
+        console.log("Error occured while retrieving leaderboard:", error);
+        return {
+            entries: [],
+            groups: [],
+            error: "An unknown database error has occured",
+        }
+    }
+
+}
+
+export async function getSouvenir(competitionId: string, groupId: string, userId: string): Promise<{ souvenir?: Souvenir, error?: string }> {
+    try {
+
+        const [user] = await database.select()
+            .from(groupUsers)
+            .where(and(eq(groupUsers.id, userId), eq(groupUsers.group_id, groupId)));
+
+        if (!user) {
+            throw new Error("User has not been found.");
+        }
+
+        const [entry] = await database.select()
+            .from(leaderboard)
+            .where(and(eq(leaderboard.group_id, groupId), eq(leaderboard.competition_id, competitionId)));
+
+        if (!entry) {
+            throw new Error("Leaderboard entry has not been found.");
+        }
+
+        const [group] = await database.select()
+            .from(groups)
+            .where(eq(groups.id, groupId));
+
+        if (!group) {
+            throw new Error("Group has not been found.");
+        }
+
+        return {
+            souvenir: {
+                username: user.username,
+                groupName: group.name,
+                points: entry.points,
+            }
+        }
+
+    } catch(error) {
+        console.log("Error occured while retrieving leaderboard:", error);
+        return {
+            souvenir: undefined,
+            error: "An unknown database error has occured",
+        }
     }
 }
 
