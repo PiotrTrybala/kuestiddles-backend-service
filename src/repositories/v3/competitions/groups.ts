@@ -4,8 +4,10 @@ import { quests } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
+type CompetitionGroup = typeof groups.$inferSelect;
+type CompetitionUser = typeof groupUsers.$inferSelect;
 
-export async function searchGroups(competitionId: string, page: number, pageSize: number, name?: string) {
+export async function searchGroups(competitionId: string, page: number, pageSize: number, name?: string): Promise<{ groups: CompetitionGroup[], error?: string }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -24,17 +26,17 @@ export async function searchGroups(competitionId: string, page: number, pageSize
             .limit(limit)
             .offset(offset);
 
-        return { results };
+        return { groups: results, };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving groups:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            groups: [],
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getGroupById(id: string) {
+export async function getGroupById(id: string): Promise<{ group?: CompetitionGroup, error?: string }> {
     try {
         const [group] = await database.select()
             .from(groups)
@@ -49,15 +51,15 @@ export async function getGroupById(id: string) {
 
         return { group };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving group:", error);
         return {
             group: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getGroupBySlug(competitionId: string, slug: string) {
+export async function getGroupBySlug(competitionId: string, slug: string): Promise<{ group?: CompetitionGroup, error?: string }> {
     try {
         const [group] = await database.select()
             .from(groups)
@@ -72,15 +74,15 @@ export async function getGroupBySlug(competitionId: string, slug: string) {
 
         return { group };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving group by slug:", error);
         return {
             group: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getGroupUsers(groupId: string) {
+export async function getGroupUsers(groupId: string): Promise<{ users: CompetitionUser[], error?: string }> {
     try {
         const users = await database.select()
             .from(groupUsers)
@@ -88,15 +90,15 @@ export async function getGroupUsers(groupId: string) {
 
         return { users };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retreving competition groups users:", error);
         return {
             users: [],
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function createGroup(competitionId: string, name: string, slug?: string | null) {
+export async function createGroup(competitionId: string, name: string, slug?: string | null): Promise<{ group?: CompetitionGroup, error?: string }> {
     try {
         if (!slug) slug = slugify(name, { lower: true, trim: true });
 
@@ -108,24 +110,24 @@ export async function createGroup(competitionId: string, name: string, slug?: st
             })
             .returning();
 
-        return { id: group?.id };
+        return { group: group };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while creating competitions group:", error);
         return {
             group: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function solveQuest(groupId: string, questId: string, answers: string[]) {
+export async function solveQuest(groupId: string, questId: string, answers: string[]): Promise<{ solved: boolean, error?: string }> {
     try {
         const [quest] = await database.select()
             .from(quests)
             .where(eq(quests.id, questId));
 
         if (!quest) {
-            return { error: "Quest has not been found" };
+            return { solved: false, error: "Quest has not been found" };
         }
 
         const [existing] = await database.select()
@@ -138,7 +140,7 @@ export async function solveQuest(groupId: string, questId: string, answers: stri
             );
 
         if (existing?.solved) {
-            return { error: "Quest has already been solved" };
+            return { solved: true, error: "Quest has already been solved" };
         }
 
         const correctAnswers = quest!.answers ?? [];
@@ -147,7 +149,7 @@ export async function solveQuest(groupId: string, questId: string, answers: stri
         );
 
         if (!isCorrect) {
-            return { error: "Incorrect answer" };
+            return { solved: false, error: "Incorrect answer" };
         }
 
         if (existing) {
@@ -172,26 +174,28 @@ export async function solveQuest(groupId: string, questId: string, answers: stri
             .set({ points: sql`${leaderboard.points} + ${quest.points}` })
             .where(eq(leaderboard.group_id, groupId));
 
-        return { success: true };
+        return { solved: true };
     } catch(error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while solving quest:", error);
         return {
-            error: "An unexpected database error occured",
+            solved: false,
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function removeGroupById(id: string) {
+export async function removeGroupById(id: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [group] = await database.delete(groups)
             .where(eq(groups.id, id))
             .returning();
 
-        return { id: group?.id };
+        return { deleted: true };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting competition group:", error);
         return {
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         };
     }
 }

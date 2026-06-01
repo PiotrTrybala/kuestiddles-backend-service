@@ -3,8 +3,10 @@ import { competitions, leaderboard } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
+type Competition = typeof competitions.$inferSelect;
+type Leaderboard = typeof leaderboard.$inferSelect;
 
-export async function searchCompetitions(organizationId: string, page: number, pageSize: number, name?: string) {
+export async function searchCompetitions(organizationId: string, page: number, pageSize: number, name?: string): Promise<{ competitions: Competition[], error?: string }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -23,17 +25,17 @@ export async function searchCompetitions(organizationId: string, page: number, p
             .limit(limit)
             .offset(offset);
 
-        return { results };
+        return { competitions: results };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving competitions:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            competitions: [],
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getCompetitionById(id: string) {
+export async function getCompetitionById(id: string): Promise<{ competition?: Competition, error?: string }> {
     try {
         const [competition] = await database.select()
             .from(competitions)
@@ -48,15 +50,15 @@ export async function getCompetitionById(id: string) {
 
         return { competition };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving competition:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getCompetitionBySlug(organizationId: string, slug: string) {
+export async function getCompetitionBySlug(organizationId: string, slug: string): Promise<{ competition?: Competition, error?: string }> {
     try {
         const [competition] = await database.select()
             .from(competitions)
@@ -71,32 +73,32 @@ export async function getCompetitionBySlug(organizationId: string, slug: string)
 
         return { competition };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving competition by slug:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function getLeaderboard(competitionId: string) {
+export async function getLeaderboard(competitionId: string): Promise<{ leaderboard: Leaderboard[], error?: string }> {
     try {
         const entries = await database.select()
             .from(leaderboard)
             .where(eq(leaderboard.competition_id, competitionId))
             .orderBy(desc(leaderboard.points));
 
-        return { entries };
+        return { leaderboard: entries };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving leaderboard:", error);
         return {
-            entries: [],
-            error: "An unexpected database error occured",
+            leaderboard: [],
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function createCompetition(organizationId: string, name: string, slug?: string | null, expiresAt?: Date | null, retainUntil?: Date | null) {
+export async function createCompetition(organizationId: string, name: string, slug?: string | null, expiresAt?: Date | null, retainUntil?: Date | null): Promise<{ competition?: Competition, error?: string }> {
     try {
         if (!slug) slug = slugify(name, { lower: true, trim: true });
 
@@ -110,17 +112,17 @@ export async function createCompetition(organizationId: string, name: string, sl
             })
             .returning();
 
-        return { id: competition?.id };
+        return { competition: competition };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while creating competition:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function updateCompetitionStatusById(id: string, expiresAt: Date, retainUntil: Date) {
+export async function updateCompetitionStatusById(id: string, expiresAt: Date, retainUntil: Date): Promise<{ competition?: Competition, error?: string }> {
     try {
         const [competition] = await database.update(competitions)
             .set({
@@ -130,42 +132,44 @@ export async function updateCompetitionStatusById(id: string, expiresAt: Date, r
             .where(eq(competitions.id, id))
             .returning();
 
-        return { id: competition?.id };
+        return { competition };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while updating competition status:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function removeCompetitionById(id: string) {
+export async function removeCompetitionById(id: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [competition] = await database.delete(competitions)
             .where(eq(competitions.id, id))
             .returning();
 
-        return { id: competition?.id };
+        return { deleted: true, };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting competition:", error);
         return {
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function removeCompetitionBySlug(organizationId: string, slug: string) {
+export async function removeCompetitionBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [competition] = await database.delete(competitions)
             .where(and(eq(competitions.organization_id, organizationId), eq(competitions.slug, slug)))
             .returning();
 
-        return { id: competition?.id };
+        return { deleted: true, };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting competition by slug:", error);
         return {
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         };
     }
 }

@@ -2,7 +2,7 @@ import { boolean, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid }
 import { organization } from "../auth";
 import { timestamps } from "../utils";
 import { randomBytes } from "crypto";
-import { quests } from "./games";
+import { games, quests } from "./games";
 
 export const INVITE_SECRET_LENGTH = 64;
 export const competitionStatus = pgEnum('competition_status', ['onboarding', 'playing', 'summarized', 'archived']);
@@ -10,6 +10,7 @@ export const competitionStatus = pgEnum('competition_status', ['onboarding', 'pl
 export const competitions = pgTable("competitions", {
     id: uuid().primaryKey().notNull().defaultRandom(),
     slug: text().notNull(),
+    game_id: text().notNull().references(() => games.id),
     organization_id: text().notNull().references(() => organization.id),
     name: text().notNull(),
     status: competitionStatus().notNull().default("onboarding"),

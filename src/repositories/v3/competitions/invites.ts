@@ -1,10 +1,11 @@
 import { database } from "@/database/db";
-import { competitions, groups, groupUsers, invites, leaderboard, groupSolves } from "@/database/schema";
-import { quests } from "@/database/schema";
-import { and, desc, eq, ilike, sql } from "drizzle-orm";
-import slugify from "slugify";
+import { competitions, groups, groupUsers, invites } from "@/database/schema";
+import { and, eq, sql } from "drizzle-orm";
 
-export async function searchInvites(organizationId: string, page: number, pageSize: number) {
+type CompetitionInvite = typeof invites.$inferSelect;
+type CompetitionUser = typeof groupUsers.$inferSelect;
+
+export async function searchInvites(organizationId: string, page: number, pageSize: number): Promise<{ invites: CompetitionInvite[], error?: string }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -20,17 +21,17 @@ export async function searchInvites(organizationId: string, page: number, pageSi
             .limit(limit)
             .offset(offset);
 
-        return { results };
+        return { invites: results };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving invites:", error);
         return {
-            results: [],
-            error: "An unexpected database error occured",
+            invites: [],
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function generateGroupInvite(competitionId: string, groupId: string, expiresAt: Date) {
+export async function generateGroupInvite(competitionId: string, groupId: string, expiresAt: Date): Promise<{ invite?: CompetitionInvite, error?: string }> {
     try {
         const [invite] = await database.insert(invites)
             .values({
@@ -40,17 +41,17 @@ export async function generateGroupInvite(competitionId: string, groupId: string
             })
             .returning();
 
-        return { id: invite?.id };
+        return { invite: invite };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while generating new group invite:", error);
         return {
             invite: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function acceptGroupInvite(competitionId: string, groupId: string, inviteId: string, username: string) {
+export async function acceptGroupInvite(competitionId: string, groupId: string, inviteId: string, username: string): Promise<{ user?: CompetitionUser, error?: string }> {
     try {
         const [invite] = await database.select()
             .from(invites)
@@ -81,17 +82,17 @@ export async function acceptGroupInvite(competitionId: string, groupId: string, 
             .set({ members: sql`${groups.members} + 1` })
             .where(eq(groups.id, groupId));
 
-        return { id: groupUser?.id };
+        return { user: groupUser };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while accepting competition group invite:", error);
         return {
-            invite: undefined,
-            error: "An unexpected database error occured",
+            user: undefined,
+            error: "An unexpected database error has occured",
         };
     } 
 }
 
-export async function getInviteById(id: string) {
+export async function getInviteById(id: string): Promise<{ invite?: CompetitionInvite, error?: string }> {
     try {
         const [invite] = await database.select()
             .from(invites)
@@ -106,25 +107,26 @@ export async function getInviteById(id: string) {
 
         return { invite };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving invite:", error);
         return {
             invite: undefined,
-            error: "An unexpected database error occured",
+            error: "An unexpected database error has occured",
         };
     }
 }
 
-export async function deleteInvite(competitionId: string, id: string) {
+export async function deleteInvite(competitionId: string, id: string): Promise<{ deleted: boolean, error?: string }> {
       try {
-        const [competition] = await database.delete(competitions)
+        const [competition] = await database.delete(invites)
             .where(and(eq(invites.id, id), eq(invites.competition_id, competitionId)))
             .returning();
 
-        return { id: competition?.id };
+        return { deleted: true };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while deleting invite:", error);
         return {
-            error: "An unexpected database error occured",
+            deleted: false,
+            error: "An unexpected database error has occured",
         };
     }  
 }

@@ -3,7 +3,9 @@ import { competitions, groups, groupUsers, invites, leaderboard, groupSolves, qu
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 
 
-export async function getCompetitionQuests(competitionId: string) {
+type Quest = typeof quests.$inferSelect;
+
+export async function getCompetitionQuests(competitionId: string): Promise<{ quests: { quests: Quest[], groups}[], error?: string }> {
     try {
         const questResults = await database.select()
             .from(groupSolves)
@@ -13,7 +15,7 @@ export async function getCompetitionQuests(competitionId: string) {
 
         return { quests: questResults };
     } catch (error) {
-        console.error("Internal database error:", error);
+        console.error("Error occured while retrieving competitions quests:", error);
         return {
             quests: [],
             error: "An unexpected database error occured",

@@ -91,6 +91,7 @@ Routes:
         - /solve - POST
       - /invites
         - /accept - GET
+      - /souvenir - GBET
     - /avatars
       - /:userId - GET
       - / - POST
