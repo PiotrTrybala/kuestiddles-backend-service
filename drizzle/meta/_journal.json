@@ -5,50 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1777016330655,
-      "tag": "0000_puzzling_layla_miller",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1777016390862,
-      "tag": "0001_amusing_callisto",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1777017317099,
-      "tag": "0002_fair_molly_hayes",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1777281972304,
-      "tag": "0003_freezing_quicksilver",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1777401987976,
-      "tag": "0004_cooing_big_bertha",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1777894276426,
-      "tag": "0005_nervous_infant_terrible",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1779820768737,
-      "tag": "0006_lame_skaar",
+      "when": 1780413161089,
+      "tag": "0000_vengeful_steve_rogers",
       "breakpoints": true
     }
   ]

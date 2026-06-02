@@ -16,7 +16,6 @@ import {
     removeQuestBySlug,
     removeQuestByGameId,
 } from "@/repositories/v3/quests";
-import { getRecentEntities, registerRecentEntity } from "@/controllers/recent";
 import { requireOrganization } from "@/routes/middleware";
 import { UUID_PATTERN } from "@/routes/api";
 
