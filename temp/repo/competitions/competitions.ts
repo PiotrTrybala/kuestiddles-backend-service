@@ -1,10 +1,9 @@
 import { database } from "@/database/db";
-import { competitions, leaderboard } from "@/database/schema";
+import { competitions } from "@/database/schema";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 type Competition = typeof competitions.$inferSelect;
-type Leaderboard = typeof leaderboard.$inferSelect;
 
 export async function searchCompetitions(organizationId: string, page: number, pageSize: number, name?: string): Promise<{ competitions: Competition[], error?: string }> {
     try {
