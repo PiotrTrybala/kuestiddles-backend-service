@@ -99,3 +99,25 @@ export async function acceptInvite(inviteId: string): Promise<{ accepted: boolea
         }
     }
 }
+
+export async function removeInvite(inviteId: string): Promise<{ deleted: boolean, error?: string }> {
+    try {
+
+        const { invite, error } = await getInvite(inviteId);
+        if (error) {
+            throw new Error(error);
+        }
+
+        await redis.del(inviteId);
+
+        return {
+            deleted: true,
+        }
+    } catch(error) {
+        console.error("Error occured while deleting invite:", error);
+        return {
+            deleted: false,
+            error: "An unknown database error has occured",
+        }
+    }
+}
