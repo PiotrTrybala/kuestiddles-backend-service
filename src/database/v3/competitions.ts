@@ -49,6 +49,13 @@ export const groupUsers = pgTable("groups_users", {
     uniqueIndex("username_group_idx").on(table.group_id, table.username),
 ]);
 
+export const competitionsQuests = pgTable("competitions_quests", {
+    competition_id: uuid().notNull().references(() => competitions.id),
+    quest_id: uuid().notNull().references(() => quests.id),
+}, (table) => [
+    uniqueIndex("competitions_quests_idx").on(table.competition_id, table.quest_id)
+]);
+
 export const groupsQuests = pgTable("groups_quests", {
     group_id: uuid().notNull().references(() => groups.id),
     quest_id: uuid().notNull().references(() => quests.id),
