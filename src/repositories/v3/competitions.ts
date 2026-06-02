@@ -1,10 +1,13 @@
 
 // Competitions CRUD actions
 
+import { getLeaderboard, updateLeaderboard } from "@/controllers/leaderboard";
 import { database } from "@/database/db";
-import { competitions, groups, groupUsers, quests } from "@/database/schema";
-import { eq, ilike, and } from "drizzle-orm";
+import { competitions, groups, groupsQuests, groupUsers, quests } from "@/database/schema";
+import { eq, ilike, and, sql } from "drizzle-orm";
+import { UniqueConstraintBuilder } from "drizzle-orm/gel-core";
 import slugify from "slugify";
+import { getQuestById } from "./quests";
 
 type Competition = typeof competitions.$inferSelect;
 type Quest = typeof quests.$inferSelect;
@@ -201,7 +204,7 @@ export async function deleteCompetitionById(competitionId: string): Promise<{ de
     }
 }
 
-export async function deleteCompetitionBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> { 
+export async function deleteCompetitionBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
     try {
         const [competition] = await database.delete(competitions)
             .where(and(eq(competitions.organization_id, organizationId), eq(competitions.slug, slug)))
@@ -214,7 +217,7 @@ export async function deleteCompetitionBySlug(organizationId: string, slug: stri
             deleted: false,
             error: "An unexpected database error has occured",
         };
-    }  
+    }
 }
 
 // Groups and Users CRUD actions
@@ -222,28 +225,314 @@ export async function deleteCompetitionBySlug(organizationId: string, slug: stri
 type Group = typeof groups.$inferSelect;
 type User = typeof groupUsers.$inferSelect;
 
-export async function searchGroups(competitionId: string, page: number, pageSize: number, options?: { name?: string, labels?: string[] }) { }
+export async function searchGroups(
+    competitionId: string,
+    page: number,
+    pageSize: number,
+    options?: {
+        name?: string,
+    }): Promise<{ groups: Group[], error?: string }> {
+    try {
+        const offset = page * pageSize;
+        const limit = pageSize;
 
-export async function getGroupById(groupId: string) { }
+        const name = options?.name ?? "";
 
-export async function getGroupBySlug(competitionId: string, slug: string) { }
+        const filters = [
+            eq(groups.competition_id, competitionId),
+        ];
 
-export async function createGroup(competitionId: string, name: string, slug?: string) { }
+        if (name && name.length > 0) {
+            filters.push(ilike(groups.name, `%${name}%`));
+        }
 
-export async function solveGroupQuest(groupId: string, questId: string, answers: string[]) { }
+        const results = await database.select()
+            .from(groups)
+            .where(and(...filters))
+            .limit(limit)
+            .offset(offset);
 
-export async function updateGroupById(groupId: string, name: string) { }
+        return { groups: results, };
+    } catch (error) {
+        console.error("Error occured while retrieving groups:", error);
+        return {
+            groups: [],
+            error: "An unexpected database error has occured",
+        };
+    }
+}
 
-export async function deleteGroupById(groupId: string) { }
+export async function getGroupById(groupId: string): Promise<{ group?: Group, error?: string }> {
+    try {
+        const [group] = await database.select()
+            .from(groups)
+            .where(eq(groups.id, groupId));
 
-export async function deleteGroupBySlug(competitionId: string, slug: string) { }
+        if (!group) {
+            return {
+                group: undefined,
+                error: "Group has not been found",
+            };
+        }
+
+        return { group };
+    } catch (error) {
+        console.error("Error occured while retrieving group:", error);
+        return {
+            group: undefined,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function getGroupBySlug(competitionId: string, slug: string): Promise<{ group?: Group, error?: string }> {
+    try {
+        const [group] = await database.select()
+            .from(groups)
+            .where(and(eq(groups.competition_id, competitionId), eq(groups.slug, slug)));
+
+        if (!group) {
+            return {
+                group: undefined,
+                error: "Group has not been found",
+            };
+        }
+
+        return { group };
+    } catch (error) {
+        console.error("Error occured while retrieving group by slug:", error);
+        return {
+            group: undefined,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function createGroup(competitionId: string, name: string, slug?: string): Promise<{ group?: Group, error?: string }> {
+    try {
+        if (!slug) slug = slugify(name, { lower: true, trim: true });
+
+        const [group] = await database.insert(groups)
+            .values({
+                competition_id: competitionId,
+                slug,
+                name,
+            })
+            .returning();
+
+        return { group: group };
+    } catch (error) {
+        console.error("Error occured while creating competitions group:", error);
+        return {
+            group: undefined,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function solveGroupQuest(competitionId: string, groupId: string, questId: string, answers: string[]): Promise<{ solved: boolean, error?: string }> {
+    try {
+        const { quest, error } = await getQuestById(questId);
+        if (!quest || error) {
+            return { solved: false, error: "Quest has not been found" };
+        }
+
+        const [existing] = await database.select()
+            .from(groupsQuests)
+            .where(
+                and(
+                    eq(groupsQuests.group_id, groupId),
+                    eq(groupsQuests.quest_id, questId),
+                )
+            );
+
+        if (!existing) {
+            return { solved: true, error: "Quest has already been solved" };
+        }
+
+        const correctAnswers = quest!.answers ?? [];
+        const isCorrect = answers.some((answer) =>
+            correctAnswers.some((correct) => correct.toLowerCase() === answer.toLowerCase())
+        );
+
+        if (!isCorrect) {
+            return { solved: false, error: "Incorrect answer" };
+        }
+
+        await database.insert(groupsQuests)
+            .values({
+                group_id: groupId,
+                quest_id: questId,
+            });
+
+        const { leaderboard } = await getLeaderboard(competitionId);
+        const groupEntry = leaderboard.find(entry => entry.groupId);
+        if (!groupEntry) {
+            return {
+                solved: false,
+                error: "Group leaderboard entry has not been found",
+            }
+        }
+
+        await updateLeaderboard(competitionId, groupId, groupEntry.points + quest.points);
+
+        return { solved: true };
+    } catch (error) {
+        console.error("Error occured while solving quest:", error);
+        return {
+            solved: false,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function deleteGroupById(groupId: string): Promise<{ deleted: boolean, error?: string }> {
+    try {
+        const [group] = await database.delete(groups)
+            .where(eq(groups.id, groupId))
+            .returning();
+
+        return { deleted: true };
+    } catch (error) {
+        console.error("Error occured while deleting competition group:", error);
+        return {
+            deleted: false,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function deleteGroupBySlug(competitionId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+    try {
+        const [group] = await database.delete(groups)
+            .where(and(eq(groups.competition_id, competitionId), eq(groups.slug, slug)))
+            .returning();
+
+        return { deleted: true };
+    } catch (error) {
+        console.error("Error occured while deleting competition group:", error);
+        return {
+            deleted: false,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
 
 // Users subsection
 
-export async function getUsers(groupId: string) { }
+export async function getUsers(groupId: string): Promise<{ users: User[], error?: string }> { 
+    try {
+        const users = await database.select()
+            .from(groupUsers)
+            .where(eq(groupUsers.group_id, groupId));
+        return {
+            users,
+        }
 
-export async function getSouvenir(competitionId: string, groupId: string, userId: string) { }
+    } catch(error) {
+        console.log("Error occured while retrieving group users:", error);
+        return {
+            users: [],
+            error: "An unknown database error has occured",
+        }
+    }
+}
 
-export async function createUser(competitionId: string, groupId: string, username: string) { }
+type Souvenir = {
+    username: string,
+    groupName: string,
+    points: number,
+};
 
-export async function deleteUser(groupId: string, username: string) { }
+export async function getSouvenir(competitionId: string, groupId: string, userId: string): Promise<{ souvenir?: Souvenir, error?: string }> { 
+    try {
+        const [user] = await database.select()
+            .from(groupUsers)
+            .where(and(eq(groupUsers.id, userId), eq(groupUsers.group_id, groupId)));
+
+        if (!user) {
+            throw new Error("User has not been found.");
+        }
+
+        const { leaderboard } = await getLeaderboard(competitionId);
+        const entry = leaderboard.find(entry => entry.groupId);
+        if (!entry) {
+            throw new Error("Leaderboard entry has not been found.");
+        }
+
+        const [group] = await database.select()
+            .from(groups)
+            .where(eq(groups.id, groupId));
+
+        if (!group) {
+            throw new Error("Group has not been found.");
+        }
+
+        return {
+            souvenir: {
+                username: user.username,
+                groupName: group.name,
+                points: entry.points,
+            }
+        }
+
+    } catch(error) {
+        console.log("Error occured while retrieving leaderboard:", error);
+        return {
+            souvenir: undefined,
+            error: "An unknown database error has occured",
+        }
+    }
+}
+
+export async function createUser(groupId: string, username: string): Promise<{ user?: User, error?: string }> { 
+    try {
+
+        const [user] = await database.insert(groupUsers)
+            .values({
+                group_id: groupId,
+                username,
+            })
+            .returning();
+
+        return { user: user };
+    } catch (error) {
+        console.error("Error occured while creating competition group users:", error);
+        return {
+            user: undefined,
+            error: "An unexpected database error has occured",
+        };
+    }
+}
+
+export async function deleteUserById(userId: string): Promise<{ deleted: boolean, error?: string }> { 
+    try {
+        const [competition] = await database.delete(groupUsers)
+            .where(eq(groupUsers.id, userId))
+            .returning();
+
+        return { deleted: true, };
+    } catch (error) {
+        console.error("Error occured while deleting competition by slug:", error);
+        return {
+            deleted: false,
+            error: "An unexpected database error has occured",
+        };
+    }       
+}
+
+export async function deleteUserByUsername(groupId: string, username: string): Promise<{ deleted: boolean, error?: string }> { 
+    try {
+        const [competition] = await database.delete(groupUsers)
+            .where(and(eq(groupUsers.group_id, groupId), eq(groupUsers.username, username)))
+            .returning();
+
+        return { deleted: true, };
+    } catch (error) {
+        console.error("Error occured while deleting competition by slug:", error);
+        return {
+            deleted: false,
+            error: "An unexpected database error has occured",
+        };
+    }       
+}
