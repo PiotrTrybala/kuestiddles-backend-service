@@ -32,7 +32,7 @@ questsRouter.get("/search", zValidator("query", z.object({
     const organization = c.get("organization")!;
     const { page, pageSize, title, labels } = c.req.valid("query");
 
-    const { results, error } = await searchQuests(
+    const { quests, error } = await searchQuests(
         organization.id,
         page,
         pageSize,
@@ -44,7 +44,7 @@ questsRouter.get("/search", zValidator("query", z.object({
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ results });
+    return c.json({ quests: quests });
 });
 
 questsRouter.get("/recent", async (c) => {
@@ -84,7 +84,7 @@ questsRouter.post("/", zValidator("json", z.object({
     if (error || !id) {
         return c.json({ message: error }, 500);
     }
-    await registerRecentEntity('quests', organization.id, user.id, id);
+
 
     return c.json({ id });
 });
@@ -102,7 +102,6 @@ questsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
         return c.json({ message: error }, 500);
     }
 
-    await registerRecentEntity('quests', organization.id, user.id, quest.id);
 
     return c.json(quest);
 });
@@ -133,14 +132,14 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     const { id } = c.req.valid("param");
     const data = c.req.valid("json");
 
-    const { id: questId, error } = await updateQuest(id, data);
+    const { updated, error } = await updateQuest(id, data);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    await registerRecentEntity('quests', organization.id, user.id, id);
+    // await registerRecentEntity('quests', organization.id, user.id, id);
 
-    return c.json({ id: questId });
+    return c.json({ updated });
 });
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/thumbnail`, zValidator("param", z.object({
@@ -151,12 +150,12 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/thumbnail`, zValidator("param", z.obje
     const { id } = c.req.valid("param");
     const { thumbnail } = c.req.valid("json");
 
-    const { id: questId, error } = await updateQuestThumbnail(id, thumbnail);
+    const { updated, error } = await updateQuestThumbnail(id, thumbnail);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: questId });
+    return c.json({ updated });
 });
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object({
@@ -167,12 +166,12 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object(
     const { id } = c.req.valid("param");
     const { labels } = c.req.valid("json");
 
-    const { id: questId, error } = await updateQuestLabels(id, labels);
+    const { updated, error } = await updateQuestLabels(id, labels);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: questId });
+    return c.json({ updated });
 });
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/answers`, zValidator("param", z.object({
@@ -183,12 +182,12 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/answers`, zValidator("param", z.object
     const { id } = c.req.valid("param");
     const { answers } = c.req.valid("json");
 
-    const { id: questId, error } = await updateQuestAnswers(id, answers);
+    const { updated, error } = await updateQuestAnswers(id, answers);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: questId });
+    return c.json({ updated });
 });
 
 questsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
@@ -196,12 +195,12 @@ questsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 })), async (c) => {
     const { id } = c.req.valid("param");
 
-    const { id: questId, error } = await removeQuestById(id);
+    const { deleted, error } = await removeQuestById(id);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.body(null, 204);
+    return c.json({ deleted });
 });
 
 questsRouter.delete(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.object({
@@ -231,7 +230,7 @@ questsRouter.get("/:slug", zValidator("param", z.object({
         return c.json({ message: error }, 500);
     }
 
-    await registerRecentEntity('quests', organization.id, user.id, quest.id);
+    // await registerRecentEntity('quests', organization.id, user.id, quest.id);
 
     return c.json(quest);
 });
@@ -244,10 +243,10 @@ questsRouter.delete("/:slug", zValidator("param", z.object({
 
     const { slug } = c.req.valid("param");
 
-    const { id, error } = await removeQuestBySlug(organization.id, slug);
+    const { deleted, error } = await removeQuestBySlug(organization.id, slug);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id });
+    return c.json({ deleted });
 });

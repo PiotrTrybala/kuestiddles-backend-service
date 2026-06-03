@@ -7,7 +7,7 @@ import slugify from "slugify";
 import { gamesRouter } from "./games";
 import { landmarksRouter } from "./landmarks";
 import { questsRouter } from "./quests";
-import { competitionsRouter } from "./competitions/competitions";
+import { competitionsRouter } from "./competitions";
 
 export const organizationsRouter = new Hono<AppEnv>();
 

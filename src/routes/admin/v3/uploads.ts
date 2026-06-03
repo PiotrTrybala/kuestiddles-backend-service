@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/config/app";
-import { getUploadDataById, getUploadMetadataById, getUploadMetadataBySlug, removeUploadById, removeUploadBySlug, searchUploads, upload } from "@/repositories/v3/uploads";
+import { getUploadDataById, getUploadMetadataById, getUploadMetadataBySlug, removeUploadById, removeUploadBySlug, searchUploads, uploadUploads } from "@/repositories/v3/uploads";
 import { UUID_PATTERN } from "@/routes/api";
 import { requireOrganization } from "@/routes/middleware";
 import { uploadsSchema } from "@/routes/validators";
@@ -23,7 +23,7 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid('query');
 
-    const { results, error } = await searchUploads(
+    const { uploads, error } = await searchUploads(
         organization.id,
         page,
         pageSize,
@@ -38,7 +38,7 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     }
 
     return c.json({
-        results,
+        uploads: uploads,
     });
 });
 
@@ -51,7 +51,7 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
 
     if (uploads.length === 0) return c.json({ message: "0 uploads found." }, 400);
 
-    const { results, error } = await upload(
+    const { uploads: uploadsResults, error } = await uploadUploads(
         organization.id,
         uploads,
     );
@@ -60,7 +60,7 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
             message: error,
         }, 500);
     }
-    return c.json(results);
+    return c.json(uploadsResults);
 });
 
 uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object({
@@ -86,14 +86,14 @@ uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
 
     const { id } = c.req.valid('param');
 
-    const { file, error } = await getUploadDataById(id);
+    const { data, error } = await getUploadDataById(id);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
-    return c.body(file!.stream(), {
+    return c.body(data!.stream(), {
         headers: {
             "Content-Type": "image/webp",
             "Cache-Control": "public, max-age=31536000",

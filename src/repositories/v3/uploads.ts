@@ -128,7 +128,7 @@ export const DEFAULT_UPLOAD_QUALITY = 75;
 export const DEFAULT_UPLOAD_WIDTH = 400;
 export const DEFAULT_UPLOAD_HEIGHT = 300;
 
-export async function upload(organizationId: string, files: File[]): Promise<{ uploads: { id: string, hash: string }[], error?: string }> {
+export async function uploadUploads(organizationId: string, files: File[]): Promise<{ uploads: { id: string, hash: string }[], error?: string }> {
     try {
         const results = await Promise.all(files.map(async (file) => {
 

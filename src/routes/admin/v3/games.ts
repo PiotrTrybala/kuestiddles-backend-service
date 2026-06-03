@@ -19,7 +19,7 @@ gamesRouter.get("/search", zValidator('query', z.object({
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid("query");
 
-    const { results, error } = await searchGames(
+    const { games, error } = await searchGames(
         organization.id,
         page,
         pageSize,
@@ -34,7 +34,7 @@ gamesRouter.get("/search", zValidator('query', z.object({
     }
 
     return c.json({
-        results,
+        games: games,
     });
 });
 
@@ -46,14 +46,14 @@ gamesRouter.post("/", zValidator("json", z.object({
     if (!organization) return c.notFound();
     const { name, slug } = c.req.valid("json");
 
-    const { id, error } = await createGame(organization.id, name, slug);
+    const { game, error } = await createGame(organization.id, name, slug);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
     return c.json({
-        id: id,
+        game: game,
     });
 });
 
@@ -62,14 +62,14 @@ gamesRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 })), async (c) => {
     const { id } = c.req.valid("param");
 
-    const { metadata, error } = await getGameById(id);
+    const { game, error } = await getGameById(id);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
-    return c.json(metadata);
+    return c.json(game);
 });
 
 gamesRouter.get("/:slug", zValidator("param", z.object({
@@ -79,7 +79,7 @@ gamesRouter.get("/:slug", zValidator("param", z.object({
     if (!organization) return c.notFound();
     const { slug } = c.req.valid("param");
 
-    const { metadata, error } = await getGameBySlug(
+    const { game, error } = await getGameBySlug(
         organization.id,
         slug,
     );
@@ -89,7 +89,7 @@ gamesRouter.get("/:slug", zValidator("param", z.object({
         }, 500);
     }
 
-    return c.json(metadata);
+    return c.json(game);
 
 });
 
@@ -101,7 +101,7 @@ gamesRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("json", z.object({
     const { id } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
-    const { id: gameId, error } = await updateGameAssetsById(id, assets);
+    const { game, error } = await updateGameAssetsById(id, assets);
 
     if (error) {
         return c.json({
@@ -109,7 +109,7 @@ gamesRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("json", z.object({
         }, 500);
     }
     return c.json({
-        gameId: gameId,
+        game: game,
     });
 });
 
@@ -124,7 +124,7 @@ gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
     const { slug } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
-    const { id, error } = await updateGameAssetsBySlug(organization.id, slug, assets);
+    const { game, error } = await updateGameAssetsBySlug(organization.id, slug, assets);
 
     if (error) {
         return c.json({
@@ -132,7 +132,7 @@ gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
         }, 500);
     }
     return c.json({
-        id: id,
+        game: game,
     });
 });
 
@@ -141,14 +141,14 @@ gamesRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 })), async (c) => {
     const { id } = c.req.valid("param");
 
-    const { id: gameId, error } = await removeGameById(id);
+    const { deleted, error } = await removeGameById(id);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
     return c.json({
-        id: gameId,
+        deleted,
     });
 });
 
@@ -160,13 +160,13 @@ gamesRouter.delete("/:slug", zValidator("param", z.object({
 
     const { slug } = c.req.valid("param");
 
-    const { id, error } = await removeGameBySlug(organization.id, slug);
+    const { deleted, error } = await removeGameBySlug(organization.id, slug);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
     return c.json({
-        id: id,
+        deleted,
     });
 });

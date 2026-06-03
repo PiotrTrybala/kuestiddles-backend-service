@@ -120,7 +120,7 @@ export async function createLandmark(
     slug?: string, 
     labels?: string[], 
     assets?: string[]
-): Promise<{ id?: string, error?: string }> {
+): Promise<{ landmark?: Landmark, error?: string }> {
     try {
 
         if (!slug) slug = slugify(title, {
@@ -140,18 +140,18 @@ export async function createLandmark(
             }).returning()
         
         return {
-            id: landmark?.id,
+            landmark: landmark,
         }
     } catch(error) {
         console.error("Error occured while creating landmark:", error);
         return {
-            id: undefined,
+            landmark: undefined,
             error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ updated?: Landmark, error?: string }> { 
+export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ landmark?: Landmark, error?: string }> { 
     try {
 
         const [landmark] = await database.update(landmarks)
@@ -163,19 +163,19 @@ export async function updateLandmark(id: string, title?: string, description?: s
             .returning();
 
         return {
-            updated: landmark,
+            landmark: landmark,
         }
 
     } catch(error) {
         console.error("Error occured while updating landmark:", error);
         return {
-            updated: undefined,
+            landmark: undefined,
             error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkAssets(id: string, assets: string[]): Promise<{ updated?: Landmark, error?: string }> {
+export async function updateLandmarkAssets(id: string, assets: string[]): Promise<{ landmark?: Landmark, error?: string }> {
     try {
 
         const [landmark] = await database.update(landmarks)
@@ -185,19 +185,19 @@ export async function updateLandmarkAssets(id: string, assets: string[]): Promis
             .returning();
         
         return {
-            updated: landmark,
+            landmark: landmark,
         }
 
     } catch(error) {
         console.error("Error occured while updating landmarks assets:", error);
         return {
-            updated: undefined,
+            landmark: undefined,
             error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkLabels(id: string, labels: string[]): Promise<{ updated?: Landmark, error?: string }> {
+export async function updateLandmarkLabels(id: string, labels: string[]): Promise<{ landmark?: Landmark, error?: string }> {
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -206,18 +206,18 @@ export async function updateLandmarkLabels(id: string, labels: string[]): Promis
             .returning();
         
         return {
-            updated: landmark,
+            landmark,
         }
     } catch(error) {
         console.error("Error occured while updating landmarks labels:", error);
         return {
-            updated: undefined,
+            landmark: undefined,
             error: "An unexpected database error has occured",
         }
     }
 }
 
-export async function updateLandmarkLocation(id: string, longitude: number, latitude: number): Promise<{ updated?: Landmark, error?: string }> { 
+export async function updateLandmarkLocation(id: string, longitude: number, latitude: number): Promise<{ landmark?: Landmark, error?: string }> { 
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -229,12 +229,12 @@ export async function updateLandmarkLocation(id: string, longitude: number, lati
             .returning();
 
         return {
-            updated: landmark,
+            landmark,
         }
     } catch(error) {
         console.error("Error occured while updating landmarks location:", error);
         return {
-            updated: undefined,
+            landmark: undefined,
             error: "An unexpected database error has occured",
         }
     }

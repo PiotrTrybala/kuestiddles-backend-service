@@ -34,7 +34,7 @@ landmarksRouter.get("/search", zValidator("query", z.object({
     const organization = c.get("organization")!;
     const { page, pageSize, title, labels } = c.req.valid("query");
 
-    const { results, error } = await searchLandmarks(
+    const { landmarks, error } = await searchLandmarks(
         organization.id,
         page,
         pageSize,
@@ -48,7 +48,7 @@ landmarksRouter.get("/search", zValidator("query", z.object({
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ results });
+    return c.json({ landmarks: landmarks });
 });
 
 landmarksRouter.get("/recent", async (c) => {
@@ -69,7 +69,7 @@ landmarksRouter.post("/", zValidator("json", z.object({
 
     const { title, description, longitude, latitude, slug, labels, assets } = c.req.valid("json");
 
-    const { id, error } = await createLandmark(
+    const { landmark, error } = await createLandmark(
         organization.id,
         title,
         description,
@@ -84,7 +84,7 @@ landmarksRouter.post("/", zValidator("json", z.object({
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id });
+    return c.json({ landmark: landmark });
 });
 
 landmarksRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
@@ -125,12 +125,12 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     const { id } = c.req.valid("param");
     const { title, description } = c.req.valid("json");
 
-    const { id: landmarkId, error } = await updateLandmark(id, title, description);
+    const { landmark, error } = await updateLandmark(id, title, description);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: landmarkId });
+    return c.json({ landmark });
 });
 
 // Update assets
@@ -142,12 +142,12 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("param", z.obje
     const { id } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
-    const { id: landmarkId, error } = await updateLandmarkAssets(id, assets);
+    const { landmark, error } = await updateLandmarkAssets(id, assets);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: landmarkId });
+    return c.json({ landmark });
 });
 
 // Update labels
@@ -159,12 +159,12 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.obje
     const { id } = c.req.valid("param");
     const { labels } = c.req.valid("json");
 
-    const { id: landmarkId, error } = await updateLandmarkLabels(id, labels);
+    const { landmark, error } = await updateLandmarkLabels(id, labels);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: landmarkId });
+    return c.json({ landmark });
 });
 
 landmarksRouter.patch(`/:id{${UUID_PATTERN}}/location`, zValidator("param", z.object({
@@ -176,12 +176,12 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/location`, zValidator("param", z.ob
     const { id } = c.req.valid("param");
     const { longitude, latitude } = c.req.valid("json");
 
-    const { id: landmarkId, error } = await updateLandmarkLocation(id, longitude, latitude);
+    const { landmark, error } = await updateLandmarkLocation(id, longitude, latitude);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: landmarkId });
+    return c.json({ landmark });
 });
 
 landmarksRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
@@ -189,12 +189,12 @@ landmarksRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 })), async (c) => {
     const { id } = c.req.valid("param");
 
-    const { id: landmarkId, error } = await removeLandmarkById(id);
+    const { deleted, error } = await removeLandmarkById(id);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id: landmarkId });
+    return c.json({ deleted });
 });
 
 landmarksRouter.delete("/:slug", zValidator("param", z.object({
@@ -205,10 +205,10 @@ landmarksRouter.delete("/:slug", zValidator("param", z.object({
 
     const { slug } = c.req.valid("param");
 
-    const { id, error } = await removeLandmarkBySlug(organization.id, slug);
+    const { deleted, error } = await removeLandmarkBySlug(organization.id, slug);
     if (error) {
         return c.json({ message: error }, 500);
     }
 
-    return c.json({ id });
+    return c.json({ deleted });
 });
