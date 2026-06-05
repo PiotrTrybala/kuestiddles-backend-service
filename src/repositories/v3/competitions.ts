@@ -339,6 +339,7 @@ export async function createGroup(competitionId: string, name: string, slug?: st
     }
 }
 
+// ONLY FOR COMPETITION GROUP USER
 export async function solveGroupQuest(competitionId: string, groupId: string, questId: string, answers: string[]): Promise<{ solved: boolean, error?: string }> {
     try {
         const { quest, error } = await getQuestById(questId);
