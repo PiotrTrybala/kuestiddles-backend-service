@@ -168,13 +168,22 @@ export async function createCompetition(organizationId: string, gameId: string, 
     }
 }
 
-export async function updateCompetitionById(competitionId: string, name: string, finishesAt: Date): Promise<{ competition?: Competition, error?: string }> {
+export async function updateCompetitionById(competitionId: string, name?: string, status?: "onboarding" | "in-progress" | "finishing" | "archived", finishesAt?: Date): Promise<{ competition?: Competition, error?: string }> {
     try {
+
+        const updateBody: Partial<typeof competitions.$inferInsert> = {};
+        if (name !== undefined) updateBody.name = name;
+        if (status !== undefined) updateBody.status = status;
+        if (finishesAt !== undefined) updateBody.finishes_at = finishesAt;
+
+        if (Object.keys(updateBody).length === 0) {
+            return {
+                error: "No update parameters provided"
+            };
+        }
+
         const [competition] = await database.update(competitions)
-            .set({
-                name: name,
-                finishes_at: finishesAt,
-            })
+            .set(updateBody)
             .where(eq(competitions.id, competitionId))
             .returning();
 
