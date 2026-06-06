@@ -8,11 +8,30 @@ import { requireOrganization } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import z from "zod";
+import { getLeaderboard } from "@/controllers/leaderboard";
 
 // Competition router - /competitions
 
 export const competitionsRouter = new Hono<AppEnv>();
 competitionsRouter.use("*", requireOrganization);
+
+competitionsRouter.get("/search", zValidator('query', z.object({
+    page: z.coerce.number().default(0),
+    pageSize: z.coerce.number().default(20),
+    name: z.string().optional(),
+})), async (c) => {
+    const { id } = c.get("organization")!;
+    const { page, pageSize, name } = c.req.valid("query");
+
+    const { competitions, error } = await searchCompetitions(id, page, pageSize, { name });
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+
+    return c.json({ competitions })
+});
 
 competitionsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
@@ -27,7 +46,14 @@ competitionsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
         }, 500);
     }
 
-    return c.json(competition);
+    const { leaderboard, error: e} = await getLeaderboard(competition!.id);
+    if (e) {
+        return c.json({
+            message: e,
+        }, 500);
+    }
+
+    return c.json({ competition, leaderboard });
 });
 
 
@@ -116,24 +142,6 @@ competitionsRouter.get("/checkSlug", zValidator("query", z.object({
     }
 
     return c.json({ isVacant });
-});
-
-competitionsRouter.get("/search", zValidator('query', z.object({
-    page: z.coerce.number().default(0),
-    pageSize: z.coerce.number().default(20),
-    name: z.string().optional(),
-})), async (c) => {
-    const { id } = c.get("organization")!;
-    const { page, pageSize, name } = c.req.valid("query");
-
-    const { competitions, error } = await searchCompetitions(id, page, pageSize, { name });
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json({ competitions })
 });
 
 competitionsRouter.post("/", zValidator("json", z.object({
