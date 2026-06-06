@@ -4,8 +4,12 @@ import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { createGame, getGameById, getGameBySlug, removeGameById, removeGameBySlug, searchGames, updateGameAssetsById, updateGameAssetsBySlug } from "@/repositories/v3/games";
 import { UUID_PATTERN } from "@/globals";
+import { requireOrganization } from "@/routes/middleware";
+import { getQuestsByGameId } from "@/repositories/v3/quests";
 
 export const gamesRouter = new Hono<AppEnv>();
+gamesRouter.use("*", requireOrganization);
+
 
 gamesRouter.get("/search", zValidator('query', z.object({
     page: z.coerce.number().default(0),
@@ -40,7 +44,7 @@ gamesRouter.get("/search", zValidator('query', z.object({
 
 gamesRouter.post("/", zValidator("json", z.object({
     name: z.string(),
-    slug: z.string().nullish(),
+    slug: z.string().optional(),
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
@@ -69,7 +73,14 @@ gamesRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
         }, 500);
     }
 
-    return c.json(game);
+    const { quests, error: e } = await getQuestsByGameId(game!.id);
+    if (e) {
+        return c.json({
+            message: e,
+        }, 500);
+    }
+
+    return c.json({ game, gameQuests: quests, });
 });
 
 gamesRouter.get("/:slug", zValidator("param", z.object({

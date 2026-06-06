@@ -56,7 +56,7 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
         },
     });
 
-    if (!organization) return c.json({ message: "Forbidden" }, 403);
+    if (!organization) return c.json({ message: "Not found" }, 404);
 
     const currentMember = organization.members.find(member => member.userId === user.id);
     if (!currentMember) return c.json({ message: "Forbidden" }, 403);

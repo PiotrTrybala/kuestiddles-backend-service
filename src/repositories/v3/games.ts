@@ -71,6 +71,7 @@ export async function getGameById(id: string): Promise<{ game?: Game, error?: st
             }
         }
 
+
         return {
             game: game,
         }
