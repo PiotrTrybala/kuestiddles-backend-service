@@ -1,9 +1,29 @@
 import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
 import { requireCompetition } from "../middleware";
+import { getCompetitionsQuests } from "@/repositories/v3/competitions";
 
 export const competitionsRouter = new Hono<AppEnv>();
 competitionsRouter.use("*", requireCompetition());
+
+competitionsRouter.get("/quests", async (c) => {
+
+    const competition = c.get("competition")!;
+
+    const { quests, error } = await getCompetitionsQuests(competition.competitionId);
+    if (error) {
+        return c.json({
+            message: error,
+        })
+    }
+
+});
+
+competitionsRouter.post("/quests/solve", async (c) => {});
+
+competitionsRouter.get("/souvenir", async (c) => {});
+
+competitionsRouter.post("/invites/accept", async (c) => {});
 
 // competitionsRouter.get("/quests", async (c) => {
 

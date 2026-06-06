@@ -73,6 +73,7 @@ export async function getCompetitionById(competitionId: string): Promise<{ compe
     }
 }
 
+// COMPETITION USER METHOD
 export async function getCompetitionsQuests(competitionId: string): Promise<{ quests: Quest[], error?: string }> {
     try {
         const { competition, error } = await getCompetitionById(competitionId);

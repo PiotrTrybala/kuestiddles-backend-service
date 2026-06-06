@@ -17,7 +17,7 @@ import {
     removeQuestByGameId,
 } from "@/repositories/v3/quests";
 import { requireOrganization } from "@/routes/middleware";
-import { UUID_PATTERN } from "@/routes/api";
+import { UUID_PATTERN } from "@/globals";
 
 export const questsRouter = new Hono<AppEnv>();
 

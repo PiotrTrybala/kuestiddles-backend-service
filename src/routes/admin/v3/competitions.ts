@@ -3,7 +3,7 @@
 import type { AppEnv } from "@/config/app";
 import { createInvite, getInvite, getInvites, removeInvite } from "@/controllers/invites";
 import { checkCompetitionSlug, createCompetition, createGroup, deleteCompetitionById, deleteCompetitionBySlug, deleteGroupById, deleteGroupBySlug, getCompetitionById, getCompetitionBySlug, getGroupById, getGroupBySlug, searchCompetitions, searchGroups, updateCompetitionById } from "@/repositories/v3/competitions";
-import { UUID_PATTERN } from "@/routes/api";
+import { UUID_PATTERN } from "@/globals";
 import { requireOrganization } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";

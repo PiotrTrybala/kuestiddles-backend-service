@@ -1,6 +1,8 @@
 
 // General variables
 
+export const UUID_PATTERN = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+
 export const APP_NAME = Bun.env.APP_NAME!;
 export const APP_DOMAIN = Bun.env.APP_DOMAIN!;
 

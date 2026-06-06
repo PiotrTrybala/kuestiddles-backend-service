@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { createGame, getGameById, getGameBySlug, removeGameById, removeGameBySlug, searchGames, updateGameAssetsById, updateGameAssetsBySlug } from "@/repositories/v3/games";
-import { UUID_PATTERN } from "@/routes/api";
+import { UUID_PATTERN } from "@/globals";
 
 export const gamesRouter = new Hono<AppEnv>();
 

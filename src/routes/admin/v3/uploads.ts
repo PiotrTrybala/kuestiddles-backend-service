@@ -1,12 +1,12 @@
 import type { AppEnv } from "@/config/app";
+import { UUID_PATTERN } from "@/globals";
 import { getUploadDataById, getUploadMetadataById, getUploadMetadataBySlug, removeUploadById, removeUploadBySlug, searchUploads, uploadUploads } from "@/repositories/v3/uploads";
-import { UUID_PATTERN } from "@/routes/api";
 import { requireOrganization } from "@/routes/middleware";
 import { uploadsSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import z from "zod";
- 
+
 export const uploadsRouter = new Hono<AppEnv>();
 
 uploadsRouter.use("*", requireOrganization);
@@ -42,7 +42,16 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     });
 });
 
-uploadsRouter.post("/", zValidator('form', uploadsSchema), async (c) => {
+uploadsRouter.post("/", zValidator('form', uploadsSchema, (result, c) => {
+    // If validation fails, intercept and return a clean error format
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            errors: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
 
     const organization = c.get("organization")!;
     const { uploads } = c.req.valid("form");
@@ -138,13 +147,15 @@ uploadsRouter.delete("/:slug", zValidator('param', z.object({
     const organization = c.get("organization")!;
     const { slug } = c.req.valid("param");
 
-    const { error } = await removeUploadBySlug(organization.id, slug);
+    const { deleted, error } = await removeUploadBySlug(organization.id, slug);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
-    return c.body(null, 200);
+    return c.json({
+        deleted,
+    });
 });
 

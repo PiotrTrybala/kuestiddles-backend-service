@@ -16,7 +16,7 @@ import {
 } from "@/repositories/v3/landmarks";
 import { landmarks } from "@/database/schema";
 import { requireOrganization } from "@/routes/middleware";
-import { UUID_PATTERN } from "@/routes/api";
+import { UUID_PATTERN } from "@/globals";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
