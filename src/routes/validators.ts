@@ -9,6 +9,14 @@ export const uploadSchema = z
   .refine((file) => file.size <= UPLOAD_MAX_SIZE, "File is too large (max is 3MB)")
   .refine((file) => ACCEPTED_TYPES.includes(file.type), "Only PNG and JPEG are accepted");
 
+export const avatarUploadSchema = z.object({
+  avatar: z.preprocess((value) => {
+      if (value instanceof File) return [value];
+      // If it's empty, falsy, or a blank string from FormData, return undefined
+      if (!value || value === "") return undefined;
+  }, uploadSchema),
+})
+
 // Multiple files validation schema
 export const uploadsSchema = z.object({
   uploads: z

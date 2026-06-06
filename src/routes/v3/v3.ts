@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { avatarsRouter } from "./avatars";
 import { competitionsRouter } from "./competitions";
 import { authRouter } from "./auth";
+import { requireAuth } from "../middleware";
 
 export const v3Router = new Hono<AppEnv>();
 

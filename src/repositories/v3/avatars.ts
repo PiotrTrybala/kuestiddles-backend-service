@@ -5,23 +5,21 @@ import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
-export async function getAvatar(avatarId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
+export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
     try {
         const [metadata] = await database.select()
             .from(avatars)
             .where(eq(avatars.user_id, userId));
 
-        console.log(metadata);
+        let avatar: Bun.S3File;
 
         if (!metadata) {
-            return {
-                avatar: undefined,
-                error: "avatar has not been found",
-            }
+            avatar = s3.file("avatars/default");
+        } else {
+            avatar = s3.file(metadata!.path);
         }
 
-        const file = s3.file(metadata!.path);
-        return { avatar: file }
+        return { avatar }
     } catch (error) {
         console.error("Error occured while retriving users avatar:", error);
 
@@ -49,9 +47,8 @@ export async function uploadAvatar(
             .resize(DEFAULT_AVATAR_WIDTH, DEFAULT_AVATAR_HEIGHT, { withoutEnlargement: true, withoutReduction: true })
             .toBuffer();
 
-        const avatarId = await sha256(userId);
 
-        const uploadPath = `avatars/${avatarId!}`;
+        const uploadPath = `avatars/${userId}`;
 
         await s3.write(uploadPath, webpBuffer, {
             type: "image/webp",
