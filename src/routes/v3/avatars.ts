@@ -12,12 +12,12 @@ avatarsRouter.get("/:userId", zValidator('param', z.object({
 })), async (c) => {
     const { userId } = c.req.valid("param");
 
-    const { file, error } = await getAvatar(userId);
+    const { avatar, error } = await getAvatar(userId);
     if (error) {
         return c.notFound();
     }
 
-    return c.body(file!.stream(), {
+    return c.body(avatar!.stream(), {
         headers: {
             "Content-Type": "image/webp",
             "Cache-Control": "public, max-age=31536000",

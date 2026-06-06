@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 
-export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
+export async function getAvatar(avatarId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
     try {
         const [metadata] = await database.select()
             .from(avatars)
