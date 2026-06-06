@@ -18,7 +18,15 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     labels: z.string()
         .optional()
         .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
-})), async (c) => {
+}),(result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
 
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid('query');
@@ -43,12 +51,11 @@ uploadsRouter.get("/search", zValidator('query', z.object({
 });
 
 uploadsRouter.post("/", zValidator('form', uploadsSchema, (result, c) => {
-    // If validation fails, intercept and return a clean error format
     if (!result.success) {
         const error = JSON.parse(result.error.message);
         return c.json({
             success: false,
-            errors: error[0].message,
+            message: error[0].message,
         }, 400);
     }
 }), async (c) => {
@@ -74,7 +81,15 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema, (result, c) => {
 
 uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-})), async (c) => {
+}), (result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
 
     const { id } = c.req.valid('param');
 
@@ -91,7 +106,15 @@ uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object
 
 uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-})), async (c) => {
+}), (result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
 
     const { id } = c.req.valid('param');
 
@@ -112,7 +135,15 @@ uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
 
 uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
-})), async (c) => {
+}), (result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
     const organization = c.get("organization")!;
     const { slug } = c.req.valid('param');
 
@@ -128,7 +159,15 @@ uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
 
 uploadsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-})), async (c) => {
+}), (result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
     const { id } = c.req.valid("param");
 
     const { error } = await removeUploadById(id);
@@ -143,7 +182,15 @@ uploadsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator('param', z.object({
 
 uploadsRouter.delete("/:slug", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
-})), async (c) => {
+}),(result, c) => {
+    if (!result.success) {
+        const error = JSON.parse(result.error.message);
+        return c.json({
+            success: false,
+            message: error[0].message,
+        }, 400);
+    }
+}), async (c) => {
     const organization = c.get("organization")!;
     const { slug } = c.req.valid("param");
 
