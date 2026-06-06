@@ -1,6 +1,6 @@
 import { database } from "@/database/db";
 import { quests } from "@/database/schema";
-import { and, arrayOverlaps, eq, ilike, sql } from "drizzle-orm";
+import { and, arrayOverlaps, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
 
 type Quest = typeof quests.$inferSelect;
@@ -167,10 +167,24 @@ export async function createQuest(
     }
 }
 
-export async function updateQuest(id: string, data: { title?: string, description?: string, points?: number, landmark_id?: string }): Promise<{ updated?: Quest, error?: string }> {
+export async function updateQuest(id: string, title?: string, description?: string, points?: number, landmark_id?: string, game_id?: string): Promise<{ updated?: Quest, error?: string }> {
     try {
+
+        const updateBody: Partial<typeof quests.$inferInsert> = {};
+        if (title !== undefined) updateBody.title = title;
+        if (description !== undefined) updateBody.description = description;
+        if (points !== undefined) updateBody.points = points;
+        if (landmark_id !== undefined) updateBody.landmark_id = landmark_id;
+        if (game_id !== undefined) updateBody.game_id = game_id;
+
+        if (Object.keys(updateBody).length === 0) {
+            return {
+                error: "No update parameters provided"
+            };
+        }
+
         const [quest] = await database.update(quests)
-            .set(data)
+            .set(updateBody)
             .where(eq(quests.id, id))
             .returning();
 
@@ -178,6 +192,7 @@ export async function updateQuest(id: string, data: { title?: string, descriptio
             updated: quest,
         }
     } catch (error) {
+        // TODO: Add errors related to landmarks and games relations
         console.error("Error occured while updating quest:", error);
         return {
             updated: undefined,

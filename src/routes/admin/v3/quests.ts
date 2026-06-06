@@ -56,11 +56,11 @@ questsRouter.post("/", zValidator("json", z.object({
     title: z.string(),
     description: z.string(),
     points: z.number(),
-    gameId: z.string().nullish(),
-    slug: z.string().nullish(),
-    labels: z.string().array().nullish(),
-    answers: z.string().array().nullish(),
-    thumbnail: z.string().nullish(),
+    gameId: z.string().optional(),
+    slug: z.string().optional(), // Default: slugified name
+    labels: z.string().array().optional(), // Default: []
+    answers: z.string().array().optional(), // Default: []
+    thumbnail: z.string().optional(), // TODO: Add default value to database
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
@@ -125,14 +125,15 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     points: z.number().optional(),
-    landmark_id: z.string().uuid().optional(),
+    landmarkId: z.uuid().optional(),
+    gameId: z.uuid().optional(),
 })), async (c) => {
     const organization = c.get("organization")!;
     const user = c.get("user")!;
     const { id } = c.req.valid("param");
-    const data = c.req.valid("json");
+    const { title, description, points, landmarkId, gameId } = c.req.valid("json");
 
-    const { updated, error } = await updateQuest(id, data);
+    const { updated, error } = await updateQuest(id, title, description, points, landmarkId, gameId);
     if (error) {
         return c.json({ message: error }, 500);
     }

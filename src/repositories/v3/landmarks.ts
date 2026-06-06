@@ -154,6 +154,16 @@ export async function createLandmark(
 export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ landmark?: Landmark, error?: string }> { 
     try {
 
+        const updateBody: Partial<typeof landmarks.$inferInsert> = {};
+        if (title !== undefined) updateBody.title = title;
+        if (description !== undefined) updateBody.description = description;
+
+        if (Object.keys(updateBody).length === 0) {
+            return {
+                error: "No update parameters provided"
+            };
+        }
+
         const [landmark] = await database.update(landmarks)
             .set({
                 title,
