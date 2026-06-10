@@ -128,22 +128,6 @@ competitionsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("json", z.object({
 });
 
 
-competitionsRouter.get("/checkSlug", zValidator("query", z.object({
-    slug: z.string().max(64, { error: "Slug is too long (max 64 characters) "})
-})), async (c) => {
-    const { id } = c.get("organization")!;
-    const { slug } = c.req.valid("query");
-
-    const { isVacant, error } = await checkCompetitionSlug(id, slug);
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-
-    return c.json({ isVacant });
-});
-
 competitionsRouter.post("/", zValidator("json", z.object({
     gameId: z.uuid(),
     name: z.string().max(64, { error: "Name is too long (max 64 characters)" }),
@@ -152,7 +136,8 @@ competitionsRouter.post("/", zValidator("json", z.object({
 })), async (c) => {
     const { id } = c.get("organization")!;
     const { gameId, name, slug, finishesAt } = c.req.valid("json");
-
+    
+    // TODO: Add checking slug if it is vacant
     const { competition, error } = await createCompetition(id, gameId, name, slug, finishesAt);
     if (error) {
         return c.json({

@@ -1,7 +1,11 @@
 import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
 import { requireCompetition } from "../middleware";
-import { getCompetitionsQuests } from "@/repositories/v3/competitions";
+import { createUser, getCompetitionsQuests, getSouvenir, solveGroupQuest } from "@/repositories/v3/competitions";
+import { zValidator } from "@hono/zod-validator";
+import z from "zod";
+import { acceptInvite } from "@/controllers/invites";
+import { getLeaderboard } from "@/controllers/leaderboard";
 
 export const competitionsRouter = new Hono<AppEnv>();
 competitionsRouter.use("*", requireCompetition());
@@ -11,93 +15,107 @@ competitionsRouter.get("/quests", async (c) => {
     const competition = c.get("competition")!;
 
     const { quests, error } = await getCompetitionsQuests(competition.competitionId);
+
     if (error) {
         return c.json({
             message: error,
         })
     }
 
+    return c.json(quests);
 });
 
-competitionsRouter.post("/quests/solve", async (c) => {});
+competitionsRouter.post("/quests/solve", zValidator("json", z.object({
+    questId: z.uuid(),
+    answers: z.array(z.string()),
+})), async (c) => {
+    const competition = c.get("competition")!;
+    const { questId, answers } = c.req.valid("json"); 
+    
+    const { solved, error } = await solveGroupQuest(
+        competition.competitionId,
+        competition.groupId,
+        questId,
+        answers,
+    );
 
-competitionsRouter.get("/souvenir", async (c) => {});
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
 
-competitionsRouter.post("/invites/accept", async (c) => {});
+    return c.json({
+        solved,
+    });
+});
 
-// competitionsRouter.get("/quests", async (c) => {
+competitionsRouter.get("/souvenir/:userId", zValidator("param", z.object({
+    userId: z.uuid(),
+})), async (c) => {
+    const competition = c.get("competition")!;
+    const { userId } = c.req.valid("param");
 
-//     const competition = c.get("competition");
-//     if (!competition) return c.json({ message: "Forbidden" }, 403);
-//     return c.json({}, 200);
-//     // const { quests, error } = await getCompetitionQuests(competition.competitionId);
-//     // if (error) {
-//     //     return c.json({
-//     //         message: error,
-//     //     }, 500);
-//     // }
-//     // return c.json({
-//     //     quests,
-//     // }, 200);
-// });
+    const { souvenir, error } = await getSouvenir(
+        competition.competitionId, 
+        competition.groupId, 
+        userId
+    );
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
 
-// competitionsRouter.get("/groups/current", async (c) => {
+    return c.json(souvenir);
+});
 
-//     const competition = c.get("competition");
-//     if (!competition) return c.json({ message: "Forbidden" }, 403);
-//     return c.json({}, 200);
-//     // const { group, error } = await getUserGroup(competition.competitionId, competition.groupId);
+competitionsRouter.post("/invites/accept", zValidator("json", z.object({
+    inviteId: z.uuid(),
+    username: z.string(),
+})), async (c) => {
+    const competition = c.get("competition")!;
+    const { inviteId, username } = c.req.valid("json");
 
-//     // if (error) {
-//     //     return c.json({
-//     //         message: error,
-//     //     }, 500);
-//     // }
+    const { accepted, error } = await acceptInvite(
+        competition.competitionId,
+        inviteId,
+    );
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
 
-//     // return c.json({
-//     //     group,
-//     // })
-// });
+    if (!accepted) {
+        return c.json({ message: "Failed to accept invite to competitions group" }, 400);
+    }
 
-// competitionsRouter.post("/invites/accept", async (c) => {
-//     const { competitionId, groupId, inviteId } = c.req.query();
-//     const { username } = await c.req.json();
-//     return c.json({}, 200);
-//     // const { user, error } = await acceptGroupInvite(competitionId!, groupId!, inviteId!, username);
-//     // if (error) {
-//     //     return c.json({
-//     //         message: error,
-//     //     }, 200);
-//     // }
+    const { user, error: e } = await createUser(
+        competition.groupId,
+        username,
+    );
+    if (e) {
+        return c.json({
+            message: e,
+        }, 500);
+    }
 
-//     // return c.json({
-//     //     user,
-//     // }, 200);
-// });
+    console.log(`Created new user (userId = ${user!.id}, groupId=${user!.group_id}, username=${user!.username})`);
 
-// competitionsRouter.post("/quests/solve", async (c) => {
+    return c.json({ created: true });
+});
 
-//     const competition = c.get("competition");
-//     if (!competition) return c.json({ message: "Forbidden" }, 403);
+competitionsRouter.get("/leaderboard", async (c) => {
+    const competition = c.get("competition")!;
 
+    const { leaderboard, error } = await getLeaderboard(competition.competitionId);
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
 
-//     return c.json({}, 200);
-// });
-
-// competitionsRouter.get("/leaderboard", async (c) => {
-
-//     const competition = c.get("competition");
-//     if (!competition) return c.json({ message: "Forbidden" }, 403);
-//     return c.json({}, 200);
-// });
-
-// competitionsRouter.get("/souvenir", async (c) => {
-
-//     const competition = c.get("competition");
-//     if (!competition) return c.json({ message: "Forbidden" }, 403);
-
-
-
-//     return c.json({}, 200);
-// });
+    return c.json({ leaderboard });
+});
 
