@@ -3,12 +3,13 @@ import { database } from "@/database/db";
 import { uploads } from "@/database/v3/uploads";
 import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
-import sharp from "sharp";
+import sharp, { format } from "sharp";
 import slugify from "slugify";
+import { formatError, type RepositoryError } from "./v3";
 
 type Upload = typeof uploads.$inferSelect;
 
-export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]): Promise<{ uploads: Upload[], error?: string}> {
+export async function searchUploads(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]): Promise<{ uploads: Upload[], error?: RepositoryError }> {
     try {
         const pageIndex = Math.max(1, page) - 1; 
         const limit = Math.max(1, pageSize);
@@ -42,12 +43,12 @@ export async function searchUploads(organizationId: string, page: number, pageSi
         console.error("Error occured while retriving uploads:", error);
         return {
             uploads: [],
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         }
     }
 }
 
-export async function getUploadMetadataById(id: string): Promise<{ metadata?: Upload, error?: string }> {
+export async function getUploadMetadataById(id: string): Promise<{ metadata?: Upload, error?: RepositoryError }> {
     try {
         const [ metadata ] = await database.select()
             .from(uploads)
@@ -56,7 +57,7 @@ export async function getUploadMetadataById(id: string): Promise<{ metadata?: Up
         if (!metadata) {
             return {
                 metadata: undefined,
-                error: "upload metadata has been not found"
+                error: { message: "Upload metadata was not found", status: 404 }
             }
         }
 
@@ -69,19 +70,19 @@ export async function getUploadMetadataById(id: string): Promise<{ metadata?: Up
 
         return {
             metadata: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 
 }
 
-export async function getUploadDataById(id: string): Promise<{ data?: Bun.S3File, error?: string }> {
+export async function getUploadDataById(id: string): Promise<{ data?: Bun.S3File, error?: RepositoryError }> {
     try {
         const { metadata, error } = await getUploadMetadataById(id);
         if (error) {
             return {
                 data: undefined,
-                error,
+                error: formatError(error),
             }
         }
 
@@ -92,12 +93,12 @@ export async function getUploadDataById(id: string): Promise<{ data?: Bun.S3File
 
         return {
             data: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function getUploadMetadataBySlug(organizationId: string, slug: string): Promise<{ metadata?: Upload, error?: string }> {
+export async function getUploadMetadataBySlug(organizationId: string, slug: string): Promise<{ metadata?: Upload, error?: RepositoryError }> {
     try {
         const [ metadata ] = await database.select()
             .from(uploads)
@@ -106,7 +107,7 @@ export async function getUploadMetadataBySlug(organizationId: string, slug: stri
         if (!metadata) {
             return {
                 metadata: undefined,
-                error: "Metadata has not been found"
+                error: { message: "Upload metadata was not found", status: 404 }
             }
         }
 
@@ -119,7 +120,7 @@ export async function getUploadMetadataBySlug(organizationId: string, slug: stri
 
         return {
             metadata: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
@@ -128,7 +129,7 @@ export const DEFAULT_UPLOAD_QUALITY = 75;
 export const DEFAULT_UPLOAD_WIDTH = 400;
 export const DEFAULT_UPLOAD_HEIGHT = 300;
 
-export async function uploadUploads(organizationId: string, files: File[]): Promise<{ uploads: { id: string, hash: string }[], error?: string }> {
+export async function uploadUploads(organizationId: string, files: File[]): Promise<{ uploads: { id: string, hash: string }[], error?: RepositoryError }> {
     try {
         const results = await Promise.all(files.map(async (file) => {
 
@@ -181,23 +182,21 @@ export async function uploadUploads(organizationId: string, files: File[]): Prom
     } catch (error: any) {
         console.error("Error occured while uploading new uploads:", error);
 
-        const userMessage = error instanceof Error ? error.message : "An unexpected error has occurred";
-
         return {
             uploads: [],
-            error: userMessage,
+            error: formatError(error),
         }
     }
 }
 
-export async function removeUploadById(id: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeUploadById(id: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const { metadata, error } = await getUploadMetadataById(id);
 
         if (error || !metadata) {
             return {
                 deleted: false,
-                error: `Error occurred while deleting upload by id: ${error ?? "Upload not found"}`,
+                error: formatError(error),
             };
         }
 
@@ -212,19 +211,19 @@ export async function removeUploadById(id: string): Promise<{ deleted: boolean, 
 
         return {
             deleted: false,
-            error: "An unexpected database error occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function removeUploadBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeUploadBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const { metadata, error } = await getUploadMetadataBySlug(organizationId, slug);
 
         if (error || !metadata) {
             return {
                 deleted: false,
-                error: `Error occurred while deleting upload by id: ${error ?? "Upload not found"}`,
+                error: formatError(error),
             };
         }
         await database.delete(uploads).where(and(eq(uploads.organization_id, organizationId), eq(uploads.slug, slug)));
@@ -238,7 +237,7 @@ export async function removeUploadBySlug(organizationId: string, slug: string): 
 
         return {
             deleted: false,
-            error: "An unexpected database error occurred",
+            error: formatError(error),
         };
     }
 }

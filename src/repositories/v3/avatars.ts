@@ -4,8 +4,9 @@ import { avatars } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
+import { formatError, type RepositoryError } from "./v3";
 
-export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: string }> {
+export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: RepositoryError }> {
     try {
         const [metadata] = await database.select()
             .from(avatars)
@@ -25,7 +26,7 @@ export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, 
 
         return {
             avatar: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
@@ -37,7 +38,7 @@ export const DEFAULT_AVATAR_HEIGHT = 128;
 export async function uploadAvatar(
     userId: string,
     avatar: File,
-): Promise<{ uploaded: boolean, error?: string }> {
+): Promise<{ uploaded: boolean, error?: RepositoryError }> {
     try {
 
         const buffer = await avatar.arrayBuffer();
@@ -71,7 +72,7 @@ export async function uploadAvatar(
 
         return {
             uploaded: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }

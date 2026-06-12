@@ -8,6 +8,7 @@ import { eq, ilike, and, sql } from "drizzle-orm";
 import { UniqueConstraintBuilder } from "drizzle-orm/gel-core";
 import slugify from "slugify";
 import { getQuestById } from "./quests";
+import { formatError, type RepositoryError } from "./v3";
 
 type Competition = typeof competitions.$inferSelect;
 type Quest = typeof quests.$inferSelect;
@@ -18,7 +19,7 @@ export async function searchCompetitions(
     pageSize: number,
     options?: {
         name?: string,
-    }): Promise<{ competitions: Competition[], error?: string }> {
+    }): Promise<{ competitions: Competition[], error?: RepositoryError }> {
     try {
 
         const name = options?.name ?? "";
@@ -45,12 +46,12 @@ export async function searchCompetitions(
         console.error("Error occured while retrieving competitions:", error);
         return {
             competitions: [],
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function getCompetitionById(competitionId: string): Promise<{ competition?: Competition, error?: string }> {
+export async function getCompetitionById(competitionId: string): Promise<{ competition?: Competition, error?: RepositoryError }> {
     try {
         const [competition] = await database.select()
             .from(competitions)
@@ -59,7 +60,7 @@ export async function getCompetitionById(competitionId: string): Promise<{ compe
         if (!competition) {
             return {
                 competition: undefined,
-                error: "Competition has not been found",
+                error: { message: "Competition has not been found", status: 404 }
             };
         }
 
@@ -68,17 +69,17 @@ export async function getCompetitionById(competitionId: string): Promise<{ compe
         console.error("Error occured while retrieving competition:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
 // COMPETITION USER METHOD
-export async function getCompetitionsQuests(competitionId: string): Promise<{ quests: Quest[], error?: string }> {
+export async function getCompetitionsQuests(competitionId: string): Promise<{ quests: Quest[], error?: RepositoryError }> {
     try {
         const { competition, error } = await getCompetitionById(competitionId);
         if (error || !competition) {
-            throw new Error(error);
+            throw new Error(error!.message);
         }
 
         const competitionQuests = await database.select()
@@ -92,14 +93,14 @@ export async function getCompetitionsQuests(competitionId: string): Promise<{ qu
         console.log("Error occured while retrieving competitions quests:", error);
         return {
             quests: [],
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 
 
 }
 
-export async function getCompetitionBySlug(organizationId: string, slug: string): Promise<{ competition?: Competition, error?: string }> {
+export async function getCompetitionBySlug(organizationId: string, slug: string): Promise<{ competition?: Competition, error?: RepositoryError }> {
     try {
         const [competition] = await database.select()
             .from(competitions)
@@ -108,7 +109,7 @@ export async function getCompetitionBySlug(organizationId: string, slug: string)
         if (!competition) {
             return {
                 competition: undefined,
-                error: "Competition has not been found",
+                error: { message: "Competition has not been found", status: 404 },
             };
         }
 
@@ -117,12 +118,12 @@ export async function getCompetitionBySlug(organizationId: string, slug: string)
         console.error("Error occured while retrieving competition by slug:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function checkCompetitionSlug(organizationId: string, slug: string): Promise<{ isVacant: boolean, error?: string }> {
+export async function checkCompetitionSlug(organizationId: string, slug: string): Promise<{ isVacant: boolean, error?: RepositoryError }> {
     try {
         const [competition] = await database.select()
             .from(competitions)
@@ -131,7 +132,7 @@ export async function checkCompetitionSlug(organizationId: string, slug: string)
         if (competition) {
             return {
                 isVacant: false,
-                error: "Slug is already taken",
+                error: { message: "Slug is already taken", status: 409 },
             };
         }
 
@@ -140,12 +141,12 @@ export async function checkCompetitionSlug(organizationId: string, slug: string)
         console.error("Error occured while checking competition slug:", error);
         return {
             isVacant: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function createCompetition(organizationId: string, gameId: string, name: string, slug?: string, finishesAt?: Date): Promise<{ competition?: Competition, error?: string }> {
+export async function createCompetition(organizationId: string, gameId: string, name: string, slug?: string, finishesAt?: Date): Promise<{ competition?: Competition, error?: RepositoryError }> {
     try {
         if (!slug) slug = slugify(name, { lower: true, trim: true });
 
@@ -164,12 +165,12 @@ export async function createCompetition(organizationId: string, gameId: string, 
         console.error("Error occured while creating competition:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function updateCompetitionById(competitionId: string, name?: string, status?: "onboarding" | "in-progress" | "finishing" | "archived", finishesAt?: Date): Promise<{ competition?: Competition, error?: string }> {
+export async function updateCompetitionById(competitionId: string, name?: string, status?: "onboarding" | "in-progress" | "finishing" | "archived", finishesAt?: Date): Promise<{ competition?: Competition, error?: RepositoryError }> {
     try {
 
         const updateBody: Partial<typeof competitions.$inferInsert> = {};
@@ -179,7 +180,7 @@ export async function updateCompetitionById(competitionId: string, name?: string
 
         if (Object.keys(updateBody).length === 0) {
             return {
-                error: "No update parameters provided"
+                error: { message: "No update parameters provided", status: 400 }
             };
         }
 
@@ -193,12 +194,12 @@ export async function updateCompetitionById(competitionId: string, name?: string
         console.error("Error occured while updating competition status:", error);
         return {
             competition: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function deleteCompetitionById(competitionId: string): Promise<{ deleted: boolean, error?: string }> {
+export async function deleteCompetitionById(competitionId: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [competition] = await database.delete(competitions)
             .where(eq(competitions.id, competitionId))
@@ -209,12 +210,12 @@ export async function deleteCompetitionById(competitionId: string): Promise<{ de
         console.error("Error occured while deleting competition:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function deleteCompetitionBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+export async function deleteCompetitionBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [competition] = await database.delete(competitions)
             .where(and(eq(competitions.organization_id, organizationId), eq(competitions.slug, slug)))
@@ -225,7 +226,7 @@ export async function deleteCompetitionBySlug(organizationId: string, slug: stri
         console.error("Error occured while deleting competition:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
@@ -241,7 +242,7 @@ export async function searchGroups(
     pageSize: number,
     options?: {
         name?: string,
-    }): Promise<{ groups: Group[], error?: string }> {
+    }): Promise<{ groups: Group[], error?: RepositoryError }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -267,12 +268,12 @@ export async function searchGroups(
         console.error("Error occured while retrieving groups:", error);
         return {
             groups: [],
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function getGroupById(groupId: string): Promise<{ group?: Group, error?: string }> {
+export async function getGroupById(groupId: string): Promise<{ group?: Group, error?: RepositoryError }> {
     try {
         const [group] = await database.select()
             .from(groups)
@@ -281,7 +282,7 @@ export async function getGroupById(groupId: string): Promise<{ group?: Group, er
         if (!group) {
             return {
                 group: undefined,
-                error: "Group has not been found",
+                error: { message: "Group has not been found", status: 404 }
             };
         }
 
@@ -290,12 +291,12 @@ export async function getGroupById(groupId: string): Promise<{ group?: Group, er
         console.error("Error occured while retrieving group:", error);
         return {
             group: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function getGroupBySlug(competitionId: string, slug: string): Promise<{ group?: Group, error?: string }> {
+export async function getGroupBySlug(competitionId: string, slug: string): Promise<{ group?: Group, error?: RepositoryError }> {
     try {
         const [group] = await database.select()
             .from(groups)
@@ -304,7 +305,7 @@ export async function getGroupBySlug(competitionId: string, slug: string): Promi
         if (!group) {
             return {
                 group: undefined,
-                error: "Group has not been found",
+                error: { message: "Group has not been found", status: 404 }
             };
         }
 
@@ -313,12 +314,12 @@ export async function getGroupBySlug(competitionId: string, slug: string): Promi
         console.error("Error occured while retrieving group by slug:", error);
         return {
             group: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function createGroup(competitionId: string, name: string, slug?: string): Promise<{ group?: Group, error?: string }> {
+export async function createGroup(competitionId: string, name: string, slug?: string): Promise<{ group?: Group, error?: RepositoryError }> {
     try {
         if (!slug) slug = slugify(name, { lower: true, trim: true });
 
@@ -335,17 +336,20 @@ export async function createGroup(competitionId: string, name: string, slug?: st
         console.error("Error occured while creating competitions group:", error);
         return {
             group: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
 // ONLY FOR COMPETITION GROUP USER
-export async function solveGroupQuest(competitionId: string, groupId: string, questId: string, answers: string[]): Promise<{ solved: boolean, error?: string }> {
+export async function solveGroupQuest(competitionId: string, groupId: string, questId: string, answers: string[]): Promise<{ solved: boolean, error?: RepositoryError }> {
     try {
         const { quest, error } = await getQuestById(questId);
         if (!quest || error) {
-            return { solved: false, error: "Quest has not been found" };
+            return {
+                solved: false,
+                error: { message: "Quest has not been found", status: 404 },
+            };
         }
 
         const [existing] = await database.select()
@@ -358,7 +362,13 @@ export async function solveGroupQuest(competitionId: string, groupId: string, qu
             );
 
         if (!existing) {
-            return { solved: true, error: "Quest has already been solved" };
+            return {
+                solved: true,
+                error: {
+                    message: "Quest has already been solved",
+                    status: 409,
+                }
+            }
         }
 
         const correctAnswers = quest!.answers ?? [];
@@ -367,7 +377,12 @@ export async function solveGroupQuest(competitionId: string, groupId: string, qu
         );
 
         if (!isCorrect) {
-            return { solved: false, error: "Incorrect answer" };
+            return { 
+                solved: false, 
+                error: { 
+                    message: "Incorrect answer", 
+                    status: 400 } 
+                };
         }
 
         await database.insert(groupsQuests)
@@ -381,7 +396,7 @@ export async function solveGroupQuest(competitionId: string, groupId: string, qu
         if (!groupEntry) {
             return {
                 solved: false,
-                error: "Group leaderboard entry has not been found",
+                error: { message: "Group leaderboard entry has not been found", status: 404 },
             }
         }
 
@@ -392,12 +407,12 @@ export async function solveGroupQuest(competitionId: string, groupId: string, qu
         console.error("Error occured while solving quest:", error);
         return {
             solved: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function deleteGroupById(groupId: string): Promise<{ deleted: boolean, error?: string }> {
+export async function deleteGroupById(groupId: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [group] = await database.delete(groups)
             .where(eq(groups.id, groupId))
@@ -408,12 +423,12 @@ export async function deleteGroupById(groupId: string): Promise<{ deleted: boole
         console.error("Error occured while deleting competition group:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function deleteGroupBySlug(competitionId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+export async function deleteGroupBySlug(competitionId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [group] = await database.delete(groups)
             .where(and(eq(groups.competition_id, competitionId), eq(groups.slug, slug)))
@@ -424,14 +439,14 @@ export async function deleteGroupBySlug(competitionId: string, slug: string): Pr
         console.error("Error occured while deleting competition group:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
 // Users subsection
 
-export async function getUsers(groupId: string): Promise<{ users: User[], error?: string }> { 
+export async function getUsers(groupId: string): Promise<{ users: User[], error?: RepositoryError }> {
     try {
         const users = await database.select()
             .from(groupUsers)
@@ -440,11 +455,11 @@ export async function getUsers(groupId: string): Promise<{ users: User[], error?
             users,
         }
 
-    } catch(error) {
+    } catch (error) {
         console.log("Error occured while retrieving group users:", error);
         return {
             users: [],
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
@@ -455,7 +470,7 @@ type Souvenir = {
     points: number,
 };
 
-export async function getSouvenir(competitionId: string, groupId: string, userId: string): Promise<{ souvenir?: Souvenir, error?: string }> { 
+export async function getSouvenir(competitionId: string, groupId: string, userId: string): Promise<{ souvenir?: Souvenir, error?: RepositoryError }> {
     try {
         const [user] = await database.select()
             .from(groupUsers)
@@ -487,16 +502,16 @@ export async function getSouvenir(competitionId: string, groupId: string, userId
             }
         }
 
-    } catch(error) {
+    } catch (error) {
         console.log("Error occured while retrieving leaderboard:", error);
         return {
             souvenir: undefined,
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function createUser(competitionId: string, groupId: string, username: string): Promise<{ user?: User, error?: string }> { 
+export async function createUser(groupId: string, username: string): Promise<{ user?: User, error?: RepositoryError }> {
     try {
 
         const [user] = await database.insert(groupUsers)
@@ -511,12 +526,12 @@ export async function createUser(competitionId: string, groupId: string, usernam
         console.error("Error occured while creating competition group users:", error);
         return {
             user: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
     }
 }
 
-export async function deleteUserById(userId: string): Promise<{ deleted: boolean, error?: string }> { 
+export async function deleteUserById(userId: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [competition] = await database.delete(groupUsers)
             .where(eq(groupUsers.id, userId))
@@ -527,12 +542,12 @@ export async function deleteUserById(userId: string): Promise<{ deleted: boolean
         console.error("Error occured while deleting competition by slug:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
-    }       
+    }
 }
 
-export async function deleteUserByUsername(groupId: string, username: string): Promise<{ deleted: boolean, error?: string }> { 
+export async function deleteUserByUsername(groupId: string, username: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [competition] = await database.delete(groupUsers)
             .where(and(eq(groupUsers.group_id, groupId), eq(groupUsers.username, username)))
@@ -543,7 +558,7 @@ export async function deleteUserByUsername(groupId: string, username: string): P
         console.error("Error occured while deleting competition by slug:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         };
-    }       
+    }
 }

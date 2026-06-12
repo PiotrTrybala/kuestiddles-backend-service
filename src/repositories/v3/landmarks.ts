@@ -2,10 +2,11 @@ import { database } from "@/database/db";
 import { games, landmarks } from "@/database/schema";
 import { and, eq, ilike } from "drizzle-orm";
 import slugify from "slugify";
+import { formatError, type RepositoryError } from "./v3";
 
 type Landmark = typeof landmarks.$inferSelect;
 
-export async function searchLandmarks(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ landmarks: Landmark[], error?: string }> {
+export async function searchLandmarks(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ landmarks: Landmark[], error?: RepositoryError }> {
     try {
 
         const offset = page * pageSize;
@@ -33,12 +34,12 @@ export async function searchLandmarks(organizationId: string, page: number, page
         console.error("Error occured while retriving organizations landmarks:", error);
         return {
             landmarks: [],
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function getLandmarkById(id: string): Promise<{ landmark?: Landmark, error?: string }> {
+export async function getLandmarkById(id: string): Promise<{ landmark?: Landmark, error?: RepositoryError }> {
 try {
         const [landmark] = await database.select()
             .from(landmarks)
@@ -47,7 +48,7 @@ try {
         if (!landmark) {
             return {
                 landmark: undefined,
-                error: "Metadata has not been found"
+                error: { message: "Metadata has not been found", status: 404 } 
             }
         }
 
@@ -60,12 +61,12 @@ try {
 
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function getLandmarkBySlug(organizationId: string, slug: string): Promise<{ landmark?: Landmark, error?: string }> {
+export async function getLandmarkBySlug(organizationId: string, slug: string): Promise<{ landmark?: Landmark, error?: RepositoryError }> {
     try {
         const [landmark] = await database.select()
             .from(landmarks)
@@ -74,7 +75,7 @@ export async function getLandmarkBySlug(organizationId: string, slug: string): P
         if (!landmark) {
             return {
                 landmark: undefined,
-                error: "Metadata has not been found"
+                error: { message: "Metadata has not been found", status: 404 },
             }
         }
 
@@ -87,12 +88,12 @@ export async function getLandmarkBySlug(organizationId: string, slug: string): P
 
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function checkLandmarkSlug(organizationId: string, slug: string): Promise<{ open: boolean }> {
+export async function checkLandmarkSlug(organizationId: string, slug: string): Promise<{ open: boolean, error?: RepositoryError }> {
     try {
 
         const [landmark] = await database.select()
@@ -107,6 +108,7 @@ export async function checkLandmarkSlug(organizationId: string, slug: string): P
         console.error("Error occured while checking landmark slug:", error);
         return {
             open: false,
+            error: formatError(error),
         }
     }
 }
@@ -120,7 +122,7 @@ export async function createLandmark(
     slug?: string, 
     labels?: string[], 
     assets?: string[]
-): Promise<{ landmark?: Landmark, error?: string }> {
+): Promise<{ landmark?: Landmark, error?: RepositoryError }> {
     try {
 
         if (!slug) slug = slugify(title, {
@@ -146,12 +148,12 @@ export async function createLandmark(
         console.error("Error occured while creating landmark:", error);
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ landmark?: Landmark, error?: string }> { 
+export async function updateLandmark(id: string, title?: string, description?: string): Promise<{ landmark?: Landmark, error?: RepositoryError }> { 
     try {
 
         const updateBody: Partial<typeof landmarks.$inferInsert> = {};
@@ -160,7 +162,7 @@ export async function updateLandmark(id: string, title?: string, description?: s
 
         if (Object.keys(updateBody).length === 0) {
             return {
-                error: "No update parameters provided"
+                error: { message: "No updated parameters found", status: 400 }
             };
         }
 
@@ -180,12 +182,12 @@ export async function updateLandmark(id: string, title?: string, description?: s
         console.error("Error occured while updating landmark:", error);
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateLandmarkAssets(id: string, assets: string[]): Promise<{ landmark?: Landmark, error?: string }> {
+export async function updateLandmarkAssets(id: string, assets: string[]): Promise<{ landmark?: Landmark, error?: RepositoryError }> {
     try {
 
         const [landmark] = await database.update(landmarks)
@@ -202,12 +204,12 @@ export async function updateLandmarkAssets(id: string, assets: string[]): Promis
         console.error("Error occured while updating landmarks assets:", error);
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateLandmarkLabels(id: string, labels: string[]): Promise<{ landmark?: Landmark, error?: string }> {
+export async function updateLandmarkLabels(id: string, labels: string[]): Promise<{ landmark?: Landmark, error?: RepositoryError }> {
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -222,12 +224,12 @@ export async function updateLandmarkLabels(id: string, labels: string[]): Promis
         console.error("Error occured while updating landmarks labels:", error);
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateLandmarkLocation(id: string, longitude: number, latitude: number): Promise<{ landmark?: Landmark, error?: string }> { 
+export async function updateLandmarkLocation(id: string, longitude: number, latitude: number): Promise<{ landmark?: Landmark, error?: RepositoryError }> { 
     try {
         const [landmark] = await database.update(landmarks)
             .set({
@@ -245,12 +247,12 @@ export async function updateLandmarkLocation(id: string, longitude: number, lati
         console.error("Error occured while updating landmarks location:", error);
         return {
             landmark: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function removeLandmarkById(id: string): Promise<{ deleted: boolean, error?: string }> { 
+export async function removeLandmarkById(id: string): Promise<{ deleted: boolean, error?: RepositoryError }> { 
     try {
 
         const [ landmark ] = await database.delete(landmarks)
@@ -265,12 +267,12 @@ export async function removeLandmarkById(id: string): Promise<{ deleted: boolean
         console.error("Error occured while deleting landmark by id:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function removeLandmarkBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeLandmarkBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
         try {
 
         const [ landmark ] = await database.delete(landmarks)
@@ -285,7 +287,7 @@ export async function removeLandmarkBySlug(organizationId: string, slug: string)
         console.error("Error occured while deleting landmark by slug:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }

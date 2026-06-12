@@ -2,11 +2,12 @@ import { database } from "@/database/db";
 import { quests } from "@/database/schema";
 import { and, arrayOverlaps, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
+import { formatError, type RepositoryError } from "./v3";
 
 type Quest = typeof quests.$inferSelect;
 type QuestInsert = typeof quests.$inferInsert;
 
-export async function searchQuests(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ quests: Quest[], error?: string }> {
+export async function searchQuests(organizationId: string, page: number, pageSize: number, title?: string, labels?: string[]): Promise<{ quests: Quest[], error?: RepositoryError }> {
     try {
         const offset = page * pageSize;
         const limit = pageSize;
@@ -36,12 +37,12 @@ export async function searchQuests(organizationId: string, page: number, pageSiz
         console.error("Error occured while retriving organizations quests:", error);
         return {
             quests: [],
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function getQuestById(id: string): Promise<{ quest?: Quest, error?: string }> {
+export async function getQuestById(id: string): Promise<{ quest?: Quest, error?: RepositoryError }> {
     try {
         const [quest] = await database.select()
             .from(quests)
@@ -50,7 +51,7 @@ export async function getQuestById(id: string): Promise<{ quest?: Quest, error?:
         if (!quest) {
             return {
                 quest: undefined,
-                error: "Quest has not been found"
+                error: { message: "Quest has not been found", status: 404 }
             };
         }
 
@@ -61,12 +62,12 @@ export async function getQuestById(id: string): Promise<{ quest?: Quest, error?:
         console.error("Error occured while retriving quest:", error);
         return {
             quest: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function getQuestsByGameId(gameId: string): Promise<{ quests: Quest[], error?: string }> {
+export async function getQuestsByGameId(gameId: string): Promise<{ quests: Quest[], error?: RepositoryError }> {
     try {
         const results = await database.select()
             .from(quests)
@@ -79,12 +80,12 @@ export async function getQuestsByGameId(gameId: string): Promise<{ quests: Quest
         console.error("Error occured while retriving quests by game id:", error);
         return {
             quests: [],
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function getQuestBySlug(organizationId: string, slug: string): Promise<{ quest?: Quest, error?: string }> {
+export async function getQuestBySlug(organizationId: string, slug: string): Promise<{ quest?: Quest, error?: RepositoryError }> {
     try {
         const [quest] = await database.select()
             .from(quests)
@@ -93,7 +94,7 @@ export async function getQuestBySlug(organizationId: string, slug: string): Prom
         if (!quest) {
             return {
                 quest: undefined,
-                error: "Quest has not been found"
+                error: { message: "Quest has not been found", status: 404 }
             };
         }
 
@@ -104,12 +105,12 @@ export async function getQuestBySlug(organizationId: string, slug: string): Prom
         console.error("Error occured while retriving quest by slug:", error);
         return {
             quest: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function checkQuestSlug(organizationId: string, slug: string): Promise<{ open: boolean }> {
+export async function checkQuestSlug(organizationId: string, slug: string): Promise<{ open: boolean, error?: RepositoryError }> {
     try {
         const [quest] = await database.select()
             .from(quests)
@@ -121,7 +122,8 @@ export async function checkQuestSlug(organizationId: string, slug: string): Prom
     } catch (error) {
         console.error("Error occured while checking validity of quests slug:", error);
         return { 
-            open: false 
+            open: false,
+            error: formatError(error)
         };
     }
 }
@@ -137,7 +139,7 @@ export async function createQuest(
     labels?: string[], 
     answers?: string[], 
     thumbnail?: string
-): Promise<{ id?: string, error?: string }> {
+): Promise<{ id?: string, error?: RepositoryError }> {
     try {
         if (!slug) slug = slugify(title, { lower: true, trim: true });
 
@@ -162,12 +164,12 @@ export async function createQuest(
         console.error("Error occured while creating new quest:", error);
         return {
             id: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function updateQuest(id: string, title?: string, description?: string, points?: number, landmark_id?: string, game_id?: string): Promise<{ updated?: Quest, error?: string }> {
+export async function updateQuest(id: string, title?: string, description?: string, points?: number, landmark_id?: string, game_id?: string): Promise<{ updated?: Quest, error?: RepositoryError }> {
     try {
 
         const updateBody: Partial<typeof quests.$inferInsert> = {};
@@ -179,7 +181,7 @@ export async function updateQuest(id: string, title?: string, description?: stri
 
         if (Object.keys(updateBody).length === 0) {
             return {
-                error: "No update parameters provided"
+                error: { message: "No update parameters provided", status: 400 }
             };
         }
 
@@ -196,12 +198,12 @@ export async function updateQuest(id: string, title?: string, description?: stri
         console.error("Error occured while updating quest:", error);
         return {
             updated: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function updateQuestThumbnail(id: string, thumbnail: string): Promise<{ updated?: Quest, error?: string }> {
+export async function updateQuestThumbnail(id: string, thumbnail: string): Promise<{ updated?: Quest, error?: RepositoryError }> {
     try {
         const [quest] = await database.update(quests)
             .set({ thumbnail })
@@ -215,12 +217,12 @@ export async function updateQuestThumbnail(id: string, thumbnail: string): Promi
         console.error("Error occured while updating quests thumbnail:", error);
         return {
             updated: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function updateQuestLabels(id: string, labels: string[]): Promise<{ updated?: Quest, error?: string }> {
+export async function updateQuestLabels(id: string, labels: string[]): Promise<{ updated?: Quest, error?: RepositoryError }> {
     try {
         const [quest] = await database.update(quests)
             .set({ labels })
@@ -234,12 +236,12 @@ export async function updateQuestLabels(id: string, labels: string[]): Promise<{
         console.error("Error occured while updating quests labels:", error);
         return {
             updated: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function updateQuestAnswers(id: string, answers: string[]): Promise<{ updated?: Quest, error?: string }> {
+export async function updateQuestAnswers(id: string, answers: string[]): Promise<{ updated?: Quest, error?: RepositoryError }> {
     try {
         const [quest] = await database.update(quests)
             .set({ answers })
@@ -253,12 +255,12 @@ export async function updateQuestAnswers(id: string, answers: string[]): Promise
         console.error("Error occured while updating quests answers:", error);
         return {
             updated: undefined,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function removeQuestById(id: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeQuestById(id: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [quest] = await database.delete(quests)
             .where(eq(quests.id, id))
@@ -271,12 +273,12 @@ export async function removeQuestById(id: string): Promise<{ deleted: boolean, e
         console.error("Error occured while removing quest:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function removeQuestByGameId(gameId: string): Promise<{ deleted: boolean, count: number, error?: string }> {
+export async function removeQuestByGameId(gameId: string): Promise<{ deleted: boolean, count: number, error?: RepositoryError }> {
     try { 
         const deletedQuests = await database.delete(quests)
             .where(eq(quests.game_id, gameId))
@@ -291,12 +293,12 @@ export async function removeQuestByGameId(gameId: string): Promise<{ deleted: bo
         return {
             deleted: false,
             count: 0,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }
 
-export async function removeQuestBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeQuestBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [quest] = await database.delete(quests)
             .where(and(eq(quests.organization_id, organizationId), eq(quests.slug, slug)))
@@ -309,7 +311,7 @@ export async function removeQuestBySlug(organizationId: string, slug: string): P
         console.error("Error occured while deleting quest by slug:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occurred",
+            error: formatError(error),
         };
     }
 }

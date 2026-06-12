@@ -2,10 +2,11 @@ import { database } from "@/database/db";
 import { games } from "@/database/schema";
 import { and, eq, ilike } from "drizzle-orm";
 import slugify from "slugify";
+import { formatError, type RepositoryError } from "./v3";
 
 type Game = typeof games.$inferSelect;
 
-export async function searchGames(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]): Promise<{ games: Game[], error?: string }> {
+export async function searchGames(organizationId: string, page: number, pageSize: number, name?: string, labels?: string[]): Promise<{ games: Game[], error?: RepositoryError }> {
 
     try {
 
@@ -35,13 +36,13 @@ export async function searchGames(organizationId: string, page: number, pageSize
         console.error("Error occured while retriving games:", error);
         return {
             games: [],
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 
 }
 
-export async function checkGameSlug(organizationId: string, slug: string): Promise<{ open: boolean }> {
+export async function checkGameSlug(organizationId: string, slug: string): Promise<{ open: boolean, error?: RepositoryError }> {
     try {
         const [game] = await database.select()
             .from(games)
@@ -54,11 +55,12 @@ export async function checkGameSlug(organizationId: string, slug: string): Promi
         console.error("Error while checking game slug:", error);
         return {
             open: false,
+            error: formatError(error)
         }
     }
 }
 
-export async function getGameById(id: string): Promise<{ game?: Game, error?: string }> {
+export async function getGameById(id: string): Promise<{ game?: Game, error?: RepositoryError }> {
     try {
         const [game] = await database.select()
             .from(games)
@@ -67,7 +69,7 @@ export async function getGameById(id: string): Promise<{ game?: Game, error?: st
         if (!game) {
             return {
                 game: undefined,
-                error: "Metadata has not been found"
+                error: { message: "Metadata has not been found", status: 404 }
             }
         }
 
@@ -80,12 +82,12 @@ export async function getGameById(id: string): Promise<{ game?: Game, error?: st
         console.error("Error occured while retriving game:", error);
         return {
             game: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function getGameBySlug(organizationId: string, slug: string): Promise<{ game?: Game, error?: string }> {
+export async function getGameBySlug(organizationId: string, slug: string): Promise<{ game?: Game, error?: RepositoryError }> {
     try {
         const [game] = await database.select()
             .from(games)
@@ -94,7 +96,7 @@ export async function getGameBySlug(organizationId: string, slug: string): Promi
         if (!game) {
             return {
                 game: undefined,
-                error: "Metadata has not been found"
+                error: { message: "Metadata has not been found", status: 404 } 
             }
         }
 
@@ -106,12 +108,12 @@ export async function getGameBySlug(organizationId: string, slug: string): Promi
         console.error("Error occured while retriving game by slug:", error);
         return {
             game: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function createGame(organizationId: string, name: string, slug?: string | null): Promise<{ game?: Game, error?: string }> {
+export async function createGame(organizationId: string, name: string, slug?: string | null): Promise<{ game?: Game, error?: RepositoryError }> {
     try {
 
         if (!slug) slug = slugify(name, {
@@ -133,12 +135,12 @@ export async function createGame(organizationId: string, name: string, slug?: st
         console.error("Error occured while creating new game:", error);
         return {
             game: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateGameAssetsById(id: string, assets: string[]): Promise<{ game?: Game, error?: string }> {
+export async function updateGameAssetsById(id: string, assets: string[]): Promise<{ game?: Game, error?: RepositoryError }> {
     try {
         const [ game ] = await database.update(games)
             .set({
@@ -153,12 +155,12 @@ export async function updateGameAssetsById(id: string, assets: string[]): Promis
         console.error("Error occured while updating games assets:", error);
         return {
             game: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function updateGameAssetsBySlug(organizationId: string, slug: string, assets: string[]): Promise<{ game?: Game, error?: string }> {
+export async function updateGameAssetsBySlug(organizationId: string, slug: string, assets: string[]): Promise<{ game?: Game, error?: RepositoryError }> {
 
     try {
         const [ game ] = await database.update(games)
@@ -175,13 +177,13 @@ export async function updateGameAssetsBySlug(organizationId: string, slug: strin
         console.error("Error occured while updating games assets by slug:", error);
         return {
             game: undefined,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 
 }
 
-export async function removeGameById(id: string): Promise<{ deleted: boolean, error?: string}> {
+export async function removeGameById(id: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
         const [ game ] = await database.delete(games)
             .where(eq(games.id, id))
@@ -194,12 +196,12 @@ export async function removeGameById(id: string): Promise<{ deleted: boolean, er
         console.error("Error occured while deleting game:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function removeGameBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: string}> {
+export async function removeGameBySlug(organizationId: string, slug: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
 try {
         const [ game ] = await database.delete(games)
             .where(and(eq(games.organization_id, organizationId), eq(games.slug, slug)))
@@ -212,7 +214,7 @@ try {
         console.error("Error occured while deleting game by slug:", error);
         return {
             deleted: false,
-            error: "An unexpected database error has occured",
+            error: formatError(error),
         }
     }
 }

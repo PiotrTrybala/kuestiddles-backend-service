@@ -93,7 +93,6 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
     }
 
     const { user, error: e } = await createUser(
-        competition.competitionId,
         competition.groupId,
         username,
     );
