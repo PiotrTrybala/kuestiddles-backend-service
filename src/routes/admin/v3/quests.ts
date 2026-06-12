@@ -18,6 +18,8 @@ import {
 } from "@/repositories/v3/quests";
 import { requireOrganization } from "@/routes/middleware";
 import { UUID_PATTERN } from "@/globals";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { handleValidationError } from "./v3";
 
 export const questsRouter = new Hono<AppEnv>();
 
@@ -28,7 +30,7 @@ questsRouter.get("/search", zValidator("query", z.object({
     pageSize: z.coerce.number().default(20),
     title: z.string().default(""),
     labels: z.string().transform((value) => value.split(",")).default([]),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const { page, pageSize, title, labels } = c.req.valid("query");
 
@@ -61,7 +63,7 @@ questsRouter.post("/", zValidator("json", z.object({
     labels: z.string().array().optional(), // Default: []
     answers: z.string().array().optional(), // Default: []
     thumbnail: z.string().optional(), // TODO: Add default value to database
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -91,7 +93,7 @@ questsRouter.post("/", zValidator("json", z.object({
 
 questsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const user = c.get("user")!;
     const { id } = c.req.valid("param");
@@ -107,7 +109,7 @@ questsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 questsRouter.get(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.object({
     gameId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { gameId } = c.req.valid("param");
 
     const { quests, error } = await getQuestsByGameId(gameId);
@@ -126,13 +128,16 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     points: z.number().optional(),
     landmarkId: z.uuid().optional(),
     gameId: z.uuid().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { title, description, points, landmarkId, gameId } = c.req.valid("json");
 
     const { updated, error } = await updateQuest(id, title, description, points, landmarkId, gameId);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     // await registerRecentEntity('quests', organization.id, user.id, id);
@@ -142,15 +147,18 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/thumbnail`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     thumbnail: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { thumbnail } = c.req.valid("json");
 
     const { updated, error } = await updateQuestThumbnail(id, thumbnail);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ updated });
@@ -158,15 +166,18 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/thumbnail`, zValidator("param", z.obje
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     labels: z.string().array(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { labels } = c.req.valid("json");
 
     const { updated, error } = await updateQuestLabels(id, labels);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ updated });
@@ -174,15 +185,18 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object(
 
 questsRouter.patch(`/:id{${UUID_PATTERN}}/answers`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     answers: z.string().array(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { answers } = c.req.valid("json");
 
     const { updated, error } = await updateQuestAnswers(id, answers);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ updated });
@@ -190,12 +204,15 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}/answers`, zValidator("param", z.object
 
 questsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { deleted, error } = await removeQuestById(id);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ deleted });
@@ -203,7 +220,7 @@ questsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 questsRouter.delete(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.object({
     gameId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { gameId } = c.req.valid("param");
 
     const { count, error } = await removeQuestByGameId(gameId);
@@ -216,7 +233,7 @@ questsRouter.delete(`/game/:gameId{${UUID_PATTERN}}`, zValidator("param", z.obje
 
 questsRouter.get("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     const user = c.get("user")!;
     if (!organization) return c.notFound();
@@ -224,8 +241,11 @@ questsRouter.get("/:slug", zValidator("param", z.object({
     const { slug } = c.req.valid("param");
 
     const { quest, error } = await getQuestBySlug(organization.id, slug);
-    if (error || !quest) {
-        return c.json({ message: error }, 500);
+    if (error) {
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     // await registerRecentEntity('quests', organization.id, user.id, quest.id);
@@ -235,7 +255,7 @@ questsRouter.get("/:slug", zValidator("param", z.object({
 
 questsRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -243,7 +263,10 @@ questsRouter.delete("/:slug", zValidator("param", z.object({
 
     const { deleted, error } = await removeQuestBySlug(organization.id, slug);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ deleted });

@@ -6,6 +6,8 @@ import { createGame, getGameById, getGameBySlug, removeGameById, removeGameBySlu
 import { UUID_PATTERN } from "@/globals";
 import { requireOrganization } from "@/routes/middleware";
 import { getQuestsByGameId } from "@/repositories/v3/quests";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { handleValidationError } from "./v3";
 
 export const gamesRouter = new Hono<AppEnv>();
 gamesRouter.use("*", requireOrganization);
@@ -18,7 +20,7 @@ gamesRouter.get("/search", zValidator('query', z.object({
     labels: z.string()
         .optional()
         .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid("query");
@@ -32,9 +34,10 @@ gamesRouter.get("/search", zValidator('query', z.object({
     );
 
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({
@@ -45,17 +48,19 @@ gamesRouter.get("/search", zValidator('query', z.object({
 gamesRouter.post("/", zValidator("json", z.object({
     name: z.string(),
     slug: z.string().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
     const { name, slug } = c.req.valid("json");
 
     const { game, error } = await createGame(organization.id, name, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({
         game: game,
     });
@@ -63,21 +68,23 @@ gamesRouter.post("/", zValidator("json", z.object({
 
 gamesRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { game, error } = await getGameById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     const { quests, error: e } = await getQuestsByGameId(game!.id);
     if (e) {
+        const { message, status } = e;
         return c.json({
-            message: e,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ game, gameQuests: quests, });
@@ -85,7 +92,7 @@ gamesRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 gamesRouter.get("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
     const { slug } = c.req.valid("param");
@@ -95,9 +102,10 @@ gamesRouter.get("/:slug", zValidator("param", z.object({
         slug,
     );
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json(game);
@@ -106,19 +114,20 @@ gamesRouter.get("/:slug", zValidator("param", z.object({
 
 gamesRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("json", z.object({
     assets: z.string().array(),
-})), zValidator("param", z.object({
+}), handleValidationError), zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
     const { game, error } = await updateGameAssetsById(id, assets);
-
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({
         game: game,
     });
@@ -126,9 +135,9 @@ gamesRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("json", z.object({
 
 gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
     assets: z.string().array(),
-})), zValidator("param", z.object({
+}), handleValidationError), zValidator("param", z.object({
     slug: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -136,12 +145,13 @@ gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
     const { assets } = c.req.valid("json");
 
     const { game, error } = await updateGameAssetsBySlug(organization.id, slug, assets);
-
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({
         game: game,
     });
@@ -149,15 +159,17 @@ gamesRouter.patch("/:slug/assets", zValidator("json", z.object({
 
 gamesRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { deleted, error } = await removeGameById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({
         deleted,
     });
@@ -165,7 +177,7 @@ gamesRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 gamesRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -173,10 +185,12 @@ gamesRouter.delete("/:slug", zValidator("param", z.object({
 
     const { deleted, error } = await removeGameBySlug(organization.id, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+    
     return c.json({
         deleted,
     });

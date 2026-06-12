@@ -5,7 +5,9 @@ import { requireOrganization } from "@/routes/middleware";
 import { uploadsSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import z from "zod";
+import { handleValidationError } from "./v3";
 
 export const uploadsRouter = new Hono<AppEnv>();
 
@@ -18,15 +20,7 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     labels: z.string()
         .optional()
         .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
-}),(result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
 
     const organization = c.get("organization")!;
     const { page, pageSize, name, labels } = c.req.valid('query');
@@ -50,15 +44,7 @@ uploadsRouter.get("/search", zValidator('query', z.object({
     });
 });
 
-uploadsRouter.post("/", zValidator('form', uploadsSchema, (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+uploadsRouter.post("/", zValidator('form', uploadsSchema, handleValidationError), async (c) => {
 
     const organization = c.get("organization")!;
     const { uploads } = c.req.valid("form");
@@ -72,24 +58,18 @@ uploadsRouter.post("/", zValidator('form', uploadsSchema, (result, c) => {
         uploads,
     );
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+    
     return c.json(uploadsResults);
 });
 
 uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-}), (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { id } = c.req.valid('param');
 
@@ -106,23 +86,16 @@ uploadsRouter.get(`/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z.object
 
 uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-}), (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { id } = c.req.valid('param');
 
     const { data, error } = await getUploadDataById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.body(data!.stream(), {
@@ -135,23 +108,16 @@ uploadsRouter.get(`/:id{${UUID_PATTERN}}/data`, zValidator('param', z.object({
 
 uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
-}), (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const { slug } = c.req.valid('param');
 
     const { metadata, error } = await getUploadMetadataBySlug(organization.id, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json(metadata);
@@ -159,22 +125,15 @@ uploadsRouter.get("/:slug/metadata", zValidator('param', z.object({
 
 uploadsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator('param', z.object({
     id: z.uuid({ error: "invalid parameter" }),
-}), (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { error } = await removeUploadById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.body(null, 200);
@@ -182,25 +141,17 @@ uploadsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator('param', z.object({
 
 uploadsRouter.delete("/:slug", zValidator('param', z.object({
     slug: z.string({ error: "invalid parameter" }),
-}),(result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const { slug } = c.req.valid("param");
 
     const { deleted, error } = await removeUploadBySlug(organization.id, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
-
     return c.json({
         deleted,
     });

@@ -9,6 +9,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import z from "zod";
 import { getLeaderboard } from "@/controllers/leaderboard";
+import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
+import { handleValidationError } from "./v3";
 
 // Competition router - /competitions
 
@@ -19,15 +21,16 @@ competitionsRouter.get("/search", zValidator('query', z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
     name: z.string().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.get("organization")!;
     const { page, pageSize, name } = c.req.valid("query");
 
     const { competitions, error } = await searchCompetitions(id, page, pageSize, { name });
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ competitions })
@@ -35,22 +38,24 @@ competitionsRouter.get("/search", zValidator('query', z.object({
 
 competitionsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { id } = c.req.valid("param");
 
     const { competition, error } = await getCompetitionById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     const { leaderboard, error: e} = await getLeaderboard(competition!.id);
     if (e) {
+        const { message, status } = e;
         return c.json({
-            message: e,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ competition, leaderboard });
@@ -59,46 +64,50 @@ competitionsRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 competitionsRouter.get("/:slug", zValidator("param", z.object({
     slug: z.string().max(64, { error: "Max length of slug is 64 characters" }),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const { slug } = c.req.valid("param");
 
     const { competition, error } = await getCompetitionBySlug(organization.id, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json(competition);
 });
 
 competitionsRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     
     const { id } = c.req.valid("param");
     
     const { deleted, error } = await deleteCompetitionById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
-    
+
     return c.json({ deleted });
 });
 
 competitionsRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.get("organization")!;
     const { slug } = c.req.valid("param");
     
     const { deleted, error } = await deleteCompetitionBySlug(id, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
     
     return c.json({ deleted });
@@ -110,7 +119,7 @@ competitionsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("json", z.object({
     finishedAt: z.date().refine((date) => date > new Date(), {
         error: "Date must be in the future",
     })
-})), zValidator("param", z.object({
+}), handleValidationError), zValidator("param", z.object({
     id: z.uuid(),
 })), async (c) => {
     
@@ -119,9 +128,10 @@ competitionsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("json", z.object({
     
     const { competition, error } = await updateCompetitionById(id, name, status, finishedAt);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
     
     return c.json(competition);
@@ -133,16 +143,17 @@ competitionsRouter.post("/", zValidator("json", z.object({
     name: z.string().max(64, { error: "Name is too long (max 64 characters)" }),
     slug: z.string().max(64, { error: "Slug is too long (max 64 characters" }).optional(),
     finishesAt: z.date().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.get("organization")!;
     const { gameId, name, slug, finishesAt } = c.req.valid("json");
     
     // TODO: Add checking slug if it is vacant
     const { competition, error } = await createCompetition(id, gameId, name, slug, finishesAt);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
 
@@ -157,62 +168,69 @@ competitionsRouter.get("/:competitionId/groups/search", zValidator("param", z.ob
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
     name: z.string().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { competitionId } = c.req.valid("param");
     const { page, pageSize, name } = c.req.valid("query");
 
     const { groups, error } = await searchGroups(competitionId, page, pageSize, { name });
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({ groups });
 });
 
 competitionsRouter.get(`/:competitionId/groups/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     competitionId: z.uuid(),
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { competitionId, id } = c.req.valid("param");
 
     const { group, error } = await getGroupById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json(group);
 });
 
 competitionsRouter.get("/:competitionId/groups/:slug", zValidator("param", z.object({
     competitionId: z.uuid(),
     slug: z.string().max(64, { error: "Slug is too long (max 64 characters)" }),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.get("organization")!;
     const { competitionId, slug } = c.req.valid("param");
 
     const { group, error } = await getGroupBySlug(competitionId, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json(group);
 });
 
 competitionsRouter.delete(`/:competitionId/groups/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { id } = c.req.valid("param");
     
     const { deleted, error } = await deleteGroupById(id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
     
     return c.json({ deleted });
@@ -221,36 +239,39 @@ competitionsRouter.delete(`/:competitionId/groups/:id{${UUID_PATTERN}}`, zValida
 competitionsRouter.delete("/:competitionId/groups/:slug", zValidator("param", z.object({
     slug: z.string().max(64, { error: "Slug is too long (max 64 characters)" }),
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.get("organization")!;
     const { competitionId, slug } = c.req.valid("param");
     
     const { deleted, error } = await deleteGroupBySlug(competitionId, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
-    
+
     return c.json({ deleted });
 });
 
 competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({
     name: z.string().max(64, { error: "Name is too long (max 64 characters)" }),
     slug: z.string().max(64, { error: "Slug is too long (max 64 characters)" }).optional(),
-})), zValidator("param", z.object({
+}), handleValidationError), zValidator("param", z.object({
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { competitionId } = c.req.valid("param");
     const { name, slug } = c.req.valid("json");
 
     const { group, error } = await createGroup(competitionId, name, slug);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json(group);
 });
 
@@ -258,31 +279,35 @@ competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({
 
 competitionsRouter.get("/:competitionId/invites", zValidator("param", z.object({
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { competitionId } = c.req.valid("param");
 
     const { invites, error } = await getInvites(competitionId);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json({ invites });
 });
 
 competitionsRouter.get(`/:competitionId/invites/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { id, competitionId } = c.req.valid("param");
 
     const { invite, error } = await getInvite(competitionId, id);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+
     return c.json(invite);
 });
 
@@ -291,7 +316,7 @@ competitionsRouter.post("/:competitionId/invites", zValidator("json", z.object({
     expiresIn: z.number().min(0, { error: "expiresIn must be greater than 0" }).default(60),
 })), zValidator("param", z.object({
     competitionId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
 
     const { competitionId } = c.req.valid("param");
     const { groupId, expiresIn } = c.req.valid("json");
@@ -309,14 +334,16 @@ competitionsRouter.post("/:competitionId/invites", zValidator("json", z.object({
 competitionsRouter.delete(`/:competitionId/invite/:inviteid{${UUID_PATTERN}}`, zValidator("param", z.object({
     competitionId: z.uuid(),
     inviteId: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { competitionId, inviteId } = c.req.valid("param");
 
     const { deleted, error } = await removeInvite(competitionId, inviteId);
     if (error) {
+        const { message, status } = error;
         return c.json({
-            message: error,
-        }, 500);
+            message: message,
+        }, status as ContentfulStatusCode);
     }
+    
     return c.json({ deleted });
 });

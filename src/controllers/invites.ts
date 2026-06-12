@@ -1,4 +1,5 @@
 import { redis } from "@/config/redis";
+import { formatError, type RepositoryError } from "@/repositories/v3/v3";
 
 type Invite = {
     competitionId: string,
@@ -18,7 +19,7 @@ export function getInviteId(competitionId: string, inviteId: string) {
     return `kuest:invites:${competitionId}:${inviteId}`;
 }
 
-export async function getInvites(competitionId: string): Promise<{ invites: Invite[], error?: string }> {
+export async function getInvites(competitionId: string): Promise<{ invites: Invite[], error?: RepositoryError }> {
     try {
         let cursor = "0";
         const invites: Invite[] = [];
@@ -50,18 +51,18 @@ export async function getInvites(competitionId: string): Promise<{ invites: Invi
         console.error("Error occured while retrieving invite");
         return {
             invites: [],
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function getInvite(competitionId: string, inviteId: string): Promise<{ invite?: Invite, error?: string }> {
+export async function getInvite(competitionId: string, inviteId: string): Promise<{ invite?: Invite, error?: RepositoryError }> {
     try {
         const id = getInviteId(competitionId, inviteId);
         const exists = await redis.exists(id);
         if (!exists) return {
             invite: undefined,
-            error: "Invite has not been found"
+            error: { message: "Invite has not been found", status: 404 }
         }
 
         const [groupId, expiresAt] = await redis.hmget(id, ["competitionId", "groupId", "expiresAt"])
@@ -78,12 +79,12 @@ export async function getInvite(competitionId: string, inviteId: string): Promis
         console.error("Error occured while retrieving invite");
         return {
             invite: undefined,
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function createInvite(invite: CreateInvite): Promise<{ invite?: Invite, error?: string }> {
+export async function createInvite(invite: CreateInvite): Promise<{ invite?: Invite, error?: RepositoryError }> {
     try {
 
         const id = getInviteId(invite.competitionId, crypto.randomUUID());
@@ -110,17 +111,17 @@ export async function createInvite(invite: CreateInvite): Promise<{ invite?: Inv
         console.error("Error occured while retrieving invite");
         return {
             invite: undefined,
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function acceptInvite(competitionId: string, inviteId: string): Promise<{ accepted: boolean, error?: string }> {
+export async function acceptInvite(competitionId: string, inviteId: string): Promise<{ accepted: boolean, error?: RepositoryError }> {
     try {
 
         const { invite, error } = await getInvite(competitionId, inviteId);
         if (error) {
-            throw new Error(error);
+            throw new Error(error!.message);
         }
 
         console.log("Accepted invite:", inviteId, " for:", invite?.competitionId);
@@ -132,17 +133,17 @@ export async function acceptInvite(competitionId: string, inviteId: string): Pro
         console.error("Error occured while retrieving invite");
         return {
             accepted: false,
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }
 
-export async function removeInvite(competitionId: string, inviteId: string): Promise<{ deleted: boolean, error?: string }> {
+export async function removeInvite(competitionId: string, inviteId: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
     try {
 
         const { invite, error } = await getInvite(competitionId, inviteId);
         if (error) {
-            throw new Error(error);
+            throw new Error(error!.message);
         }
 
         await redis.del(getInviteId(competitionId, inviteId));
@@ -154,7 +155,7 @@ export async function removeInvite(competitionId: string, inviteId: string): Pro
         console.error("Error occured while deleting invite:", error);
         return {
             deleted: false,
-            error: "An unknown database error has occured",
+            error: formatError(error),
         }
     }
 }

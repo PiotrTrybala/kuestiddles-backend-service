@@ -1,6 +1,7 @@
+import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 import { DatabaseError } from "pg";
 
-export type RepositoryError = { message: string, status: number };
+export type RepositoryError = { message: string, status: ContentfulStatusCode | ContentlessStatusCode };
 
 function isRepositoryError(error: unknown): error is RepositoryError {
     return typeof error === "object" && error !== null && "message" in error && "status" in error;

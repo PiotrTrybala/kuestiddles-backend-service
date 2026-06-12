@@ -14,9 +14,10 @@ import {
     removeLandmarkById,
     removeLandmarkBySlug,
 } from "@/repositories/v3/landmarks";
-import { landmarks } from "@/database/schema";
 import { requireOrganization } from "@/routes/middleware";
 import { UUID_PATTERN } from "@/globals";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { handleValidationError } from "./v3";
 
 export const landmarksRouter = new Hono<AppEnv>();
 
@@ -30,7 +31,7 @@ landmarksRouter.get("/search", zValidator("query", z.object({
     labels: z.string()
         .optional()
         .transform((val) => val && val.trim() !== "" ? val.split(',') : undefined),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization")!;
     const { page, pageSize, title, labels } = c.req.valid("query");
 
@@ -63,7 +64,7 @@ landmarksRouter.post("/", zValidator("json", z.object({
     slug: z.string().nullish(),
     labels: z.string().array().optional(),
     assets: z.string().array().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -81,7 +82,10 @@ landmarksRouter.post("/", zValidator("json", z.object({
     );
 
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ landmark: landmark });
@@ -89,12 +93,15 @@ landmarksRouter.post("/", zValidator("json", z.object({
 
 landmarksRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { landmark, error } = await getLandmarkById(id);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json(landmark);
@@ -102,7 +109,7 @@ landmarksRouter.get(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 landmarksRouter.get("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -110,7 +117,10 @@ landmarksRouter.get("/:slug", zValidator("param", z.object({
 
     const { landmark, error } = await getLandmarkBySlug(organization.id, slug);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json(landmark);
@@ -118,16 +128,19 @@ landmarksRouter.get("/:slug", zValidator("param", z.object({
 
 landmarksRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     title: z.string().optional(),
     description: z.string().optional(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { title, description } = c.req.valid("json");
 
     const { landmark, error } = await updateLandmark(id, title, description);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ landmark });
@@ -136,15 +149,18 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 // Update assets
 landmarksRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("param", z.object({
     id: z.uuid(), 
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     assets: z.string().array(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { assets } = c.req.valid("json");
 
     const { landmark, error } = await updateLandmarkAssets(id, assets);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ landmark });
@@ -153,15 +169,18 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/assets`, zValidator("param", z.obje
 // Update labels
 landmarksRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     labels: z.string().array(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { labels } = c.req.valid("json");
 
     const { landmark, error } = await updateLandmarkLabels(id, labels);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ landmark });
@@ -169,16 +188,19 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/labels`, zValidator("param", z.obje
 
 landmarksRouter.patch(`/:id{${UUID_PATTERN}}/location`, zValidator("param", z.object({
     id: z.uuid(),
-})), zValidator("json", z.object({
+}), handleValidationError), zValidator("json", z.object({
     longitude: z.number(),
     latitude: z.number(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
     const { longitude, latitude } = c.req.valid("json");
 
     const { landmark, error } = await updateLandmarkLocation(id, longitude, latitude);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ landmark });
@@ -186,12 +208,15 @@ landmarksRouter.patch(`/:id{${UUID_PATTERN}}/location`, zValidator("param", z.ob
 
 landmarksRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { id } = c.req.valid("param");
 
     const { deleted, error } = await removeLandmarkById(id);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ deleted });
@@ -199,7 +224,7 @@ landmarksRouter.delete(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
 
 landmarksRouter.delete("/:slug", zValidator("param", z.object({
     slug: z.string(),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
 
@@ -207,7 +232,10 @@ landmarksRouter.delete("/:slug", zValidator("param", z.object({
 
     const { deleted, error } = await removeLandmarkBySlug(organization.id, slug);
     if (error) {
-        return c.json({ message: error }, 500);
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
     }
 
     return c.json({ deleted });

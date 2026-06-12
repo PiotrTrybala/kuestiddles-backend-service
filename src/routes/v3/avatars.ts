@@ -5,12 +5,13 @@ import { avatarSchema, uploadSchema } from "../validators";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { requireAuth } from "@/routes/middleware";
+import { handleValidationError } from "../admin/v3/v3";
 
 export const avatarsRouter = new Hono<AppEnv>();
 
 avatarsRouter.get("/:userId", zValidator('param', z.object({
     userId: z.string().max(64, { error: "UserId is too long (max 64 characters)" }),
-})), async (c) => {
+}), handleValidationError), async (c) => {
     const { userId } = c.req.valid("param");
 
     const { avatar, error } = await getAvatar(userId);
@@ -28,15 +29,7 @@ avatarsRouter.get("/:userId", zValidator('param', z.object({
     });
 });
 
-avatarsRouter.post("/", requireAuth("none"), zValidator("form", avatarSchema, (result, c) => {
-    if (!result.success) {
-        const error = JSON.parse(result.error.message);
-        return c.json({
-            success: false,
-            message: error[0].message,
-        }, 400);
-    }
-}), async (c) => {
+avatarsRouter.post("/", requireAuth("none"), zValidator("form", avatarSchema, handleValidationError), async (c) => {
 
     const user = c.get("user")!;
     const { avatar } = c.req.valid("form");
