@@ -52,11 +52,11 @@ questsRouter.get("/recent", async (c) => {
 });
 
 questsRouter.post("/", zValidator("json", z.object({
+    gameId: z.uuid(),
     landmarkId: z.uuid(),
     title: z.string(),
     description: z.string(),
-    points: z.number(),
-    gameId: z.string().optional(),
+    points: z.coerce.number(),
     slug: z.string().optional(), // Default: slugified name
     labels: z.string().array().optional(), // Default: []
     answers: z.string().array().optional(), // Default: []
@@ -64,9 +64,8 @@ questsRouter.post("/", zValidator("json", z.object({
 })), async (c) => {
     const organization = c.get("organization");
     if (!organization) return c.notFound();
-    const user = c.get("user")!;
 
-    const { landmarkId, title, description, points, gameId, slug, labels, answers, thumbnail } = c.req.valid("json");
+    const { gameId, landmarkId, title, slug, description, points, labels, answers, thumbnail } = c.req.valid("json");
 
     const { id, error } = await createQuest(
         organization.id,
@@ -74,7 +73,7 @@ questsRouter.post("/", zValidator("json", z.object({
         title,
         description,
         points,
-        gameId ?? undefined,
+        gameId,
         slug ?? undefined,
         labels ?? undefined,
         answers ?? undefined,
@@ -128,8 +127,6 @@ questsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     landmarkId: z.uuid().optional(),
     gameId: z.uuid().optional(),
 })), async (c) => {
-    const organization = c.get("organization")!;
-    const user = c.get("user")!;
     const { id } = c.req.valid("param");
     const { title, description, points, landmarkId, gameId } = c.req.valid("json");
 

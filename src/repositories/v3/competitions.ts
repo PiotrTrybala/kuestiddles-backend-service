@@ -496,7 +496,7 @@ export async function getSouvenir(competitionId: string, groupId: string, userId
     }
 }
 
-export async function createUser(groupId: string, username: string): Promise<{ user?: User, error?: string }> { 
+export async function createUser(competitionId: string, groupId: string, username: string): Promise<{ user?: User, error?: string }> { 
     try {
 
         const [user] = await database.insert(groupUsers)

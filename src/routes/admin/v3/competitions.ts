@@ -151,6 +151,25 @@ competitionsRouter.post("/", zValidator("json", z.object({
 
 // Group router - /competitions/:competitionId/groups
 
+competitionsRouter.get("/:competitionId/groups/search", zValidator("param", z.object({
+    competitionId: z.uuid(),
+})), zValidator('query', z.object({
+    page: z.coerce.number().default(0),
+    pageSize: z.coerce.number().default(20),
+    name: z.string().optional(),
+})), async (c) => {
+    const { competitionId } = c.req.valid("param");
+    const { page, pageSize, name } = c.req.valid("query");
+
+    const { groups, error } = await searchGroups(competitionId, page, pageSize, { name });
+    if (error) {
+        return c.json({
+            message: error,
+        }, 500);
+    }
+    return c.json({ groups });
+});
+
 competitionsRouter.get(`/:competitionId/groups/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     competitionId: z.uuid(),
     id: z.uuid(),
@@ -214,25 +233,6 @@ competitionsRouter.delete("/:competitionId/groups/:slug", zValidator("param", z.
     }
     
     return c.json({ deleted });
-});
-
-competitionsRouter.get("/:competitionId/groups/search", zValidator("param", z.object({
-    competitionId: z.uuid(),
-})), zValidator('query', z.object({
-    page: z.coerce.number().default(0),
-    pageSize: z.coerce.number().default(20),
-    name: z.string().optional(),
-})), async (c) => {
-    const { competitionId } = c.req.valid("param");
-    const { page, pageSize, name } = c.req.valid("query");
-
-    const { groups, error } = await searchGroups(competitionId, page, pageSize, { name });
-    if (error) {
-        return c.json({
-            message: error,
-        }, 500);
-    }
-    return c.json({ groups });
 });
 
 competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({

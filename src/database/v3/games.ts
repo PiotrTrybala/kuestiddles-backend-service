@@ -19,10 +19,10 @@ export const games = pgTable("games", {
 
 export const quests = pgTable("quests", {
     id: uuid().notNull().defaultRandom().primaryKey(),
-    slug: text().notNull(),
     organization_id: text().notNull().references(() => organization.id),
-    game_id: uuid().references(() => games.id),
     landmark_id: uuid().notNull().references(() => landmarks.id),
+    game_id: uuid().references(() => games.id),
+    slug: text().notNull(),
     title: text().notNull(),
     labels: text().array().notNull().default(sql`'{}'::text[]`),
     description: text().notNull(),

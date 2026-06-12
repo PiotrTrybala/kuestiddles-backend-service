@@ -132,7 +132,7 @@ export async function createQuest(
     title: string, 
     description: string, 
     points: number, 
-    gameId?: string, 
+    gameId: string, 
     slug?: string, 
     labels?: string[], 
     answers?: string[], 

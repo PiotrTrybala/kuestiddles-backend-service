@@ -95,3 +95,7 @@ Routes:
     - /avatars
       - /:userId - GET
       - / - POST
+
+Repositories errors:
+  - Duplicate keys
+  - Key not found

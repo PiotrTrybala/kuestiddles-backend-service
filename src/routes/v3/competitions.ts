@@ -6,6 +6,7 @@ import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { acceptInvite } from "@/controllers/invites";
 import { getLeaderboard } from "@/controllers/leaderboard";
+import { signCompetitionToken } from "../utils";
 
 export const competitionsRouter = new Hono<AppEnv>();
 competitionsRouter.use("*", requireCompetition());
@@ -92,6 +93,7 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
     }
 
     const { user, error: e } = await createUser(
+        competition.competitionId,
         competition.groupId,
         username,
     );
@@ -101,9 +103,18 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
         }, 500);
     }
 
+    const competitionToken = signCompetitionToken(
+        competition.competitionId,
+        competition.groupId,
+        username,
+    )
+
     console.log(`Created new user (userId = ${user!.id}, groupId=${user!.group_id}, username=${user!.username})`);
 
-    return c.json({ created: true });
+    return c.json({ 
+        created: true,
+        competitionToken,
+     });
 });
 
 competitionsRouter.get("/leaderboard", async (c) => {
