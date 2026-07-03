@@ -164,7 +164,7 @@ competitionsRouter.post("/", zValidator("json", z.object({
 
 competitionsRouter.get("/:competitionId/groups/search", zValidator("param", z.object({
     competitionId: z.uuid(),
-})), zValidator('query', z.object({
+}), handleValidationError), zValidator('query', z.object({
     page: z.coerce.number().default(0),
     pageSize: z.coerce.number().default(20),
     name: z.string().optional(),
@@ -309,6 +309,23 @@ competitionsRouter.get(`/:competitionId/invites/:id{${UUID_PATTERN}}`, zValidato
     }
 
     return c.json(invite);
+});
+
+competitionsRouter.get(`/:competitionId/leaderboard`, zValidator("param", z.object({
+    competitionId: z.uuid(),
+}), handleValidationError), async (c) => {
+    
+    const { competitionId } = c.req.valid("param");
+
+    const { leaderboard, error } = await getLeaderboard(competitionId)
+        if (error) {
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
+    }
+
+    return c.json(leaderboard);
 });
 
 competitionsRouter.post("/:competitionId/invites", zValidator("json", z.object({

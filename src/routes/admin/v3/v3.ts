@@ -7,10 +7,11 @@ export function handleValidationError<T>(
     c: Context
 ) {
     if (!result.success) {
-        const error = JSON.parse(result.error.message);
+        
+        const error = JSON.parse(result.error.message)[0];
         return c.json({
             success: false,
-            message: error[0].message,
+            message: `Invalid ${error.path[0]} value`,
         }, 400);
     }
 }
