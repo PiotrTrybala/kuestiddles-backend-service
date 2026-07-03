@@ -1,101 +1,46 @@
 # Kuestiddles Backend Service
 
-## Routes
+This is main backend service used by Kuestiddles application frontend (Admin) and mobile application (Competition User)
 
-Routes:
+# Main features
+- API for managing all entities in the system: landmarks, uploads, quests, competitions
+- API for participating in competitions made for competition's users
 
-- /api
-  - /admin - requireAdmin("admin")
-    - /v3 - requireOrganization(...)
-      - /uploads
-        - /search?page=0>=&pageSize=>0&name=aabbcc&labels=aa,bb,cc - GET
-        - /:id/metadata - GET
-        - /:id/data - GET
-        - /:slug/metadata - GET
-        - /:slug/data - GET
-        - / - POST
-        - /:id - DELETE
-        - /:slug - DELETE
-      - /games
-        - /search - GET
-        - /:id - GET
-        - /:slug - GET
-        - / - POST
-        - /:id/assets - PATCH
-        - /:slug/assets - PATCH
-        - /:gameId - DELETE
-        - /:slug - DELETE
-      - /landmarks
-        - /search - GET
-        - /:id - GET
-        - /:slug - GET
-        - / - POST
-        - /:id - PATCH
-        - /:id/assets - PATCH
-        - /:id/labels - PATCH
-        - /:id/location - PATCH
-        - /:id - DELETE
-        - /slug/:slug - DELETE
-      - /quests
-        - /search - GET
-        - /:id - GET
-        - /:slug - GET
-        - /game/:gameId - GET
-        - / - POST
-        - /:id - PATCH
-        - /:id/thumbnail - PATCH
-        - /:id/labels - PATCH
-        - /:id/answers - PATCH
-        - /:id - DELETE
-        - /:slug - DELETE
-        - /game/:gameId - DELETE
-      - /competitions
-        - /:competitionId
-          - /groups
-            - /search - GET
-            - /:id - GET
-            - /:slug - GET
-            - /:id/users - GET
-            - / - POST
-            - /:id - DELETE
-            - /:slug - DELETE
-          - /invites
-            - /search - GET
-            - / - POST
-            - /:id - DELETE
-        - /search - GET
-        - /:id - GET
-        - /:slug - GET
-        - /:id/leaderboard - GET
-        - / - POST
-        - /:id - PATCH
-        - /:id - DELETE
-        - /:slug - DELETE
-  - /user
-    - /v3
-      - /landmarks
-        - /search - GET
-        - /:id - GET
-        - /visit - POST
-      - /quests
-        - /search - GET
-        - /:id - GET
-        - /solve - POST
-      - /uploads
-        - /:id - GET
-  - /v3
-    - /competitions
-      - /groups
-        - /current - GET
-      - /quests
-        - /solve - POST
-      - /invites
-        - /accept - GET
-      - /souvenir - GBET
-    - /avatars
-      - /:userId - GET
-      - / - POST
+## API Routes - Admin
 
-Repositories errors:
-  - Duplicate keys
-  - Key not found
+- /admin:
+    - /v3:
+        - POST / - create organization
+        - /uploads:
+            - GET /search
+            - GET /:id/metadata
+            - GET /:id/data
+            - GET /:slug/metadata
+            - POST /
+            - DELETE /:id
+            - DELETE /:slug
+        - /games:
+            - GET /search
+            - GET /:id
+            - GET /:slug
+            - DELETE /:id
+            - DELETE /:slug
+            - POST /
+            - PATCH /:id
+            - PATCH /:id/assets
+    
+        - /landmarks:
+
+        - /quests:
+            
+        - /competitions:
+    - /payments:
+        - GET /
+        - POST /upgrade
+
+
+# TODO List
+- Add usage limits to all resources: landmarks, uploads, quests and competitions
+- 
+- 
+- 

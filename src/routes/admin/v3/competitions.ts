@@ -267,6 +267,7 @@ competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({
     const { group, error } = await createGroup(competitionId, name, slug);
     if (error) {
         const { message, status } = error;
+        console.log(message, status);
         return c.json({
             message: message,
         }, status as ContentfulStatusCode);

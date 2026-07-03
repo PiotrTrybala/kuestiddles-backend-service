@@ -1,6 +1,5 @@
 
 import type { Context } from "hono";
-import type { ZodSafeParseResult } from "zod";
 
 export function handleValidationError<T>(
     result: { success: true; data: T } | { success: false; error: { message: string }; data: T },

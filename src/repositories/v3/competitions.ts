@@ -333,7 +333,7 @@ export async function createGroup(competitionId: string, name: string, slug?: st
 
         return { group: group };
     } catch (error) {
-        console.error("Error occured while creating competitions group:", error);
+        console.error("Error occured while creating competitions group:", formatError(error));
         return {
             group: undefined,
             error: formatError(error),
