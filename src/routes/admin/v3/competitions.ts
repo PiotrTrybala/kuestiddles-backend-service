@@ -2,7 +2,7 @@
 
 import type { AppEnv } from "@/config/app";
 import { createInvite, getInvite, getInvites, removeInvite } from "@/controllers/invites";
-import { checkCompetitionSlug, createCompetition, createGroup, deleteCompetitionById, deleteCompetitionBySlug, deleteGroupById, deleteGroupBySlug, getCompetitionById, getCompetitionBySlug, getGroupById, getGroupBySlug, searchCompetitions, searchGroups, updateCompetitionById } from "@/repositories/v3/competitions";
+import { checkCompetitionSlug, createCompetition, createGroup, deleteCompetitionById, deleteCompetitionBySlug, deleteGroupById, deleteGroupBySlug, getCompetitionById, getCompetitionBySlug, getGroupById, getGroupBySlug, getUsers, searchCompetitions, searchGroups, updateCompetitionById } from "@/repositories/v3/competitions";
 import { UUID_PATTERN } from "@/globals";
 import { requireOrganization } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
@@ -198,6 +198,24 @@ competitionsRouter.get(`/:competitionId/groups/:id{${UUID_PATTERN}}`, zValidator
     }
 
     return c.json(group);
+});
+
+competitionsRouter.get(`/:competitionId/groups/:id{${UUID_PATTERN}}/users`, zValidator("param", z.object({
+    competitionId: z.uuid(),
+    id: z.uuid(),
+}), handleValidationError), async (c) => {
+
+    const { competitionId, id } = c.req.valid("param");
+
+    const { users, error } = await getUsers(id);
+    if (error) {
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
+    }
+
+    return c.json(users);
 });
 
 competitionsRouter.get("/:competitionId/groups/:slug", zValidator("param", z.object({
