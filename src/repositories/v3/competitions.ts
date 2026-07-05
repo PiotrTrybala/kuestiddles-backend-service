@@ -3,7 +3,7 @@
 
 import { getLeaderboard, updateLeaderboard } from "@/controllers/leaderboard";
 import { database } from "@/database/db";
-import { competitions, groups, groupsQuests, groupUsers, quests } from "@/database/schema";
+import { competitions, groups, groupsQuests, groupUsers, quests, statusRank } from "@/database/schema";
 import { eq, ilike, and, sql } from "drizzle-orm";
 import { UniqueConstraintBuilder } from "drizzle-orm/gel-core";
 import slugify from "slugify";
@@ -175,7 +175,9 @@ export async function updateCompetitionById(competitionId: string, name?: string
 
         const updateBody: Partial<typeof competitions.$inferInsert> = {};
         if (name !== undefined) updateBody.name = name;
-        if (status !== undefined) updateBody.status = status;
+        if (status !== undefined) {
+            updateBody.status = status;
+        }
         if (finishesAt !== undefined) updateBody.finishes_at = finishesAt;
 
         if (Object.keys(updateBody).length === 0) {

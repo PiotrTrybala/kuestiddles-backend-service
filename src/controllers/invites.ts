@@ -1,7 +1,8 @@
 import { redis } from "@/config/redis";
 import { formatError, type RepositoryError } from "@/repositories/v3/v3";
 
-type Invite = {
+export type Invite = {
+    id: string,
     competitionId: string,
     groupId: string,
     expiresAt: Date,
@@ -34,6 +35,7 @@ export async function getInvites(competitionId: string): Promise<{ invites: Invi
                 const rawHashes = await Promise.all(batchPromises);
 
                 const parsedInvites = rawHashes.map(hash => ({
+                    id: hash['id'] as string,
                     competitionId: hash['competitionId'] as string,
                     groupId: hash['groupId'] as string,
                     expiresAt: new Date(hash['expiresAt']!)
@@ -69,6 +71,7 @@ export async function getInvite(competitionId: string, inviteId: string): Promis
 
         return {
             invite: {
+                id: inviteId,
                 competitionId: competitionId,
                 groupId: groupId!,
                 expiresAt: JSON.parse(expiresAt!),
@@ -101,6 +104,7 @@ export async function createInvite(invite: CreateInvite): Promise<{ invite?: Inv
         
         return {
             invite: {
+                id,
                 competitionId: invite.competitionId,
                 groupId: invite.groupId,
                 expiresAt: expiresAt,

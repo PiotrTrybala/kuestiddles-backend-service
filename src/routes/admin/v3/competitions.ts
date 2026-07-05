@@ -118,7 +118,7 @@ competitionsRouter.patch(`/:id{${UUID_PATTERN}}`, zValidator("json", z.object({
     status: z.enum(["onboarding", "in-progress", "finishing", "archived"]).optional(),
     finishedAt: z.date().refine((date) => date > new Date(), {
         error: "Date must be in the future",
-    })
+    }).optional(),
 }), handleValidationError), zValidator("param", z.object({
     id: z.uuid(),
 })), async (c) => {

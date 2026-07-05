@@ -1,4 +1,4 @@
-import { DrizzleError, DrizzleQueryError } from "drizzle-orm";
+
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 
 export type RepositoryError = { 
@@ -28,8 +28,6 @@ function hasPostgresCode(error: unknown): error is { code: string } {
 
 export function formatError(error: unknown): RepositoryError {
     console.error("Formatting error context:", error, (error as any).cause.code);
-
-    // Check if it has a Postgres error code (handles wrapped/driver mismatch errors seamlessly)
 
     if (hasPostgresCode(error)) {
         const mapped = POSTGRES_ERROR_MAP[error!.cause.code];

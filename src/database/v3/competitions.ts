@@ -9,6 +9,13 @@ export const competitionStatus = pgEnum(
     ["onboarding", "in-progress", "finishing", "archived"]
 );
 
+export const statusRank = {
+    "onboarding": 0,
+    "in-progress": 1,
+    "finishing": 2,
+    "archived": 10,
+};
+
 export const competitions = pgTable("competitions", {
     id: uuid().primaryKey().notNull().defaultRandom(),
     slug: text().notNull(),

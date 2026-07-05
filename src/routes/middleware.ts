@@ -49,6 +49,8 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
 
     const slug = c.req.param("organizationSlug");
 
+    console.log("slug:", slug);
+
     const organization = await auth.api.getFullOrganization({
         headers: c.req.raw.headers,
         query: {
