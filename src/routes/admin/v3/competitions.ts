@@ -11,6 +11,7 @@ import z from "zod";
 import { getLeaderboard } from "@/controllers/leaderboard";
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 import { handleValidationError } from "./v3";
+import { createInvitation, deleteInvitation, getInvitation } from "@/controllers/invites2";
 
 // Competition router - /competitions
 
@@ -296,35 +297,18 @@ competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({
 
 // Invites router - /competitions/:competitionId/invites
 
-competitionsRouter.get("/:competitionId/invites", zValidator("param", z.object({
-    competitionId: z.uuid(),
-}), handleValidationError), async (c) => {
-    const { competitionId } = c.req.valid("param");
-
-    const { invites, error } = await getInvites(competitionId);
-    if (error) {
-        const { message, status } = error;
-        return c.json({
-            message: message,
-        }, status as ContentfulStatusCode);
-    }
-
-    return c.json({ invites });
-});
-
 competitionsRouter.get(`/:competitionId/invites/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     id: z.uuid(),
     competitionId: z.uuid(),
 }), handleValidationError), async (c) => {
 
     const { id, competitionId } = c.req.valid("param");
-
-    const { invite, error } = await getInvite(competitionId, id);
+    // TODO: Update returned error type here
+    const { invite, error } = await getInvitation(competitionId, id);
     if (error) {
-        const { message, status } = error;
         return c.json({
-            message: message,
-        }, status as ContentfulStatusCode);
+            message: error,
+        }, 500);
     }
 
     return c.json(invite);
@@ -357,28 +341,29 @@ competitionsRouter.post("/:competitionId/invites", zValidator("json", z.object({
     const { competitionId } = c.req.valid("param");
     const { groupId, expiresIn } = c.req.valid("json");
 
-    const { invite, error } = await createInvite({ competitionId, groupId, expiresIn });
+    const { invite, error } = await createInvitation({ competitionId, groupId, expiresIn });
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
-    return c.json(invite);
+    return c.json({
+        token: invite!.invitationToken,
+    });
 });
 
-competitionsRouter.delete(`/:competitionId/invite/:inviteid{${UUID_PATTERN}}`, zValidator("param", z.object({
+competitionsRouter.delete(`/:competitionId/invite/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     competitionId: z.uuid(),
-    inviteId: z.uuid(),
+    id: z.uuid(),
 }), handleValidationError), async (c) => {
-    const { competitionId, inviteId } = c.req.valid("param");
+    const { competitionId, id } = c.req.valid("param");
 
-    const { deleted, error } = await removeInvite(competitionId, inviteId);
+    const { deleted, error } = await deleteInvitation(competitionId, id);
     if (error) {
-        const { message, status } = error;
         return c.json({
-            message: message,
-        }, status as ContentfulStatusCode);
+            message: error,
+        }, 500);
     }
     
     return c.json({ deleted });
