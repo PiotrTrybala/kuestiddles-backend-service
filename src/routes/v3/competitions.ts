@@ -12,7 +12,7 @@ import { acceptInvitation } from "@/controllers/invites2";
 
 export const competitionsRouter = new Hono<AppEnv>();
 
-competitionsRouter.get("/quests", requireCompetition, async (c) => {
+competitionsRouter.get("/quests", requireCompetition(), async (c) => {
 
     const competition = c.get("competition")!;
 
@@ -31,7 +31,7 @@ competitionsRouter.get("/quests", requireCompetition, async (c) => {
     return c.json(quests);
 });
 
-competitionsRouter.post("/quests/solve", requireCompetition, zValidator("json", z.object({
+competitionsRouter.post("/quests/solve", requireCompetition(), zValidator("json", z.object({
     questId: z.uuid(),
     answers: z.array(z.string()),
 }), handleValidationError), async (c) => {
@@ -56,7 +56,7 @@ competitionsRouter.post("/quests/solve", requireCompetition, zValidator("json", 
     });
 });
 
-competitionsRouter.get("/souvenir/:userId", requireCompetition, zValidator("param", z.object({
+competitionsRouter.get("/souvenir/:userId", requireCompetition(), zValidator("param", z.object({
     userId: z.uuid(),
 }), handleValidationError), async (c) => {
     const competition = c.get("competition")!;
@@ -125,7 +125,7 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
      });
 });
 
-competitionsRouter.get("/leaderboard", requireCompetition, async (c) => {
+competitionsRouter.get("/leaderboard", requireCompetition(), async (c) => {
     const competition = c.get("competition")!;
 
     const { leaderboard, error } = await getLeaderboard(competition.competitionId);

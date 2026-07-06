@@ -75,7 +75,14 @@ export async function getCompetitionById(competitionId: string): Promise<{ compe
 }
 
 // COMPETITION USER METHOD
-export async function getCompetitionsQuests(competitionId: string): Promise<{ quests: Quest[], error?: RepositoryError }> {
+export async function getCompetitionsQuests(competitionId: string): Promise<{ quests: {
+    id: string,
+    landmarkId: string,
+    title: string,
+    description: string,
+    thumbnail: string,
+    points: number,
+}[], error?: RepositoryError }> {
     try {
         const { competition, error } = await getCompetitionById(competitionId);
         if (error || !competition) {
@@ -86,8 +93,19 @@ export async function getCompetitionsQuests(competitionId: string): Promise<{ qu
             .from(quests)
             .where(eq(quests.game_id, competition.game_id));
 
+        const maskedQuests = competitionQuests.map((quest) => {
+            return {
+                id: quest.id,
+                landmarkId: quest.landmark_id,
+                title: quest.title,
+                description: quest.description,
+                thumbnail: quest.thumbnail,
+                points: quest.points,
+            }
+        });
+
         return {
-            quests: competitionQuests,
+            quests: maskedQuests,
         }
     } catch (error) {
         console.log("Error occured while retrieving competitions quests:", error);
