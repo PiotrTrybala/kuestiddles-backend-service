@@ -11,7 +11,7 @@ export interface CompetitionTokenPayload extends JwtPayload {
 
 export function signCompetitionToken(competitionId: string, groupId: string, username: string, options?: SignOptions) {
     return jwt.sign({ competitionId, groupId, username }, COMPETITION_TOKEN_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "24h",
         ...options,
     });
 }

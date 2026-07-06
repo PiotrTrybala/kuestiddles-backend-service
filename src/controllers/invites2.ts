@@ -43,11 +43,11 @@ export async function getInvitation(competitionId: string, inviteId: string): Pr
 
 }
 
-export async function createInvitation(invite: CreateGroupInvitation): Promise<{ invite?: GroupInvitation | { invitationToken: string }, error?: string }> {
+export async function createInvitation(invite: CreateGroupInvitation): Promise<{ invite?: GroupInvitation & { invitationToken: string }, error?: string }> {
     try {
-        
+        console.log("create invitation group id = ", invite.groupId);
         const id = getInvitationId(invite.competitionId, crypto.randomUUID());
-        const suffixId = id.split("kuest:invites:")[1];
+        const suffixId = `${id.split("invitation:")[1]}:${invite.groupId}`;
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + invite.expiresIn);
 
@@ -65,7 +65,7 @@ export async function createInvitation(invite: CreateGroupInvitation): Promise<{
                 competitionId: invite.competitionId,
                 groupId: invite.groupId,
                 expiresAt: expiresAt,
-                invitationToken: new TextEncoder().encode(suffixId).toBase64(),
+                invitationToken: suffixId as string,
             }
         }
 
@@ -78,15 +78,17 @@ export async function createInvitation(invite: CreateGroupInvitation): Promise<{
     }
 }
 
-export async function acceptInvite(competitionId: string, inviteId: string): Promise<{ accepted: boolean, error?: string }> {
+export async function acceptInvitation(invitationToken: string): Promise<{ accepted: boolean, error?: string }> {
     try {
 
-        const { invite, error } = await getInvitation(competitionId, inviteId);
+        const [ competitionId, invitationId ] = invitationToken.split(":");
+
+        const { invite, error } = await getInvitation(competitionId!, invitationId!);
         if (error) {
             throw new Error(error);
         }
 
-        console.log("Accepted invite:", inviteId, " for:", invite?.competitionId);
+        console.log("Accepted invite:", invitationId, " for:", invite?.competitionId);
 
         return {
             accepted: true,

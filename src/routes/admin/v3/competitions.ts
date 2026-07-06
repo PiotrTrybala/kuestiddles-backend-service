@@ -348,12 +348,14 @@ competitionsRouter.post("/:competitionId/invites", zValidator("json", z.object({
         }, 500);
     }
 
+    console.log("Invitation: ", invite);
+
     return c.json({
         token: invite!.invitationToken,
     });
 });
 
-competitionsRouter.delete(`/:competitionId/invite/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
+competitionsRouter.delete(`/:competitionId/invites/:id{${UUID_PATTERN}}`, zValidator("param", z.object({
     competitionId: z.uuid(),
     id: z.uuid(),
 }), handleValidationError), async (c) => {

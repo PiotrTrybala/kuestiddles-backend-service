@@ -29,10 +29,11 @@ export const COMPETITION_TOKEN_HEADER = "x-competition-token";
 export const requireCompetition = () => {
     return createMiddleware<AppEnv>(async (c, next) => {
         const competitionToken = c.req.header(COMPETITION_TOKEN_HEADER);
-        if (!competitionToken) return c.body(null, 400);
+        console.log("competition token = ", competitionToken);
+        if (!competitionToken) return c.json({ message: "Invalid competition token" }, 400);
 
         const token = verifyCompetitionToken(competitionToken);
-        if (!token) return c.body(null, 403);
+        if (!token) return c.json({ message: "Competition token could not be verified" }, 403);
 
         c.set("competition", token);
 

@@ -120,10 +120,12 @@ export async function createInvite(invite: CreateInvite): Promise<{ invite?: Inv
     }
 }
 
-export async function acceptInvite(competitionId: string, inviteId: string): Promise<{ accepted: boolean, error?: RepositoryError }> {
+export async function acceptInvite(inviteToken: string): Promise<{ accepted: boolean, error?: RepositoryError }> {
     try {
 
-        const { invite, error } = await getInvite(competitionId, inviteId);
+        const [competitionId, inviteId] = inviteToken.split(":");
+
+        const { invite, error } = await getInvite(competitionId!, inviteId!);
         if (error) {
             throw new Error(error!.message);
         }

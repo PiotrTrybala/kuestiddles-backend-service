@@ -8,15 +8,19 @@ import { acceptInvite } from "@/controllers/invites";
 import { getLeaderboard } from "@/controllers/leaderboard";
 import { signCompetitionToken } from "../utils";
 import { handleValidationError } from "../admin/v3/v3";
+import { acceptInvitation } from "@/controllers/invites2";
 
 export const competitionsRouter = new Hono<AppEnv>();
-competitionsRouter.use("*", requireCompetition());
 
-competitionsRouter.get("/quests", async (c) => {
+competitionsRouter.get("/quests", requireCompetition, async (c) => {
 
     const competition = c.get("competition")!;
 
+    console.log("competition:", competition);
+
     const { quests, error } = await getCompetitionsQuests(competition.competitionId);
+
+    console.log("competitions quests: ", quests);
 
     if (error) {
         return c.json({
@@ -27,7 +31,7 @@ competitionsRouter.get("/quests", async (c) => {
     return c.json(quests);
 });
 
-competitionsRouter.post("/quests/solve", zValidator("json", z.object({
+competitionsRouter.post("/quests/solve", requireCompetition, zValidator("json", z.object({
     questId: z.uuid(),
     answers: z.array(z.string()),
 }), handleValidationError), async (c) => {
@@ -52,7 +56,7 @@ competitionsRouter.post("/quests/solve", zValidator("json", z.object({
     });
 });
 
-competitionsRouter.get("/souvenir/:userId", zValidator("param", z.object({
+competitionsRouter.get("/souvenir/:userId", requireCompetition, zValidator("param", z.object({
     userId: z.uuid(),
 }), handleValidationError), async (c) => {
     const competition = c.get("competition")!;
@@ -73,28 +77,32 @@ competitionsRouter.get("/souvenir/:userId", zValidator("param", z.object({
 });
 
 competitionsRouter.post("/invites/accept", zValidator("json", z.object({
-    inviteId: z.uuid(),
+    inviteToken: z.string(), // TODO: Add regex validation
     username: z.string(),
 }), handleValidationError), async (c) => {
-    const competition = c.get("competition")!;
-    const { inviteId, username } = c.req.valid("json");
 
-    const { accepted, error } = await acceptInvite(
-        competition.competitionId,
-        inviteId,
-    );
+    const { inviteToken, username } = c.req.valid("json");
+
+    const { accepted, error } = await acceptInvitation(inviteToken);
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
+    
     if (!accepted) {
         return c.json({ message: "Failed to accept invite to competitions group" }, 400);
     }
 
+    console.log("invitation token = ", inviteToken);
+
+    const [ competitionId, invitationId, groupId ] = inviteToken.split(":");
+
+    console.log("competitionId = ", competitionId, "invitationId = ", invitationId, "groupId = ", groupId);
+
     const { user, error: e } = await createUser(
-        competition.groupId,
+        groupId!,
         username,
     );
     if (e) {
@@ -104,8 +112,8 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
     }
 
     const competitionToken = signCompetitionToken(
-        competition.competitionId,
-        competition.groupId,
+        competitionId!,
+        groupId!,
         username,
     )
 
@@ -117,7 +125,7 @@ competitionsRouter.post("/invites/accept", zValidator("json", z.object({
      });
 });
 
-competitionsRouter.get("/leaderboard", async (c) => {
+competitionsRouter.get("/leaderboard", requireCompetition, async (c) => {
     const competition = c.get("competition")!;
 
     const { leaderboard, error } = await getLeaderboard(competition.competitionId);

@@ -523,6 +523,12 @@ export async function createUser(groupId: string, username: string): Promise<{ u
             })
             .returning();
 
+        await database.update(groups)
+            .set({
+                members: sql`${groups.members} + 1`,
+            })
+            .where(eq(groups.id, groupId));
+
         return { user: user };
     } catch (error) {
         console.error("Error occured while creating competition group users:", error);
