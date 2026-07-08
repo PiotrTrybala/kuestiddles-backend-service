@@ -1,5 +1,55 @@
-
+import { DrizzleError } from "drizzle-orm";
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
+
+export type Error = {
+    message: string,
+    status: ContentfulStatusCode | ContentlessStatusCode,
+};
+
+class ErrorBuilder {
+
+    #message: string;
+    #tag: string;
+    #status: ContentfulStatusCode | ContentlessStatusCode;
+
+    constructor() {
+        this.#message = "An unexpected error has occured"
+        this.#tag = "";
+        this.#status = 500;
+    }
+
+    message(message: string) {
+        this.#message = message;
+        return this;
+    }
+
+    tag(tag: string) {
+        this.#tag = tag;
+        return this;
+    }
+
+    status(status: ContentfulStatusCode | ContentlessStatusCode) {
+        this.#status = status;
+        return this;
+    }
+
+    build(): Error {
+        
+        let finalMessage: string = "";
+
+        if (this.#tag !== "") {
+            finalMessage = `${this.#tag}: ${this.#message}`;
+        } else {
+            finalMessage = `${this.#message}`;
+        }
+
+        return {
+            status: this.#status,
+            message: finalMessage,
+        }
+    }
+
+};  
 
 export type RepositoryError = { 
     message: string; 
@@ -18,12 +68,24 @@ const POSTGRES_ERROR_MAP: Record<string, Omit<RepositoryError, 'message'> & { me
     "08006": { status: 503, message: "Database connection failed" },
 };
 
+function isDrizzleError(error: any): error is DrizzleError {
+    return error instanceof DrizzleError;
+}
+
 function isRepositoryError(error: unknown): error is RepositoryError {
     return typeof error === "object" && error !== null && "message" in error && "status" in error;
 }
 
-function hasPostgresCode(error: unknown): error is { code: string } {
-    return typeof error === "object" && error !== null && "cause" in error && typeof (error as any).cause.code === "string";
+function hasPostgresCode(error: unknown): error is { cause: { code: string } } {
+    return (
+        typeof error === "object" &&
+        error !== null &&
+        "cause" in error &&
+        typeof (error as any).cause === "object" &&
+        (error as any).cause !== null &&
+        "code" in (error as any).cause &&
+        typeof (error as any).cause.code === "string"
+    );
 }
 
 export function formatError(error: unknown): RepositoryError {
