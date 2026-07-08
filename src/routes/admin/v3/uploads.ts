@@ -8,6 +8,7 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import z from "zod";
 import { handleValidationError } from "./v3";
 import { deleteImageById, getImage, getImageMetadata, searchImages, uploadImages } from "@/repositories/v3/images";
+import { meta } from "zod/v4/core";
 
 export const uploadsRouter = new Hono<AppEnv>();
 
@@ -80,7 +81,15 @@ uploadsRouter.get(`/images/:id{${UUID_PATTERN}}/metadata`, zValidator('param', z
         }, 500);
     }
 
-    return c.json(metadata);
+    return c.json({
+        id: metadata?.id,
+        organizationId: metadata?.organization_id,
+        slug: metadata?.slug,
+        labels: metadata?.labels,
+        hash: metadata?.hash,
+        createdAt: metadata?.createdAt,
+        updatedAt: metadata?.updatedAt,
+    });
 
 });
 

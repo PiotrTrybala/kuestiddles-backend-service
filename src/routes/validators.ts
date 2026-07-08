@@ -1,6 +1,6 @@
 import z from "zod";
 
-const UPLOAD_MAX_SIZE = 3 * 1024 * 1024; // 3MB
+const UPLOAD_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
 
 // Single file validation schema

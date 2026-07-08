@@ -123,7 +123,7 @@ export async function uploadImages(organizationId: string, files: File[], option
 
             const webpBuffer = await sharp(Buffer.from(buffer))
                 .webp({ quality: options?.quality ?? 75 })
-                .resize(options?.width ?? 400, options?.height ?? 300, { withoutEnlargement: true, withoutReduction: true })
+                .resize(options?.width ?? 400, options?.height ?? 300, { withoutEnlargement: false, withoutReduction: false })
                 .toBuffer();
 
             const imageId = crypto.randomUUID() as string;
