@@ -52,8 +52,8 @@ export async function createDefaultAvatar(userId: string): Promise<{ created: bo
         return {
             created: true,
         }
-    } catch(error) {
-            console.error("Error occured while uploading new users avatar:", error);
+    } catch (error) {
+        console.error("Error occured while uploading new users avatar:", error);
 
         return {
             created: false,
@@ -64,27 +64,23 @@ export async function createDefaultAvatar(userId: string): Promise<{ created: bo
 }
 
 export async function addAvatar(userId: string, image: File): Promise<{ added: boolean, error?: RepositoryError }> {
-
     try {
-
         const buffer = await image.arrayBuffer();
-
         const webpBuffer = await sharp(Buffer.from(buffer))
             .webp({ quality: DEFAULT_AVATAR_QUALITY })
             .resize(DEFAULT_AVATAR_WIDTH, DEFAULT_AVATAR_HEIGHT, { withoutEnlargement: true, withoutReduction: true })
             .toBuffer();
 
 
-        const uploadPath = `avatars/${userId}`;
-
-        await s3.write(uploadPath, webpBuffer, {
+        const avatarPath = `avatars/${userId}.webp`;
+        await s3.write(avatarPath, webpBuffer, {
             type: "image/webp",
         });
 
         const [metadata] = await database.insert(avatars)
             .values({
                 user_id: userId,
-                path: uploadPath,
+                path: avatarPath,
             }).returning();
 
         if (!metadata) {
@@ -101,7 +97,6 @@ export async function addAvatar(userId: string, image: File): Promise<{ added: b
             error: formatError(error),
         }
     }
-
 }
 
 export async function uploadAvatar(
@@ -109,17 +104,12 @@ export async function uploadAvatar(
     avatar: File,
 ): Promise<{ uploaded: boolean, error?: RepositoryError }> {
     try {
-
         const buffer = await avatar.arrayBuffer();
-
         const webpBuffer = await sharp(Buffer.from(buffer))
             .webp({ quality: DEFAULT_AVATAR_QUALITY })
             .resize(DEFAULT_AVATAR_WIDTH, DEFAULT_AVATAR_HEIGHT, { withoutEnlargement: true, withoutReduction: true })
             .toBuffer();
-
-
         const uploadPath = `avatars/${userId}`;
-
         await s3.write(uploadPath, webpBuffer, {
             type: "image/webp",
         });
