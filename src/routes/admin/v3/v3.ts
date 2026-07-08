@@ -6,8 +6,15 @@ export function handleValidationError<T>(
     c: Context
 ) {
     if (!result.success) {
-        
         const error = JSON.parse(result.error.message)[0];
+        console.log(error);
+
+        if (error.code === "custom") {
+            return c.json({
+                success: false,
+                message: error.message,
+            }, 400);
+        }
         return c.json({
             success: false,
             message: `Invalid ${error.path[0]} value`,

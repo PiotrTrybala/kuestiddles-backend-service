@@ -24,9 +24,7 @@ export async function searchImages(organizationId: string, page: number, pageSiz
         const pageIndex = Math.max(1, page) - 1;
         const limit = Math.max(1, pageSize);
 
-        const offset = pageIndex * limit;
-
-        console.info(pageIndex, limit, offset);
+        const offset = pageIndex * page;
 
         const filters = [
             eq(images.organization_id, organizationId),
@@ -41,7 +39,7 @@ export async function searchImages(organizationId: string, page: number, pageSiz
         }
 
         let searchResults = (await database.select().from(images)
-            .where(and(...filters))).map((metadata) => {
+            .where(and(...filters)).limit(limit).offset(offset)).map((metadata) => {
                 return {
                     id: metadata.id,
                     organizationId: metadata.organization_id,

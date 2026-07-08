@@ -1,7 +1,7 @@
 import type { AppEnv } from "@/config/app";
-import { getAvatar, uploadAvatar } from "@/repositories/v3/avatars";
+import { addAvatar, getAvatar, uploadAvatar } from "@/repositories/v3/avatars";
 import { Hono } from "hono";
-import { avatarSchema, uploadSchema } from "../validators";
+import { avatarSchema } from "../validators";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { requireAuth } from "@/routes/middleware";
@@ -34,12 +34,13 @@ avatarsRouter.post("/", requireAuth("none"), zValidator("form", avatarSchema, ha
     const user = c.get("user")!;
     const { avatar } = c.req.valid("form");
 
-    const { uploaded, error } = await uploadAvatar(user.id, avatar);
+    const { added, error } = await addAvatar(user.id, avatar);
+
     if (error) {
         return c.json({
             message: error,
         }, 500);
     }
 
-    return c.json({ uploaded });
+    return c.json({ added });
 });

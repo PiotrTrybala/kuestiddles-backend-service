@@ -12,20 +12,18 @@ export const uploadSchema = z
 export const avatarUploadSchema = z.object({
   avatar: z.preprocess((value) => {
       if (value instanceof File) return [value];
-      // If it's empty, falsy, or a blank string from FormData, return undefined
       if (!value || value === "") return undefined;
   }, uploadSchema),
 })
 
 // Multiple files validation schema
-export const uploadsSchema = z.object({
-  uploads: z
+export const imagesSchema = z.object({
+  images: z
     .preprocess((value) => {
 
       if (Array.isArray(value)) return value;
 
       if (value instanceof File) return [value];
-      // If it's empty, falsy, or a blank string from FormData, return undefined
       if (!value || value === "") return undefined;
       
       return [value];
