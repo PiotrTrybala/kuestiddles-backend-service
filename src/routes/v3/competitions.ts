@@ -1,7 +1,7 @@
 import type { AppEnv } from "@/config/app";
 import { Hono } from "hono";
 import { requireCompetition } from "../middleware";
-import { createUser, getCompetitionsQuests, getSouvenir, solveGroupQuest } from "@/repositories/v3/competitions";
+import { createUser, getCompetitionsQuests, getSouvenir, getUsers, solveGroupQuest } from "@/repositories/v3/competitions";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { acceptInvite } from "@/controllers/invites";
@@ -29,6 +29,22 @@ competitionsRouter.get("/quests", requireCompetition(), async (c) => {
     }
 
     return c.json(quests);
+});
+
+competitionsRouter.get("/users", requireCompetition(), async (c) => {
+
+    const competition = c.get("competition")!;
+
+    const { users, error } = await getUsers(competition.groupId);
+
+    if (error) {
+        return c.json({
+            message: error,
+        });
+    }
+
+    return c.json(users);
+
 });
 
 competitionsRouter.post("/quests/solve", requireCompetition(), zValidator("json", z.object({

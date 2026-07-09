@@ -381,7 +381,9 @@ export async function solveGroupQuest(competitionId: string, groupId: string, qu
                 )
             );
 
-        if (!existing) {
+        console.log(existing);
+
+        if (existing) {
             return {
                 solved: true,
                 error: {
@@ -508,7 +510,7 @@ export async function getSouvenir(competitionId: string, groupId: string, userId
 
         const [group] = await database.select()
             .from(groups)
-            .where(eq(groups.id, groupId));
+        .where(eq(groups.id, groupId));
 
         if (!group) {
             throw new Error("Group has not been found.");
@@ -526,7 +528,10 @@ export async function getSouvenir(competitionId: string, groupId: string, userId
         console.log("Error occured while retrieving leaderboard:", error);
         return {
             souvenir: undefined,
-            error: formatError(error),
+            error: {
+                status: 500,
+                message: "An unexpected error has occured",
+            },
         }
     }
 }

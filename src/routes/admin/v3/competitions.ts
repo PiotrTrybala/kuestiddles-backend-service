@@ -8,7 +8,7 @@ import { requireOrganization } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import z from "zod";
-import { getLeaderboard } from "@/controllers/leaderboard";
+import { getLeaderboard, updateLeaderboard } from "@/controllers/leaderboard";
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 import { handleValidationError } from "./v3";
 import { createInvitation, deleteInvitation, getInvitation } from "@/controllers/invites2";
@@ -291,6 +291,17 @@ competitionsRouter.post("/:competitionId/groups", zValidator("json", z.object({
             message: message,
         }, status as ContentfulStatusCode);
     }
+
+    const { updated, error: e } = await updateLeaderboard(competitionId, group!.id, 0);
+
+    if (error) {
+        const { message, status } = error;
+        return c.json({
+            message: message,
+        }, status as ContentfulStatusCode);
+    }
+
+    console.log(`Updated leaderboard entry for group: ${group!.id}, ${updated}`)
 
     return c.json(group);
 });
