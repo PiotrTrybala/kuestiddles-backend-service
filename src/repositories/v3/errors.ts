@@ -1,3 +1,4 @@
+import { DrizzleError } from "drizzle-orm";
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 
 export type SystemError = {
@@ -19,16 +20,44 @@ export function isSystemError(error: any): error is SystemError {
     return typeof error === "object" && error !== null && "message" in error && "status" in error;
 }
 
-export function formatPostgresError(error: any) {
+export function formatError(error: any): SystemError {
 
+    if (isSystemError(error)) {
+        return error;
+    }
+
+    if (error instanceof DrizzleError) {
+        const err = error as DrizzleError;
+
+        const drizzleError = POSTGRES_ERROR_MAP[err.cause?.code];
+        return {
+            status: drizzleError?.status!,
+            message: drizzleError?.message!,
+        }
+    }
+
+    if (error instanceof Error) {
+        return {
+            status: 500,
+            message: `An unexpected error has occured: ${error.message}`
+        }
+    }
+    return {
+        status: 500,
+        message: `An unexpected error has occured`
+    }
 }
 
-export function formatRedisError(error: any) {
+// export function formatPostgresError(error: any) {
+
+// }
+
+// export function formatRedisError(error: any) {
 
 
 
-}
+// }
 
-export function fallbackError(error: any) {
+// export function fallbackError(error: any) {
 
-}
+// }
