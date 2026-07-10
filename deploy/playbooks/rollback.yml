@@ -1,0 +1,25 @@
+---
+- name: Rollback - Reverse Last Runtime Configuration
+  hosts: swarm_manager
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Fetch active deployment profile
+      community.docker.docker_swarm_service_info:
+        name: "{{ project_name }}"
+      register: service_status
+
+    - name: Fail if target service is missing
+      ansible.builtin.fail:
+        msg: "The application service {{ project_name }} cannot be found running."
+      when: not service_status.exists
+
+    - name: Trigger native Docker Swarm engine rollback 
+      ansible.builtin.command: "docker service update --rollback {{ project_name }}"
+      changed_when: true
+      register: rollback_output
+
+    - name: Display rollback status execution logs
+      ansible.builtin.debug:
+        var: rollback_output.stdout

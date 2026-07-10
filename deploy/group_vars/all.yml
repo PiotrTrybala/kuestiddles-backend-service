@@ -1,6 +1,6 @@
 project_name: kuestiddles-backend
 
-dotenv_path: "{{ playbook_dir }}/../.env"
+dotenv_path: "{{ playbook_dir }}/../../.env"
 
 image_repository: ghcr.io/kuestiddles/kuestiddles-backend
 deploy_tag: v1
