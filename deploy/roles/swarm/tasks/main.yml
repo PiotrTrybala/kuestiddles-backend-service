@@ -1,0 +1,11 @@
+---
+- name: Check if Docker Swarm is initialized
+  ansible.builtin.command: docker info --format '{{ '{{' }} .Swarm.LocalNodeState {{ '}}' }}'
+  register: swarm_status
+  changed_when: false
+
+- name: Initialize Docker Swarm
+  ansible.builtin.command: docker swarm init --advertise-addr {{ ansible_default_ipv4.address }}
+  when: swarm_status.stdout != "active"
+  register: swarm_init
+  changed_when: "'Swarm initialized' in swarm_init.stdout"

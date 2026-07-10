@@ -1,36 +1,36 @@
-version: 3.9
+version: '3.9'
 
 services:
   app:
-    image: {{ image_repository }}:{{ deploy_tag }}
+    image: "{{ image_repository }}:{{ deploy_tag }}"
     environment:
-      NODE_ENV: production
-      APP_NAME: {{ app_name }}
-      APP_DOMAIN: {{ app_domain }}
-      BETTER_AUTH_URL: {{ better_auth_url }}
-      BETTER_AUTH_SECRET: {{ better_auth_secret }}
-      AVATARS_URL: {{ avatars_url }}
-      COMPETITION_TOKEN_SECRET: {{ competition_token_secret }}
-      DATABASE_URL: {{ database_url }}
-      REDIS_URL: {{ redis_url }}
-      GOOGLE_CLIENT_ID: {{ google_client_id }}
-      GOOGLE_CLIENT_SECRET: {{ google_client_secret }}
-      GOOGLE_MOBILE_CLIENT_ID: {{ google_mobile_client_id }}
-      MAILGUN_DOMAIN: {{ mailgun_domain }}
-      MAILGUN_API_KEY: {{ mailgun_api_key }}
-      AWS_REGION: {{ aws_region }}
-      AWS_BUCKET_NAME: {{ aws_bucket_name }}
-      AWS_ACCESS_KEY_ID: {{ aws_access_key_id }}
-      AWS_SECRET_ACCESS_KEY: {{ aws_secret_access_key }}
-      STRIPE_SECRET_KEY: {{ stripe_secret_key }}
-      STRIPE_WEBHOOK_SECRET: {{ stripe_webhook_secret }}
-      PLAN_STANDARD_PRICE_ID: {{ plan_standard_price_id }}
-      STRIPE_SUCCESS_URL: {{ stripe_success_url }}
-      STRIPE_CANCEL_URL: {{ stripe_cancel_url }}
+      NODE_ENV: "production"
+      APP_NAME: "{{ app_name }}"
+      APP_DOMAIN: "{{ app_domain }}"
+      BETTER_AUTH_URL: "{{ better_auth_url }}"
+      BETTER_AUTH_SECRET: "{{ better_auth_secret }}"
+      AVATARS_URL: "{{ avatars_url }}"
+      COMPETITION_TOKEN_SECRET: "{{ competition_token_secret }}"
+      DATABASE_URL: "{{ database_url }}"
+      REDIS_URL: "{{ redis_url }}"
+      GOOGLE_CLIENT_ID: "{{ google_client_id }}"
+      GOOGLE_CLIENT_SECRET: "{{ google_client_secret }}"
+      GOOGLE_MOBILE_CLIENT_ID: "{{ google_mobile_client_id }}"
+      MAILGUN_DOMAIN: "{{ mailgun_domain }}"
+      MAILGUN_API_KEY: "{{ mailgun_api_key }}"
+      AWS_REGION: "{{ aws_region }}"
+      AWS_BUCKET_NAME: "{{ aws_bucket_name }}"
+      AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+      AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+      STRIPE_SECRET_KEY: "{{ stripe_secret_key }}"
+      STRIPE_WEBHOOK_SECRET: "{{ stripe_webhook_secret }}"
+      PLAN_STANDARD_PRICE_ID: "{{ plan_standard_price_id }}"
+      STRIPE_SUCCESS_URL: "{{ stripe_success_url }}"
+      STRIPE_CANCEL_URL: "{{ stripe_cancel_url }}"
     networks:
       - {{ docker_network }}
     deploy:
-      replicas: {{ app_replicas }}
+      replicas: {{ app_replicas | default(2) }}
       update_config:
         parallelism: 1
         delay: 10s
@@ -43,9 +43,8 @@ services:
         condition: on-failure
         max_attempts: 3
       labels:
-        - project={{ project_name }}
+        - "project={{ project_name }}"
 
 networks:
   {{ docker_network }}:
-    external: true      
-
+    external: true

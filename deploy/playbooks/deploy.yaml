@@ -1,0 +1,38 @@
+---
+- name: Deploy kuestiddles-backend
+  hosts: swarm_manager
+  gather_facts: true
+
+  tasks:
+    - name: Load variables
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../group_vars/all.yml"
+
+    - name: Install prerequisite packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+          - python3-docker
+        state: present
+        update_cache: true
+
+    - name: Configure Docker
+      ansible.builtin.include_role:
+        name: docker
+    
+    - name: Configure Swarm
+      ansible.builtin.include_role:
+        name: swarm
+
+    - name: Configure Caddy
+      ansible.builtin.include_role:
+        name: caddy
+
+    # - name: Configure and Deploy Application
+    #   ansible.builtin.include_role:
+    #     name: app
