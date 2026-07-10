@@ -1,0 +1,28 @@
+project_name: kuestiddles-backend
+
+image_repository: ghcr.io/kuestiddles/kuestiddles-backend
+registry_url: ghcr.io
+registry_username: "{{ vault_registry_username }}"
+registry_password: "{{ vault_registry_password }}"
+
+project_source_dir: "{{ playbook_dir }}/../.."
+
+docker_network: kuestiddles
+app_replicas: 3
+app_port: 3000
+app_domain: api.kuestiddles.com
+healthcheck_path: /health
+letsencrypt_email: trybalapiotr4@gmail.com
+
+postgres_version: "16"
+postgres_db: kuestiddles
+postgres_user: admin
+postgres_password: "{{ vault_postgres_password }}"
+postgres_data_dir: /srv/data/postgres
+
+redis_version: "7"
+redis_data_dir: /srv/data/redis
+
+app_data_dir: /srv/app
+compose_project_dir: /srv/stacks
+backup_dir: /srv/backups

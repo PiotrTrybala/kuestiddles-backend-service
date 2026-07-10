@@ -65,6 +65,8 @@ app.get("/health", (c) => {
 
 app.route("/api", api);
 
+console.log("Environment:", Bun.env.NODE_ENV);
+
 showRoutes(app, {
 	verbose: true,
 	colorize: true,
