@@ -1,6 +1,6 @@
 {
     # Global Configuration
-    email {{ letsencrypt_email | default('admin@example.com') }}
+    email {{ letsencrypt_email | default('trybalapiotr4@gmail.com') }}
     
     log {
         output file /var/log/caddy/global.log {
@@ -28,12 +28,11 @@
 } #}
 
 # --- Subdomain: Backend API Engine ---
-{{ api_domain_name | default('api.kuestiddles.example.com') }} {
+{{ api_domain_name | default('api.kuestiddles.pl') }} {
     encode gzip zstd
     
-    # Explicitly catch and proxy all subdomain traffic to the backend
     handle {
-        reverse_proxy http://kuestiddles-backend:{{ backend_port | default('8080') }}
+        reverse_proxy http://kuestiddles-backend:{{ app_port | default('8080') }}
     }
 
     log {

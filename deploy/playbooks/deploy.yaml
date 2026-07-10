@@ -33,6 +33,6 @@
       ansible.builtin.include_role:
         name: caddy
 
-    # - name: Configure and Deploy Application
-    #   ansible.builtin.include_role:
-    #     name: app
+    - name: Configure and Deploy Application
+      ansible.builtin.include_role:
+        name: app

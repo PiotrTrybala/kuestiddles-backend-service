@@ -5,8 +5,29 @@
     state: directory
     mode: '0755'
 
-- name: Deploy Caddyfile configuration
+- name: Create docker overlay network
+  ansible.builtin.command: >
+    docker network create --driver=overlay --attachable {{ docker_network }}
+  register: network_create
+  failed_when: 
+    - network_create.rc != 0 
+    - "'already exists' not in network_create.stderr"
+  changed_when: "'already exists' not in network_create.stderr"
+
+- name: Generate Caddyfile configuration
   ansible.builtin.template:
     src: Caddyfile.j2
-    dest: /etc/caddy/Caddyfile
-    mode: '0644'
+    dest: "/etc/caddy/Caddyfile"
+    mode: "0640"
+
+- name: Generate Caddy docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.caddy.yml.j2
+    dest: "{{ compose_project_dir }}/docker-compose.yml"
+    mode: "0640"
+
+- name: Deploy Caddy service stack
+  ansible.builtin.command: >
+    docker stack deploy -c {{ caddy_config_dir }}/docker-compose.yml caddy
+  register: caddy_deploy
+  changed_when: "'Updating' in caddy_deploy.stdout or 'Creating' in caddy_deploy.stdout"
