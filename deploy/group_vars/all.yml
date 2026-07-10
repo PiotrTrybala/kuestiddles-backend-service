@@ -1,28 +1,60 @@
 project_name: kuestiddles-backend
 
+dotenv_path: "{{ playbook_dir }}/../.env"
+
 image_repository: ghcr.io/kuestiddles/kuestiddles-backend
 registry_url: ghcr.io
-registry_username: "{{ vault_registry_username }}"
-registry_password: "{{ vault_registry_password }}"
+registry_username: "{{ dotenv.REGISTRY_USERNAME }}"
+registry_password: "{{ dotenv.REGISTRY_PASSWORD }}"
 
 project_source_dir: "{{ playbook_dir }}/../.."
 
-docker_network: kuestiddles
+docker_network: kuestiddles-backend
 app_replicas: 3
 app_port: 3000
-app_domain: api.kuestiddles.com
+app_domain: api.kuestiddles.pl
 healthcheck_path: /health
 letsencrypt_email: trybalapiotr4@gmail.com
 
-postgres_version: "16"
-postgres_db: kuestiddles
-postgres_user: admin
-postgres_password: "{{ vault_postgres_password }}"
-postgres_data_dir: /srv/data/postgres
-
-redis_version: "7"
-redis_data_dir: /srv/data/redis
+nginx_conf_dir: /srv/nginx/conf
+certbot_webroot_dir: /srv/nginx/certbot-webroot
+letsencrypt_dir: /srv/nginx/letsencrypt
+nginx_replicas: 2
 
 app_data_dir: /srv/app
 compose_project_dir: /srv/stacks
 backup_dir: /srv/backups
+
+app_name: "{{ dotenv.APP_NAME }}"
+app_domain: "{{ dotenv.APP_DOMAIN }}"
+
+better_auth_url: "{{ dotenv.BETTER_AUTH_URL }}"
+better_auth_secret: "{{ dotenv.BETTER_AUTH_SECRET }}"
+
+avatars_url: "{{ dotenv.AVATARS_URL }}"
+
+competition_token_secret: "{{ dotenv.COMPETITION_TOKEN_SECRET }}"
+
+database_url: "{{ dotenv.DATABASE_URL }}"
+redis_url: "{{ dotenv.REDIS_URL }}"
+
+google_client_id: "{{ dotenv.GOOGLE_CLIENT_ID }}"
+google_client_secret: "{{ dotenv.GOOGLE_CLIENT_SECRET }}"
+google_mobile_client_id: "{{ dotenv.GOOGLE_MOBILE_CLIENT_ID }}"
+
+mailgun_domain: "{{ dotenv.MAILGUN_DOMAIN }}"
+mailgun_api_key: "{{ dotenv.MAILGUN_API_KEY }}"
+
+aws_region: "{{ dotenv.AWS_REGION }}"
+aws_bucket_name: "{{ dotenv.AWS_BUCKET_NAME }}"
+aws_access_key_id: "{{ dotenv.AWS_ACCESS_KEY_ID }}"
+aws_secret_access_key: "{{ dotenv.AWS_SECRET_ACCESS_KEY }}"
+
+stripe_secret_key: "{{ dotenv.STRIPE_SECRET_KEY }}"
+stripe_webhook_secret: "{{ dotenv.STRIPE_WEBHOOK_SECRET }}"
+
+plan_standard_price_id: "{{ dotenv.PLAN_STANDARD_PRICE_ID }}"
+
+stripe_success_url: "{{ dotenv.STRIPE_SUCCESS_URL }}"
+stripe_cancel_url: "{{ dotenv.STRIPE_CANCEL_URL }}"
+
