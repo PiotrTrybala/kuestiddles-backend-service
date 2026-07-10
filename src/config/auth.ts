@@ -5,8 +5,12 @@ import { admin, organization, twoFactor } from "better-auth/plugins";
 import { stripeClient } from "./stripe";
 import { stripe } from "@better-auth/stripe";
 import { OAuth2Client } from "google-auth-library";
-import { APP_NAME, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/globals";
+import { APP_NAME, AVATARS_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/globals";
 import { sendAccountResetPasswordEmail, sendAccountVerificationEmail } from "./mailgun";
+import { createDefaultAvatar } from "@/repositories/v3/avatars";
+import { updateUser } from "better-auth/api";
+import { user } from "@/database/auth";
+import { eq } from "drizzle-orm";
 
 export const googleMobileClient = new OAuth2Client(GOOGLE_MOBILE_CLIENT_ID);
 
@@ -49,7 +53,7 @@ export const auth = betterAuth({
         additionalFields: {
             platform: {
                 type: "string",
-                nullable: true,        // missing in your original
+                nullable: true,
             }
         }
     },
@@ -65,7 +69,7 @@ export const auth = betterAuth({
         user: {
             create: {
                 before: async (user, ctx) => {
-                    const platform = ctx?.headers?.get("x-platform") ?? null; // "android" | "ios" | null
+                    const platform = ctx?.headers?.get("x-platform") ?? null;
                     const isMobile = platform !== null;
 
                     if (!user.username) {
@@ -75,7 +79,7 @@ export const auth = betterAuth({
                     }
 
                     user.role = isMobile ? "user" : "admin";
-                    user.platform = platform;
+                    user.platform = platform ?? "web"; // default value web if platform is not detected
 
                     return {
                         data: {
@@ -83,14 +87,23 @@ export const auth = betterAuth({
                         }
                     };
                 },
-                after: async (user) => {
+                after: async (newUser) => {
+
+                    await createDefaultAvatar(newUser.id);
+
+                    await database
+                        .update(user)
+                        .set({
+                            image: `${AVATARS_URL}/${newUser.id}`
+                        }).where(eq(user.id, newUser.id));
+
                     // TODO: upload default avatar and update image URL
                     // await uploadAvatar(user.id, defaultProfilePictureFile as File);
                     // await db
                     //     .update(userTable)
                     //     .set({ image: `http://localhost:3000/api/v3/avatars/${user.id}.webp` })
                     //     .where(eq(userTable.id, user.id));
-                    console.log(`New user created: ${user.email} on platform: ${user.platform}`);
+                    console.log(`New user created: ${newUser.email} on platform: ${newUser.platform}`);
                 }
             }
         },

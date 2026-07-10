@@ -1,97 +1,53 @@
 import { redis } from "@/config/redis";
-import { formatError, type RepositoryError } from "@/repositories/v3/v3";
+import type { RepositoryError } from "@/repositories/v3/v3";
+import { COMPETITION_INVITE_EXPIRES_IN, type Invite } from "./invites";
+import type { Invitation } from "better-auth/plugins";
 
-export type Invite = {
+export type GroupInvitation = {
     id: string,
     competitionId: string,
     groupId: string,
     expiresAt: Date,
 };
 
-type CreateInvite = {
+export type CreateGroupInvitation = {
     competitionId: string,
     groupId: string,
     expiresIn: number,
 };
 
-export const COMPETITION_INVITE_EXPIRES_IN = 60 * 5; // 5 min
-
-export function getInviteId(competitionId: string, inviteId: string) {
-    return `kuest:invites:${competitionId}:${inviteId}`;
+export function getInvitationId(competitionId: string, inviteId: string) {
+    return `kuest:invitation:${competitionId}:${inviteId}`;
 }
 
-export async function getInvites(competitionId: string): Promise<{ invites: Invite[], error?: RepositoryError }> {
+export async function getInvitation(competitionId: string, inviteId: string): Promise<{ invite?: GroupInvitation, error?: string }>{
+
     try {
-        let cursor = "0";
-        const invites: Invite[] = [];
-
-        do {
-
-            const [nextCursor, keys] = await redis.scan(cursor, "MATCH", `kuest:invites:${competitionId}`, "COUNT", 20);
-            cursor = nextCursor;
-
-            if (keys.length > 0) {
-                const batchPromises = keys.map(key => redis.hgetall(key));
-                const rawHashes = await Promise.all(batchPromises);
-
-                const parsedInvites = rawHashes.map(hash => ({
-                    id: hash['id'] as string,
-                    competitionId: hash['competitionId'] as string,
-                    groupId: hash['groupId'] as string,
-                    expiresAt: new Date(hash['expiresAt']!)
-                }));
-
-                invites.push(...parsedInvites);
-            }
-
-        } while(cursor !== "0");
-
-        return {
-            invites: invites,
-        };
-    } catch(error) {
-        console.error("Error occured while retrieving invite");
-        return {
-            invites: [],
-            error: formatError(error),
-        }
-    }
-}
-
-export async function getInvite(competitionId: string, inviteId: string): Promise<{ invite?: Invite, error?: RepositoryError }> {
-    try {
-        const id = getInviteId(competitionId, inviteId);
-        const exists = await redis.exists(id);
-        if (!exists) return {
-            invite: undefined,
-            error: { message: "Invite has not been found", status: 404 }
-        }
-
-        const [groupId, expiresAt] = await redis.hmget(id, ["competitionId", "groupId", "expiresAt"])
-
+        const invitation = await redis.hgetall(getInvitationId(competitionId, inviteId));
         return {
             invite: {
-                id: inviteId,
-                competitionId: competitionId,
-                groupId: groupId!,
-                expiresAt: JSON.parse(expiresAt!),
+                id: invitation["id"] as string,
+                competitionId: invitation["competitionId"] as string,
+                groupId: invitation["groupId"] as string,
+                expiresAt: new Date(invitation["expiresAt"] as string),
             }
         }
 
     } catch(error) {
-        console.error("Error occured while retrieving invite");
+        console.error("Error occured while retrieving invite:", error);
         return {
             invite: undefined,
-            error: formatError(error),
+            error: "An unexpected error occured during retrival of invitation",
         }
     }
+
 }
 
-export async function createInvite(invite: CreateInvite): Promise<{ invite?: Invite, error?: RepositoryError }> {
+export async function createInvitation(invite: CreateGroupInvitation): Promise<{ invite?: GroupInvitation & { invitationToken: string }, error?: string }> {
     try {
-
-        const id = getInviteId(invite.competitionId, crypto.randomUUID());
-
+        console.log("create invitation group id = ", invite.groupId);
+        const id = getInvitationId(invite.competitionId, crypto.randomUUID());
+        const suffixId = `${id.split("invitation:")[1]}:${invite.groupId}`;
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + invite.expiresIn);
 
@@ -100,37 +56,39 @@ export async function createInvite(invite: CreateInvite): Promise<{ invite?: Inv
             groupId: invite.groupId,
             expiresAt: expiresAt.toString(),
         });
+
         await redis.expire(id, COMPETITION_INVITE_EXPIRES_IN);
-        
+
         return {
             invite: {
-                id,
+                id: id,
                 competitionId: invite.competitionId,
                 groupId: invite.groupId,
                 expiresAt: expiresAt,
+                invitationToken: suffixId as string,
             }
         }
 
     } catch(error) {
-        console.error("Error occured while retrieving invite");
+        console.error("Error occured while retrieving invite:", error);
         return {
             invite: undefined,
-            error: formatError(error),
+            error: "An unexpected error occured during creation of invitation",
         }
     }
 }
 
-export async function acceptInvite(inviteToken: string): Promise<{ accepted: boolean, error?: RepositoryError }> {
+export async function acceptInvitation(invitationToken: string): Promise<{ accepted: boolean, error?: string }> {
     try {
 
-        const [competitionId, inviteId] = inviteToken.split(":");
+        const [ competitionId, invitationId ] = invitationToken.split(":");
 
-        const { invite, error } = await getInvite(competitionId!, inviteId!);
+        const { invite, error } = await getInvitation(competitionId!, invitationId!);
         if (error) {
-            throw new Error(error!.message);
+            throw new Error(error);
         }
 
-        console.log("Accepted invite:", inviteId, " for:", invite?.competitionId);
+        console.log("Accepted invite:", invitationId, " for:", invite?.competitionId);
 
         return {
             accepted: true,
@@ -139,20 +97,20 @@ export async function acceptInvite(inviteToken: string): Promise<{ accepted: boo
         console.error("Error occured while retrieving invite");
         return {
             accepted: false,
-            error: formatError(error),
+            error: "An unexpected error occured during acceptation of invitation",
         }
     }
 }
 
-export async function removeInvite(competitionId: string, inviteId: string): Promise<{ deleted: boolean, error?: RepositoryError }> {
-    try {
+export async function deleteInvitation(competitionId: string, inviteId: string) {
+try {
 
-        const { invite, error } = await getInvite(competitionId, inviteId);
+        const { invite, error } = await getInvitation(competitionId, inviteId);
         if (error) {
-            throw new Error(error!.message);
+            throw new Error(error!);
         }
 
-        await redis.del(getInviteId(competitionId, inviteId));
+        await redis.del(getInvitationId(competitionId, inviteId));
 
         return {
             deleted: true,
@@ -161,7 +119,7 @@ export async function removeInvite(competitionId: string, inviteId: string): Pro
         console.error("Error occured while deleting invite:", error);
         return {
             deleted: false,
-            error: formatError(error),
+            error: "An unexpected error occured during deletion of invitation",
         }
     }
 }

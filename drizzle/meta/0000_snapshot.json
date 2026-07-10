@@ -1,5 +1,5 @@
 {
-  "id": "e35b2ced-ad6c-430c-a9eb-e2f908ccbaeb",
+  "id": "e3782058-3388-415d-8a94-c635d31b7416",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -286,6 +286,80 @@
           "tableTo": "games",
           "columnsFrom": [
             "game_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.competitions_quests": {
+      "name": "competitions_quests",
+      "schema": "",
+      "columns": {
+        "competition_id": {
+          "name": "competition_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quest_id": {
+          "name": "quest_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "competitions_quests_idx": {
+          "name": "competitions_quests_idx",
+          "columns": [
+            {
+              "expression": "competition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "quest_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "competitions_quests_competition_id_competitions_id_fk": {
+          "name": "competitions_quests_competition_id_competitions_id_fk",
+          "tableFrom": "competitions_quests",
+          "tableTo": "competitions",
+          "columnsFrom": [
+            "competition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "competitions_quests_quest_id_quests_id_fk": {
+          "name": "competitions_quests_quest_id_quests_id_fk",
+          "tableFrom": "competitions_quests",
+          "tableTo": "quests",
+          "columnsFrom": [
+            "quest_id"
           ],
           "columnsTo": [
             "id"
@@ -647,6 +721,138 @@
           "tableTo": "quests",
           "columnsFrom": [
             "quest_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.images": {
+      "name": "images",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "labels": {
+          "name": "labels",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "path": {
+          "name": "path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hash": {
+          "name": "hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "images_organization_slug_idx": {
+          "name": "images_organization_slug_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "images_labels_gin_idx": {
+          "name": "images_labels_gin_idx",
+          "columns": [
+            {
+              "expression": "labels",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        },
+        "images_slug_trgm_idx": {
+          "name": "images_slug_trgm_idx",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last",
+              "opclass": "gin_trgm_ops"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "images_organization_id_organization_id_fk": {
+          "name": "images_organization_id_organization_id_fk",
+          "tableFrom": "images",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
           ],
           "columnsTo": [
             "id"
@@ -1204,15 +1410,15 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "slug": {
-          "name": "slug",
+        "organization_id": {
+          "name": "organization_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
+        "landmark_id": {
+          "name": "landmark_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -1222,9 +1428,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "landmark_id": {
-          "name": "landmark_id",
-          "type": "uuid",
+        "slug": {
+          "name": "slug",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -1349,12 +1555,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "quests_game_id_games_id_fk": {
-          "name": "quests_game_id_games_id_fk",
+        "quests_landmark_id_landmarks_id_fk": {
+          "name": "quests_landmark_id_landmarks_id_fk",
           "tableFrom": "quests",
-          "tableTo": "games",
+          "tableTo": "landmarks",
           "columnsFrom": [
-            "game_id"
+            "landmark_id"
           ],
           "columnsTo": [
             "id"
@@ -1362,12 +1568,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "quests_landmark_id_landmarks_id_fk": {
-          "name": "quests_landmark_id_landmarks_id_fk",
+        "quests_game_id_games_id_fk": {
+          "name": "quests_game_id_games_id_fk",
           "tableFrom": "quests",
-          "tableTo": "landmarks",
+          "tableTo": "games",
           "columnsFrom": [
-            "landmark_id"
+            "game_id"
           ],
           "columnsTo": [
             "id"
@@ -1672,159 +1878,6 @@
             "id"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.uploads": {
-      "name": "uploads",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "labels": {
-          "name": "labels",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::text[]"
-        },
-        "path": {
-          "name": "path",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "hash": {
-          "name": "hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "uploads_organization_slug_idx": {
-          "name": "uploads_organization_slug_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "uploads_labels_gin_idx": {
-          "name": "uploads_labels_gin_idx",
-          "columns": [
-            {
-              "expression": "labels",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "gin",
-          "with": {}
-        },
-        "uploads_name_trgm_idx": {
-          "name": "uploads_name_trgm_idx",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last",
-              "opclass": "gin_trgm_ops"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "gin",
-          "with": {}
-        },
-        "uploads_organization_id_idx": {
-          "name": "uploads_organization_id_idx",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "uploads_organization_id_organization_id_fk": {
-          "name": "uploads_organization_id_organization_id_fk",
-          "tableFrom": "uploads",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },

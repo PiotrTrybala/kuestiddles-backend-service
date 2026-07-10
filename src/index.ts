@@ -4,7 +4,6 @@ import { cors } from "hono/cors";
 import { auth } from './config/auth';
 
 import { api } from './routes/api';
-import { showRoutes } from 'hono/dev';
 
 import { type AppEnv } from './config/app';
 
@@ -50,8 +49,6 @@ app.use("*", async (c, next) => {
 	c.set("session", session.session);
 	c.set("user", session.user);
 
-	// TODO: Add plans to app env
-
 	await next();
 });
 
@@ -64,13 +61,6 @@ app.get("/health", (c) => {
 });
 
 app.route("/api", api);
-
-console.log("Environment:", Bun.env.NODE_ENV);
-
-showRoutes(app, {
-	verbose: true,
-	colorize: true,
-});
 
 export default {
 	port: 3000,

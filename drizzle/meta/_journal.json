@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1780413161089,
-      "tag": "0000_vengeful_steve_rogers",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1780427469949,
-      "tag": "0001_stiff_human_fly",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1783509528127,
-      "tag": "0002_colossal_white_queen",
+      "when": 1783670595920,
+      "tag": "0000_dazzling_iron_patriot",
       "breakpoints": true
     }
   ]

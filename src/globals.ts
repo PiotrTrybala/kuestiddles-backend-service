@@ -7,7 +7,6 @@ export const APP_NAME = Bun.env.APP_NAME!;
 export const APP_DOMAIN = Bun.env.APP_DOMAIN!;
 
 export const AVATARS_URL = Bun.env.AVATARS_URL!;
-export const IMAGES_URL = Bun.env.IMAGES_URL!;
 
 export const COMPETITION_TOKEN_SECRET = Bun.env.COMPETITION_TOKEN_SECRET!;
 
@@ -15,12 +14,6 @@ export const COMPETITION_TOKEN_SECRET = Bun.env.COMPETITION_TOKEN_SECRET!;
 
 export const BETTER_AUTH_URL = Bun.env.BETTER_AUTH_URL!;
 export const BETTER_AUTH_SECRET = Bun.env.BETTER_AUTH_SECRET!;
-
-// Base URLs
-
-export const USER_API_URL = Bun.env.USER_API_URL!;
-export const ADMIN_API_URL = Bun.env.ADMIN_API_URL!;
-export const MOBILE_API_URL = Bun.env.MOBILE_API_URL!;
 
 // Database variables
 
