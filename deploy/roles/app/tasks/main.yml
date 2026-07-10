@@ -1,0 +1,32 @@
+- name: Create application stack compose file
+  ansible.buildin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ compose_project_dir }}/docker-compose.app.yml"
+    mode: "0640"
+- name: Login to container registry
+  community.docker.docker_login:
+    registry_url: "{{ registry_url }}"
+    username: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+  no_log: true
+
+- name: Pull application image
+  ansible.builtin.command: docker pull {{ image_repository }}:{{ deploy_tag }}
+  changed_when: false
+
+- name: Deploy application stack
+  ansible.buildin.command: >
+    docker stack deploy -c {{ compose_project_dir }}/docker-compose.app.yml 
+    --with-registry-auth {{ project_name }}
+  register: app_deploy
+  changed_when: "'Updating' in app_deploy.stdout or 'Creating' in app_deploy.stdout"
+
+- name: Wait for all replicas to converge
+  ansible.builtin.command: >
+    docker service ls --filter name={{ project_name }}_app
+      --format "{% raw %}{{.Replicas}}{% endraw %}"
+  register: service_replicas
+  until: service_relicas.stdout is regex('^(\d+)/\1$')
+  retries: 3
+  delay: 5
+  changed_when: false

@@ -1,0 +1,18 @@
+- name: Check that .env exists
+  ansible.builtin.stat:
+    path: "{{ dotenv_path }}"
+  delegate_to: localhost
+  become: false
+  register: dotenv_stat
+
+- name: Fail if .env is missing
+  ansible.builtin.fail:
+    msg: >-
+      {{ dotenv_path }} not found. Copy .env.example to .env at the project
+      root and fill in DATABASE_URL, REDIS_URL, REGISTRY_USERNAME and REGISTRY_PASSWORD.
+  when: not dotenv_stat.stat.exists
+
+- name: Load and parse .env
+  ansible.builtin.set_fact:
+    dotenv: "{{ lookup('ansible.builtin.file', dotenv_path) | parse_dotenv }}"
+  no_log: true

@@ -3,6 +3,7 @@ project_name: kuestiddles-backend
 dotenv_path: "{{ playbook_dir }}/../.env"
 
 image_repository: ghcr.io/kuestiddles/kuestiddles-backend
+deploy_tag: v1
 registry_url: ghcr.io
 registry_username: "{{ dotenv.REGISTRY_USERNAME }}"
 registry_password: "{{ dotenv.REGISTRY_PASSWORD }}"
