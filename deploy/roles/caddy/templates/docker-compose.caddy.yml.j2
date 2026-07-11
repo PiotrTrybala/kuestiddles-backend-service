@@ -1,15 +1,15 @@
-version: '3.8'
+version: "3.9"
 
 services:
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2.7-alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - /etc/caddy/Caddyfile:/etc/caddy/Caddyfile
     networks:
       - {{ docker_network }}
     deploy:
@@ -18,6 +18,10 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
+
+networks:
+  {{ docker_network }}:
+    external: true
 
 volumes:
   caddy_data:

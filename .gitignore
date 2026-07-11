@@ -40,3 +40,5 @@ static
 
 .vault_pass
 deploy/.vault_pass
+
+deploy/ansible.cfg

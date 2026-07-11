@@ -1,4 +1,4 @@
-project_name: kuestiddles-backend
+project_name: kuestiddles_backend
 
 dotenv_path: "{{ playbook_dir }}/../../.env"
 
@@ -10,10 +10,11 @@ registry_password: "{{ dotenv.REGISTRY_PASSWORD }}"
 
 project_source_dir: "{{ playbook_dir }}/../.."
 
-docker_network: kuestiddles-backend
+ansible_user: root
+docker_network: kuestiddles_backend
 app_replicas: 3
-app_port: 3000
-app_domain: api.kuestiddles.pl
+api_port: 3000
+api_domain: api.kuestiddles.pl
 healthcheck_path: /health
 letsencrypt_email: trybalapiotr4@gmail.com
 

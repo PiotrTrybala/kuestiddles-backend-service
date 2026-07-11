@@ -4,11 +4,10 @@ import { requireCompetition } from "../middleware";
 import { createUser, getCompetitionsQuests, getSouvenir, getUsers, solveGroupQuest } from "@/repositories/v3/competitions";
 import { zValidator } from "@hono/zod-validator";
 import z from "zod";
-import { acceptInvite } from "@/controllers/invites";
 import { getLeaderboard } from "@/controllers/leaderboard";
 import { signCompetitionToken } from "../utils";
 import { handleValidationError } from "../admin/v3/v3";
-import { acceptInvitation } from "@/controllers/invites2";
+import { acceptInvitation } from "@/controllers/invites";
 
 export const competitionsRouter = new Hono<AppEnv>();
 

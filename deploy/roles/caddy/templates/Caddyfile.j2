@@ -1,7 +1,5 @@
 {
-    # Global Configuration
-    email {{ letsencrypt_email | default('trybalapiotr4@gmail.com') }}
-    
+    email {{ letsencrypt_email }}
     log {
         output file /var/log/caddy/global.log {
             roll_size 10mb
@@ -10,29 +8,12 @@
     }
 }
 
-{# # --- Main Domain: User-Facing Frontend ---
-{{ domain_name | default('kuestiddles.example.com') }} {
+{{ api_domain }} {
+
     encode gzip zstd
 
-    # Explicitly catch and proxy all main domain traffic to the frontend
     handle {
-        reverse_proxy http://kuestiddles-frontend:{{ frontend_port | default('3000') }}
-    }
-
-    log {
-        output file /var/log/caddy/frontend_access.log {
-            roll_size 5mb
-            roll_keep 5
-        }
-    }
-} #}
-
-# --- Subdomain: Backend API Engine ---
-{{ api_domain_name | default('api.kuestiddles.pl') }} {
-    encode gzip zstd
-    
-    handle {
-        reverse_proxy http://kuestiddles-backend:{{ app_port | default('8080') }}
+        reverse_proxy kuestiddles_backend_app:{{ api_port }}
     }
 
     log {
@@ -41,4 +22,5 @@
             roll_keep 5
         }
     }
+
 }

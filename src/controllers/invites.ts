@@ -1,7 +1,8 @@
 import { redis } from "@/config/redis";
 import type { RepositoryError } from "@/repositories/v3/v3";
-import { COMPETITION_INVITE_EXPIRES_IN, type Invite } from "./invites";
 import type { Invitation } from "better-auth/plugins";
+
+export const COMPETITION_INVITE_EXPIRES_IN = 60 * 5;
 
 export type GroupInvitation = {
     id: string,

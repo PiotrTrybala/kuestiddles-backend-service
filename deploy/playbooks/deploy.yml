@@ -7,8 +7,7 @@
     - name: Load variables
       ansible.builtin.include_vars:
         file: "{{ playbook_dir }}/../group_vars/all.yml"
-
-    - name: Install prerequisite packages
+    - name: Install required packages
       ansible.builtin.apt:
         name:
           - apt-transport-https
@@ -24,15 +23,15 @@
     - name: Configure Docker
       ansible.builtin.include_role:
         name: docker
-    
-    - name: Configure Swarm
+
+    - name: Configure Docker Swarm
       ansible.builtin.include_role:
         name: swarm
-
+        
     - name: Configure Caddy
       ansible.builtin.include_role:
         name: caddy
 
-    - name: Configure and Deploy Application
+    - name: Deploy application
       ansible.builtin.include_role:
         name: app

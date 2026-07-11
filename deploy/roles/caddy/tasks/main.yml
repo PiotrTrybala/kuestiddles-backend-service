@@ -23,11 +23,11 @@
 - name: Generate Caddy docker-compose file
   ansible.builtin.template:
     src: docker-compose.caddy.yml.j2
-    dest: "{{ compose_project_dir }}/docker-compose.yml"
+    dest: "{{ compose_project_dir }}/docker-compose.caddy.yml"
     mode: "0640"
 
 - name: Deploy Caddy service stack
   ansible.builtin.command: >
-    docker stack deploy -c {{ caddy_config_dir }}/docker-compose.yml caddy
+    docker stack deploy -c {{ compose_project_dir }}/docker-compose.caddy.yml caddy
   register: caddy_deploy
   changed_when: "'Updating' in caddy_deploy.stdout or 'Creating' in caddy_deploy.stdout"

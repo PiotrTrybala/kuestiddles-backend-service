@@ -1,7 +1,6 @@
 // `/:id{${UUID_PATTERN}}`
 
 import type { AppEnv } from "@/config/app";
-import { createInvite, getInvite, getInvites, removeInvite } from "@/controllers/invites";
 import { checkCompetitionSlug, createCompetition, createGroup, deleteCompetitionById, deleteCompetitionBySlug, deleteGroupById, deleteGroupBySlug, getCompetitionById, getCompetitionBySlug, getGroupById, getGroupBySlug, getUsers, searchCompetitions, searchGroups, updateCompetitionById } from "@/repositories/v3/competitions";
 import { UUID_PATTERN } from "@/globals";
 import { requireOrganization } from "@/routes/middleware";
@@ -11,7 +10,7 @@ import z from "zod";
 import { getLeaderboard, updateLeaderboard } from "@/controllers/leaderboard";
 import type { ContentfulStatusCode, ContentlessStatusCode } from "hono/utils/http-status";
 import { handleValidationError } from "./v3";
-import { createInvitation, deleteInvitation, getInvitation } from "@/controllers/invites2";
+import { createInvitation, deleteInvitation, getInvitation } from "@/controllers/invites";
 
 // Competition router - /competitions
 
