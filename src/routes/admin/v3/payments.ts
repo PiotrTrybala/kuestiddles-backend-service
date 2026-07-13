@@ -1,6 +1,6 @@
 import type { AppEnv } from "@/config/app";
 import { auth } from "@/config/auth";
-import { STRIPE_CANCEL_URL, STRIPE_SUCCESS_URL } from "@/globals";
+import { STRIPE_CANCEL_URL, STRIPE_SUCCESS_URL } from "@/env";
 import { getUserQuotas } from "@/repositories/v3/payments";
 import { requireAuth } from "@/routes/middleware";
 import { Hono } from "hono";

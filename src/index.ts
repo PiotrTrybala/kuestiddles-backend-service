@@ -6,6 +6,7 @@ import { auth } from './config/auth';
 import { api } from './routes/api';
 
 import { type AppEnv } from './config/app';
+import { APP_PORT } from './env';
 
 const app = new Hono<AppEnv>();
 
@@ -60,10 +61,10 @@ app.get("/health", (c) => {
     return c.json({ message: "Healthy service" });
 });
 
-app.route("/api", api);
+app.route("/", api);
 
 export default {
-	port: 3000,
+	port: APP_PORT,
 	hostname: '0.0.0.0',
 	fetch: app.fetch,
 };

@@ -2,7 +2,7 @@
 
 import type { AppEnv } from "@/config/app";
 import { checkCompetitionSlug, createCompetition, createGroup, deleteCompetitionById, deleteCompetitionBySlug, deleteGroupById, deleteGroupBySlug, getCompetitionById, getCompetitionBySlug, getGroupById, getGroupBySlug, getUsers, searchCompetitions, searchGroups, updateCompetitionById } from "@/repositories/v3/competitions";
-import { UUID_PATTERN } from "@/globals";
+import { UUID_PATTERN } from "@/env";
 import { requireOrganization } from "@/routes/middleware";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";

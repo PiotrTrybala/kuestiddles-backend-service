@@ -1,4 +1,4 @@
-import { MAILGUN_API_KEY, MAILGUN_DOMAIN } from "@/globals";
+import { MAILGUN_API_KEY, MAILGUN_DOMAIN } from "@/env";
 
 export async function sendEmail(from: string, to: string, subject: string, messageInHTML: string) {
 

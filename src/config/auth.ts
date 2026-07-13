@@ -5,7 +5,7 @@ import { admin, organization, twoFactor } from "better-auth/plugins";
 import { stripeClient } from "./stripe";
 import { stripe } from "@better-auth/stripe";
 import { OAuth2Client } from "google-auth-library";
-import { APP_NAME, AVATARS_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/globals";
+import { APP_NAME, AVATARS_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/env";
 import { sendAccountResetPasswordEmail, sendAccountVerificationEmail } from "./mailgun";
 import { createDefaultAvatar } from "@/repositories/v3/avatars";
 import { updateUser } from "better-auth/api";

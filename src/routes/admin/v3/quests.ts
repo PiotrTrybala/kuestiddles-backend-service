@@ -17,7 +17,7 @@ import {
     removeQuestByGameId,
 } from "@/repositories/v3/quests";
 import { requireOrganization } from "@/routes/middleware";
-import { UUID_PATTERN } from "@/globals";
+import { UUID_PATTERN } from "@/env";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { handleValidationError } from "./v3";
 

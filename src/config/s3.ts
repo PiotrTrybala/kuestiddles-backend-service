@@ -1,4 +1,4 @@
-import { AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY } from "@/globals";
+import { AWS_ACCESS_KEY_ID, AWS_BUCKET_NAME, AWS_SECRET_ACCESS_KEY } from "@/env";
 import { S3Client } from "bun";
 
 export const s3 = new S3Client({

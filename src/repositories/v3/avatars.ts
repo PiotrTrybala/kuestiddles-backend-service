@@ -6,7 +6,7 @@ import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
 import { formatError, type RepositoryError } from "./v3";
 import { defaultAc } from "better-auth/plugins/organization/access";
-import { defaultAvatar } from "@/globals";
+import { defaultAvatar } from "@/env";
 
 export async function getAvatar(userId: string): Promise<{ avatar?: Bun.S3File, error?: RepositoryError }> {
     try {

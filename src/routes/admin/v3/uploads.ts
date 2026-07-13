@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/config/app";
-import { UUID_PATTERN } from "@/globals";
+import { UUID_PATTERN } from "@/env";
 import { requireOrganization } from "@/routes/middleware";
 import { imagesSchema } from "@/routes/validators";
 import { zValidator } from "@hono/zod-validator";
