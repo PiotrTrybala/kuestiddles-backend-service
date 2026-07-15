@@ -6,7 +6,7 @@ import { stripeClient } from "./stripe";
 import { stripe } from "@better-auth/stripe";
 import { OAuth2Client } from "google-auth-library";
 import { APP_NAME, AVATARS_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_MOBILE_CLIENT_ID, STANDARD_PLAN_PRICE_ID, STRIPE_WEBHOOK_SECRET } from "@/env";
-import { sendAccountResetPasswordEmail, sendAccountVerificationEmail } from "./mailgun";
+import { send2FAuthenticationOTPCode, sendAccountResetPasswordEmail, sendAccountVerificationEmail } from "./mailgun";
 import { createDefaultAvatar } from "@/repositories/v3/avatars";
 import { updateUser } from "better-auth/api";
 import { user } from "@/database/auth";
@@ -36,8 +36,8 @@ export const auth = betterAuth({
         enabled: true,
         requireEmailVerification: true,
         autoSignIn: true,
-        sendResetPassword: async ({ user, url, token }, _) => {
-            console.log(`sent reset password email to ${user.email}`);
+        sendResetPassword: async ({ user, url }, _) => {
+            console.log(`sent reset password email to ${user.email}: ${url}`);
             await sendAccountResetPasswordEmail(user.email, url);
         }
     },
@@ -96,13 +96,6 @@ export const auth = betterAuth({
                         .set({
                             image: `${AVATARS_URL}/${newUser.id}`
                         }).where(eq(user.id, newUser.id));
-
-                    // TODO: upload default avatar and update image URL
-                    // await uploadAvatar(user.id, defaultProfilePictureFile as File);
-                    // await db
-                    //     .update(userTable)
-                    //     .set({ image: `http://localhost:3000/api/v3/avatars/${user.id}.webp` })
-                    //     .where(eq(userTable.id, user.id));
                     console.log(`New user created: ${newUser.email} on platform: ${newUser.platform}`);
                 }
             }
@@ -120,7 +113,14 @@ export const auth = betterAuth({
 
     plugins: [
         admin(),
-        twoFactor(),
+        twoFactor({
+            otpOptions: {
+                async sendOTP({ user, otp }, ctx) {
+                    console.log("Sending verification code to:", user.email);
+                    await send2FAuthenticationOTPCode(user.email, otp);
+                },
+            }
+        }),
         organization({
             allowUserToCreateOrganization: async (user) => {
                 return user.role === "admin";

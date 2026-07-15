@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from "hono/cors";
 
+import { showRoutes } from "hono/dev";
+
 import { auth } from './config/auth';
 
 import { api } from './routes/api';
@@ -62,6 +64,10 @@ app.get("/health", (c) => {
 });
 
 app.route("/", api);
+
+showRoutes(app, {
+	verbose: true,
+});
 
 export default {
 	port: APP_PORT,

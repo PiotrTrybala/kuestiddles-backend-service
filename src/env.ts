@@ -47,4 +47,4 @@ export const STRIPE_SUCCESS_URL = Bun.env.STRIPE_SUCCESS_URL!;
 export const STRIPE_CANCEL_URL = Bun.env.STRIPE_CANCEL_URL!;
 export const STANDARD_PLAN_PRICE_ID = Bun.env.PLAN_STANDARD_PRICE_ID!;
 
-export const defaultAvatar = Bun.file("./static/default-profile-picture.webp");
+export const defaultAvatar = await Bun.file("./static/default-profile-picture.webp").arrayBuffer();

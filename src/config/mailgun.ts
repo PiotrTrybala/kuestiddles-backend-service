@@ -25,6 +25,24 @@ export async function sendEmail(from: string, to: string, subject: string, messa
 
 }
 
+export async function send2FAuthenticationOTPCode(to: string, code: string) {
+    try {
+        await sendEmail(
+            `Kuestiddles <mailgun@${MAILGUN_DOMAIN}>`,
+            to,
+            "2FA verification code",
+            `
+            <h2>Verify sign in</h2>
+            <p>Your verification code is: ${code}</p>
+        `
+        );
+
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+
 export async function sendAccountVerificationEmail(to: string, url: string) {
     try {
         await sendEmail(
