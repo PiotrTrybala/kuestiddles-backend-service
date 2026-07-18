@@ -5,7 +5,7 @@ import { and, arrayOverlaps, eq, ilike } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp, { format } from "sharp";
 import slugify from "slugify";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type Upload = typeof uploads.$inferSelect;
 

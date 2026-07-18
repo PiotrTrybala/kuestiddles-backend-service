@@ -1,5 +1,5 @@
 {
-  "id": "e3782058-3388-415d-8a94-c635d31b7416",
+  "id": "316b0609-8dd0-4cc4-aab0-5ffbadcc975b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -403,8 +403,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "assets": {
-          "name": "assets",
+        "images": {
+          "name": "images",
           "type": "text[]",
           "primaryKey": false,
           "notNull": true,
@@ -447,11 +447,11 @@
           "method": "btree",
           "with": {}
         },
-        "games_assets_gin_idx": {
-          "name": "games_assets_gin_idx",
+        "games_images_gin_idx": {
+          "name": "games_images_gin_idx",
           "columns": [
             {
-              "expression": "assets",
+              "expression": "images",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -488,6 +488,66 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.games_quests": {
+      "name": "games_quests",
+      "schema": "",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quest_id": {
+          "name": "quest_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "games_quests_game_id_games_id_fk": {
+          "name": "games_quests_game_id_games_id_fk",
+          "tableFrom": "games_quests",
+          "tableTo": "games",
+          "columnsFrom": [
+            "game_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "games_quests_quest_id_quests_id_fk": {
+          "name": "games_quests_quest_id_quests_id_fk",
+          "tableFrom": "games_quests",
+          "tableTo": "quests",
+          "columnsFrom": [
+            "quest_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "games_quests_game_id_quest_id_pk": {
+          "name": "games_quests_game_id_quest_id_pk",
+          "columns": [
+            "game_id",
+            "quest_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1030,8 +1090,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "assets": {
-          "name": "assets",
+        "images": {
+          "name": "images",
           "type": "text[]",
           "primaryKey": false,
           "notNull": true,
@@ -1110,11 +1170,11 @@
           "method": "gin",
           "with": {}
         },
-        "landmarks_assets_gin_idx": {
-          "name": "landmarks_assets_gin_idx",
+        "landmarks_images_gin_idx": {
+          "name": "landmarks_images_gin_idx",
           "columns": [
             {
-              "expression": "assets",
+              "expression": "images",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1422,12 +1482,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "game_id": {
-          "name": "game_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "slug": {
           "name": "slug",
           "type": "text",
@@ -1561,19 +1615,6 @@
           "tableTo": "landmarks",
           "columnsFrom": [
             "landmark_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "quests_game_id_games_id_fk": {
-          "name": "quests_game_id_games_id_fk",
-          "tableFrom": "quests",
-          "tableTo": "games",
-          "columnsFrom": [
-            "game_id"
           ],
           "columnsTo": [
             "id"

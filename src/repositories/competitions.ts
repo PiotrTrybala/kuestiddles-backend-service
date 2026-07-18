@@ -8,7 +8,7 @@ import { eq, ilike, and, sql } from "drizzle-orm";
 import { UniqueConstraintBuilder } from "drizzle-orm/gel-core";
 import slugify from "slugify";
 import { getQuestById } from "./quests";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type Competition = typeof competitions.$inferSelect;
 type Quest = typeof quests.$inferSelect;

@@ -49,7 +49,6 @@ export const requireOrganization = createMiddleware<AppEnv>(async (c, next) => {
     if (!user || !session) return c.json({ message: "Unauthorized" }, 401);
 
     const slug = c.req.param("organizationSlug");
-
     console.log("slug:", slug);
 
     const organization = await auth.api.getFullOrganization({

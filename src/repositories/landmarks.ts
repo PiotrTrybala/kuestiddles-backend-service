@@ -2,7 +2,7 @@ import { database } from "@/database/db";
 import { games, landmarks } from "@/database/schema";
 import { and, eq, ilike } from "drizzle-orm";
 import slugify from "slugify";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type Landmark = typeof landmarks.$inferSelect;
 

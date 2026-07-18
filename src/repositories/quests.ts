@@ -2,7 +2,7 @@ import { database } from "@/database/db";
 import { quests } from "@/database/schema";
 import { and, arrayOverlaps, desc, eq, ilike, sql } from "drizzle-orm";
 import slugify from "slugify";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type Quest = typeof quests.$inferSelect;
 type QuestInsert = typeof quests.$inferInsert;

@@ -8,7 +8,6 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import z from "zod";
 import { handleValidationError } from "./v3";
 import { deleteImageById, getImage, getImageMetadata, searchImages, uploadImages } from "@/repositories/v3/images";
-import { meta } from "zod/v4/core";
 
 export const uploadsRouter = new Hono<AppEnv>();
 

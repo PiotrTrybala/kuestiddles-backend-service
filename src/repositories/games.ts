@@ -2,7 +2,7 @@ import { database } from "@/database/db";
 import { games } from "@/database/schema";
 import { and, eq, ilike } from "drizzle-orm";
 import slugify from "slugify";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type Game = typeof games.$inferSelect;
 
@@ -12,7 +12,6 @@ export async function searchGames(organizationId: string, page: number, pageSize
 
         const offset = page * pageSize;
         const limit = pageSize;
-
 
         const filters = [
             eq(games.organization_id, organizationId),

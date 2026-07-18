@@ -1,7 +1,7 @@
 import { database } from "@/database/db";
 import { user_quotas } from "@/database/payments";
 import { eq, sql } from "drizzle-orm";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 
 type UserQuotas = typeof user_quotas.$inferSelect;
 

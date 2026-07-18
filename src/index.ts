@@ -25,7 +25,7 @@ app.use(
 );
 
 app.use(
-	"/api/*",
+	"/*",
 	cors({
 		origin: ["http://localhost:5173", "https://www.kuestiddles.pl", "https://kuestiddles.pl", "http://127.0.0.1:8000"],
 		allowHeaders: ["Content-Type", "Authorization"],

@@ -4,7 +4,7 @@ import { avatars } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { sha256 } from "hono/utils/crypto";
 import sharp from "sharp";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 import { defaultAc } from "better-auth/plugins/organization/access";
 import { defaultAvatar } from "@/env";
 

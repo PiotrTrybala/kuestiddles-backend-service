@@ -1,7 +1,7 @@
 import { database } from "@/database/db";
 import { images } from "@/database/v3/uploads";
 import { eq, ilike, arrayOverlaps, and } from "drizzle-orm";
-import { formatError, type RepositoryError } from "./v3";
+import { formatError, type RepositoryError } from "./repositories";
 import { s3 } from "@/config/s3";
 import sharp from "sharp";
 import slugify from "slugify";
